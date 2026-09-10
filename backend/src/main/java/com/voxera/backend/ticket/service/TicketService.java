@@ -1,5 +1,6 @@
 package com.voxera.backend.ticket.service;
 
+import com.voxera.backend.exception.ResourceNotFoundException;
 import com.voxera.backend.ticket.entity.Ticket;
 import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
@@ -36,7 +37,8 @@ public class TicketService {
 
         User user = userRepository.findById(createdBy)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("User not found: " + createdBy));
+                        new ResourceNotFoundException(
+                                "User not found: " + createdBy));
 
         UUID ticketId = UUID.randomUUID();
 
@@ -58,7 +60,8 @@ public class TicketService {
     public Ticket getTicket(UUID ticketId) {
         return ticketRepository.findById(ticketId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Ticket not found: " + ticketId));
+                        new ResourceNotFoundException(
+                                "Ticket not found: " + ticketId));
     }
 
     @Transactional(readOnly = true)

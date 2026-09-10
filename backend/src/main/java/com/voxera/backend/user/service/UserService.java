@@ -1,5 +1,6 @@
 package com.voxera.backend.user.service;
 
+import com.voxera.backend.exception.ResourceNotFoundException;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -20,14 +21,15 @@ public class UserService {
     public User getUser(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("User not found: " + userId));
+                        new ResourceNotFoundException(
+                                "User not found: " + userId));
     }
 
     @Transactional(readOnly = true)
     public User getUserByEmployeeId(String employeeId) {
         return userRepository.findByEmployeeId(employeeId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "User not found: " + employeeId));
     }
 }
