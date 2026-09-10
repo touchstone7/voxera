@@ -1,9 +1,12 @@
 package com.voxera.backend.ticket.entity;
 
+import com.voxera.backend.team.entity.Team;
 import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.enums.TicketStatus;
+import com.voxera.backend.user.entity.User;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -38,15 +41,15 @@ public class Ticket {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "created_by", nullable = false)
-    private com.voxera.backend.user.entity.User createdBy;
+    private User createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_to")
-    private com.voxera.backend.user.entity.User assignedTo;
+    private User assignedTo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_team")
-    private com.voxera.backend.team.entity.Team assignedTeam;
+    private Team assignedTeam;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -65,6 +68,90 @@ public class Ticket {
     private Long version;
 
     protected Ticket() {
+    }
+
+    public Ticket(
+            UUID ticketId,
+            String ticketNumber,
+            String title,
+            String description,
+            TicketPriority priority,
+            TicketCategory category,
+            User createdBy,
+            LocalDateTime createdAt) {
+
+        this.ticketId = ticketId;
+        this.ticketNumber = ticketNumber;
+        this.title = title;
+        this.description = description;
+        this.status = TicketStatus.OPEN;
+        this.priority = priority;
+        this.category = category;
+        this.createdBy = createdBy;
+        this.createdAt = createdAt;
+        this.updatedAt = createdAt;
+        this.version = 0L;
+    }
+
+    public void startProgress() {
+        requireStatus(TicketStatus.OPEN);
+        this.status = TicketStatus.IN_PROGRESS;
+        touch();
+    }
+
+    public void markPending() {
+        requireStatus(TicketStatus.IN_PROGRESS);
+        this.status = TicketStatus.PENDING;
+        touch();
+    }
+
+    public void resolve() {
+        if (status != TicketStatus.IN_PROGRESS && status != TicketStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Ticket can only be resolved from IN_PROGRESS or PENDING");
+        }
+
+        this.status = TicketStatus.RESOLVED;
+        this.resolvedAt = LocalDateTime.now();
+        touch();
+    }
+
+    public void close() {
+        requireStatus(TicketStatus.RESOLVED);
+        this.status = TicketStatus.CLOSED;
+        this.closedAt = LocalDateTime.now();
+        touch();
+    }
+
+    public void cancel() {
+        if (status == TicketStatus.CLOSED || status == TicketStatus.CANCELLED) {
+            throw new IllegalStateException(
+                    "Closed or cancelled tickets cannot be cancelled");
+        }
+
+        this.status = TicketStatus.CANCELLED;
+        touch();
+    }
+
+    public void assignTo(User user) {
+        this.assignedTo = user;
+        touch();
+    }
+
+    public void assignToTeam(Team team) {
+        this.assignedTeam = team;
+        touch();
+    }
+
+    private void requireStatus(TicketStatus expected) {
+        if (status != expected) {
+            throw new IllegalStateException(
+                    "Expected ticket status " + expected + " but was " + status);
+        }
+    }
+
+    private void touch() {
+        this.updatedAt = LocalDateTime.now();
     }
 
     public UUID getTicketId() {
@@ -95,15 +182,15 @@ public class Ticket {
         return category;
     }
 
-    public com.voxera.backend.user.entity.User getCreatedBy() {
+    public User getCreatedBy() {
         return createdBy;
     }
 
-    public com.voxera.backend.user.entity.User getAssignedTo() {
+    public User getAssignedTo() {
         return assignedTo;
     }
 
-    public com.voxera.backend.team.entity.Team getAssignedTeam() {
+    public Team getAssignedTeam() {
         return assignedTeam;
     }
 
