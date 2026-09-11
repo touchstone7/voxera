@@ -90,7 +90,6 @@ public class Ticket {
         this.createdBy = createdBy;
         this.createdAt = createdAt;
         this.updatedAt = createdAt;
-        this.version = 0L;
     }
 
     public void startProgress() {
