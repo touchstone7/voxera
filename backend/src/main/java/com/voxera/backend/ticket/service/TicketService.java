@@ -104,6 +104,20 @@ public class TicketService {
         return ticket;
     }
 
+    @Transactional
+    public Ticket assignTicket(UUID ticketId, UUID userId) {
+        Ticket ticket = getTicket(ticketId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found: " + userId));
+
+        ticket.assignTo(user);
+
+        return ticketRepository.save(ticket);
+    }
+
     private String generateTicketNumber() {
         return "INC-" +
                 LocalDateTime.now().getYear() +

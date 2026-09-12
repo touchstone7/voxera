@@ -260,4 +260,86 @@ class TicketServiceTest {
 
         verify(ticketRepository).findById(ticketId);
     }
+
+    @Test
+        void assignTicketShouldAssignExistingUser() {
+        UUID assigneeId = UUID.randomUUID();
+
+        LocalDateTime now = LocalDateTime.now();
+
+        User assignee = new User(
+                assigneeId,
+                "EMP002",
+                "Assignee User",
+                "assignee@voxera.local",
+                "IT",
+                "EMPLOYEE",
+                "ACTIVE",
+                now,
+                now
+        );
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(userRepository.findById(assigneeId))
+                .thenReturn(Optional.of(assignee));
+
+        when(ticketRepository.save(ticket))
+                .thenReturn(ticket);
+
+        Ticket result = ticketService.assignTicket(
+                ticketId,
+                assigneeId
+        );
+
+        assertSame(assignee, result.getAssignedTo());
+
+        verify(ticketRepository).findById(ticketId);
+        verify(userRepository).findById(assigneeId);
+        verify(ticketRepository).save(ticket);
+        }
+
+        @Test
+        void assignTicketShouldFailWhenAssigneeDoesNotExist() {
+        UUID assigneeId = UUID.randomUUID();
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(userRepository.findById(assigneeId))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> ticketService.assignTicket(
+                        ticketId,
+                        assigneeId
+                )
+        );
+
+        verify(ticketRepository).findById(ticketId);
+        verify(userRepository).findById(assigneeId);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+        }
+
+        @Test
+        void assignTicketShouldFailWhenTicketDoesNotExist() {
+        UUID assigneeId = UUID.randomUUID();
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> ticketService.assignTicket(
+                        ticketId,
+                        assigneeId
+                )
+        );
+
+        verify(ticketRepository).findById(ticketId);
+        verify(userRepository, never()).findById(any(UUID.class));
+        verify(ticketRepository, never()).save(any(Ticket.class));
+        }
 }
