@@ -139,7 +139,7 @@ class TicketTest {
                 IllegalStateException.class,
                 ticket::close
         );
-
+        System.out.println("");
         assertEquals(TicketStatus.OPEN, ticket.getStatus());
     }
 }
