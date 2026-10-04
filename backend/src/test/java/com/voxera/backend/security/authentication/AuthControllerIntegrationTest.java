@@ -1,6 +1,5 @@
 package com.voxera.backend.security.authentication;
 
-import com.voxera.backend.security.authentication.dto.LoginResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
