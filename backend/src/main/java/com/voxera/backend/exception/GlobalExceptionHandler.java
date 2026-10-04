@@ -1,6 +1,7 @@
 package com.voxera.backend.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -31,6 +32,19 @@ public class GlobalExceptionHandler {
                 "timestamp", LocalDateTime.now(),
                 "status", 409,
                 "error", "Conflict",
+                "message", exception.getMessage()
+        );
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Map<String, Object> handleBadCredentials(
+            BadCredentialsException exception) {
+
+        return Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", 401,
+                "error", "Unauthorized",
                 "message", exception.getMessage()
         );
     }
