@@ -1,5 +1,6 @@
 package com.voxera.backend.ticket.controller;
 
+import com.jayway.jsonpath.JsonPath;
 import com.voxera.backend.ticket.entity.Ticket;
 import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
@@ -14,6 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -45,9 +48,22 @@ class TicketControllerIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    private String accessToken;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         ticketRepository.deleteAll();
+        accessToken = loginAndGetAccessToken();
+    }
+
+    @Test
+    void ticketEndpoint_shouldRejectUnauthenticatedRequest()
+            throws Exception {
+
+        mockMvc.perform(
+                        get("/api/v1/tickets/{ticketId}",
+                                UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -63,9 +79,10 @@ class TicketControllerIntegrationTest {
         );
 
         mockMvc.perform(
-                        post("/api/v1/tickets")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestBody))
+                        authenticated(
+                                post("/api/v1/tickets")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(requestBody)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.ticketId", notNullValue()))
                 .andExpect(jsonPath("$.ticketNumber",
@@ -114,8 +131,9 @@ class TicketControllerIntegrationTest {
                 .orElseThrow();
 
         mockMvc.perform(
-                        get("/api/v1/tickets/{ticketId}",
-                                ticket.getTicketId()))
+                        authenticated(
+                                get("/api/v1/tickets/{ticketId}",
+                                        ticket.getTicketId())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.ticketId")
                         .value(ticket.getTicketId().toString()))
@@ -132,8 +150,9 @@ class TicketControllerIntegrationTest {
         UUID unknownTicketId = UUID.randomUUID();
 
         mockMvc.perform(
-                        get("/api/v1/tickets/{ticketId}",
-                                unknownTicketId))
+                        authenticated(
+                                get("/api/v1/tickets/{ticketId}",
+                                        unknownTicketId)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error")
@@ -159,10 +178,11 @@ class TicketControllerIntegrationTest {
         );
 
         mockMvc.perform(
-                        get("/api/v1/tickets")
-                                .param(
-                                        "createdBy",
-                                        SEEDED_USER_ID.toString()))
+                        authenticated(
+                                get("/api/v1/tickets")
+                                        .param(
+                                                "createdBy",
+                                                SEEDED_USER_ID.toString())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].title")
@@ -194,10 +214,11 @@ class TicketControllerIntegrationTest {
                 """.formatted(agentId);
 
         mockMvc.perform(
-                        post("/api/v1/tickets/{ticketId}/assign",
-                                ticket.getTicketId())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestBody))
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/assign",
+                                        ticket.getTicketId())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(requestBody)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.ticketId")
                         .value(ticket.getTicketId().toString()))
@@ -238,10 +259,11 @@ class TicketControllerIntegrationTest {
                 """.formatted(unknownUserId);
 
         mockMvc.perform(
-                        post("/api/v1/tickets/{ticketId}/assign",
-                                ticket.getTicketId())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestBody))
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/assign",
+                                        ticket.getTicketId())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(requestBody)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error")
@@ -267,30 +289,34 @@ class TicketControllerIntegrationTest {
         UUID ticketId = ticket.getTicketId();
 
         mockMvc.perform(
-                        post("/api/v1/tickets/{ticketId}/start",
-                                ticketId))
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/start",
+                                        ticketId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status")
                         .value(TicketStatus.IN_PROGRESS.name()));
 
         mockMvc.perform(
-                        post("/api/v1/tickets/{ticketId}/pending",
-                                ticketId))
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/pending",
+                                        ticketId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status")
                         .value(TicketStatus.PENDING.name()));
 
         mockMvc.perform(
-                        post("/api/v1/tickets/{ticketId}/resolve",
-                                ticketId))
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/resolve",
+                                        ticketId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status")
                         .value(TicketStatus.RESOLVED.name()))
                 .andExpect(jsonPath("$.resolvedAt", notNullValue()));
 
         mockMvc.perform(
-                        post("/api/v1/tickets/{ticketId}/close",
-                                ticketId))
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/close",
+                                        ticketId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status")
                         .value(TicketStatus.CLOSED.name()))
@@ -323,9 +349,10 @@ class TicketControllerIntegrationTest {
                 """;
 
         mockMvc.perform(
-                        post("/api/v1/tickets")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestBody))
+                        authenticated(
+                                post("/api/v1/tickets")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(requestBody)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -350,11 +377,42 @@ class TicketControllerIntegrationTest {
                 """;
 
         mockMvc.perform(
-                        post("/api/v1/tickets/{ticketId}/assign",
-                                ticket.getTicketId())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestBody))
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/assign",
+                                        ticket.getTicketId())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(requestBody)))
                 .andExpect(status().isBadRequest());
+    }
+
+    private String loginAndGetAccessToken() throws Exception {
+
+        MvcResult result = mockMvc.perform(
+                        post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "email": "emp001@voxera.local",
+                                            "password": "VoxeraDev123!"
+                                        }
+                                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andReturn();
+
+        return JsonPath.read(
+                result.getResponse().getContentAsString(),
+                "$.accessToken"
+        );
+    }
+
+    private MockHttpServletRequestBuilder authenticated(
+            MockHttpServletRequestBuilder request) {
+
+        return request.header(
+                "Authorization",
+                "Bearer " + accessToken
+        );
     }
 
     private void createTicket(
@@ -370,9 +428,10 @@ class TicketControllerIntegrationTest {
         );
 
         mockMvc.perform(
-                        post("/api/v1/tickets")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestBody))
+                        authenticated(
+                                post("/api/v1/tickets")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(requestBody)))
                 .andExpect(status().isCreated());
     }
 
