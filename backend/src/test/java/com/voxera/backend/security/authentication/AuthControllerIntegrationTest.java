@@ -33,7 +33,8 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.employeeId").value("EMP001"))
                 .andExpect(jsonPath("$.email")
                         .value("emp001@voxera.local"))
-                .andExpect(jsonPath("$.role").value("EMPLOYEE"));
+                .andExpect(jsonPath("$.role").value("EMPLOYEE"))
+                .andExpect(jsonPath("$.accessToken").isNotEmpty());
     }
 
     @Test

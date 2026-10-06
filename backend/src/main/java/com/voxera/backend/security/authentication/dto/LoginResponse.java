@@ -7,6 +7,6 @@ public record LoginResponse(
         String employeeId,
         String name,
         String email,
-        String role
-) {
+        String role,
+        String accessToken) {
 }
