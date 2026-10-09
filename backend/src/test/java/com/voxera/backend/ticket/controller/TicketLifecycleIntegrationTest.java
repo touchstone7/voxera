@@ -21,8 +21,7 @@ class TicketLifecycleIntegrationTest
             throws Exception {
 
         createTicket(
-                "Production server issue",
-                SEEDED_USER_ID
+                "Production server issue"
         );
 
         Ticket ticket = ticketRepository.findAll()

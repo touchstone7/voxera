@@ -1,6 +1,7 @@
 package com.voxera.backend.ticket.service;
 
 import com.voxera.backend.exception.ResourceNotFoundException;
+import com.voxera.backend.security.CurrentUserService;
 import com.voxera.backend.ticket.entity.Ticket;
 import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
@@ -19,12 +20,15 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
 
     public TicketService(
             TicketRepository ticketRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            CurrentUserService currentUserService) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
+        this.currentUserService = currentUserService;
     }
 
     @Transactional
@@ -32,13 +36,9 @@ public class TicketService {
             String title,
             String description,
             TicketPriority priority,
-            TicketCategory category,
-            UUID createdBy) {
+            TicketCategory category) {
 
-        User user = userRepository.findById(createdBy)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found: " + createdBy));
+        User currentUser = currentUserService.getCurrentUser();
 
         UUID ticketId = UUID.randomUUID();
 
@@ -49,7 +49,7 @@ public class TicketService {
                 description,
                 priority,
                 category,
-                user,
+                currentUser,
                 LocalDateTime.now()
         );
 

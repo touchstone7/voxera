@@ -32,8 +32,7 @@ public class TicketController {
                 request.title(),
                 request.description(),
                 request.priority(),
-                request.category(),
-                request.createdBy()
+                request.category()
         );
 
         return TicketResponse.from(ticket);

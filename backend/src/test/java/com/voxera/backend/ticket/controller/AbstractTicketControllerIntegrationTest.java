@@ -53,16 +53,13 @@ abstract class AbstractTicketControllerIntegrationTest {
         );
     }
 
-    protected void createTicket(
-            String title,
-            UUID createdBy) throws Exception {
+    protected void createTicket(String title) throws Exception{
 
         String requestBody = createTicketRequest(
                 title,
                 "Integration test description",
                 "HIGH",
-                "NETWORK",
-                createdBy
+                "NETWORK"
         );
 
         mockMvc.perform(
@@ -77,23 +74,20 @@ abstract class AbstractTicketControllerIntegrationTest {
             String title,
             String description,
             String priority,
-            String category,
-            UUID createdBy) {
+            String category) {
 
         return """
                 {
                     "title": "%s",
                     "description": "%s",
                     "priority": "%s",
-                    "category": "%s",
-                    "createdBy": "%s"
+                    "category": "%s"
                 }
                 """.formatted(
                 title,
                 description,
                 priority,
-                category,
-                createdBy
+                category
         );
     }
 

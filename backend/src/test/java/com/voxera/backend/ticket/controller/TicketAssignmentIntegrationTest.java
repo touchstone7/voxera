@@ -22,10 +22,7 @@ class TicketAssignmentIntegrationTest
 
         UUID agentId = createTestUser();
 
-        createTicket(
-                "Laptop issue",
-                SEEDED_USER_ID
-        );
+        createTicket("Laptop issue");
 
         Ticket ticket = ticketRepository.findAll()
                 .stream()
@@ -65,10 +62,7 @@ class TicketAssignmentIntegrationTest
     void assignTicket_shouldReturn404ForUnknownUser()
             throws Exception {
 
-        createTicket(
-                "Laptop issue",
-                SEEDED_USER_ID
-        );
+        createTicket("Laptop issue");
 
         Ticket ticket = ticketRepository.findAll()
                 .stream()
@@ -101,10 +95,7 @@ class TicketAssignmentIntegrationTest
     void assignTicket_shouldRejectMissingAssignedUser()
             throws Exception {
 
-        createTicket(
-                "Laptop issue",
-                SEEDED_USER_ID
-        );
+        createTicket("Laptop issue");
 
         Ticket ticket = ticketRepository.findAll()
                 .stream()

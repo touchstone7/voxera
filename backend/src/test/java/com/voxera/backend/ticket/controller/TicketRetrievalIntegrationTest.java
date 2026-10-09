@@ -18,10 +18,7 @@ class TicketRetrievalIntegrationTest
     @Test
     void getTicket_shouldReturnExistingTicket() throws Exception {
 
-        createTicket(
-                "VPN connection issue",
-                SEEDED_USER_ID
-        );
+        createTicket("VPN connection issue");
 
         Ticket ticket = ticketRepository.findAll()
                 .stream()
@@ -65,15 +62,10 @@ class TicketRetrievalIntegrationTest
 
         UUID secondUserId = createTestUser();
 
-        createTicket(
-                "First user's ticket",
-                SEEDED_USER_ID
-        );
+        createTicket("First user's ticket");
 
         createTicket(
-                "Second user's ticket",
-                secondUserId
-        );
+                "Second user's ticket");
 
         mockMvc.perform(
                         authenticated(

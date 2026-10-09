@@ -25,8 +25,7 @@ class TicketCreationIntegrationTest
                 "Laptop not connecting to Wi-Fi",
                 "Wi-Fi disconnects every few minutes",
                 "HIGH",
-                "NETWORK",
-                SEEDED_USER_ID
+                "NETWORK"
         );
 
         mockMvc.perform(

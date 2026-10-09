@@ -1,13 +1,19 @@
 package com.voxera.backend.ticket.service;
 
-import com.voxera.backend.exception.ResourceNotFoundException;
-import com.voxera.backend.ticket.entity.Ticket;
-import com.voxera.backend.ticket.enums.TicketCategory;
-import com.voxera.backend.ticket.enums.TicketPriority;
-import com.voxera.backend.ticket.enums.TicketStatus;
-import com.voxera.backend.ticket.repository.TicketRepository;
-import com.voxera.backend.user.entity.User;
-import com.voxera.backend.user.repository.UserRepository;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,13 +21,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.voxera.backend.exception.ResourceNotFoundException;
+import com.voxera.backend.security.CurrentUserService;
+import com.voxera.backend.ticket.entity.Ticket;
+import com.voxera.backend.ticket.enums.TicketCategory;
+import com.voxera.backend.ticket.enums.TicketPriority;
+import com.voxera.backend.ticket.enums.TicketStatus;
+import com.voxera.backend.ticket.repository.TicketRepository;
+import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class TicketServiceTest {
@@ -31,6 +39,9 @@ class TicketServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private CurrentUserService currentUserService;
 
     private TicketService ticketService;
 
@@ -42,8 +53,9 @@ class TicketServiceTest {
     @BeforeEach
     void setUp() {
         ticketService = new TicketService(
-                ticketRepository,
-                userRepository
+        ticketRepository,
+        userRepository,
+        currentUserService
         );
 
         userId = UUID.randomUUID();
@@ -77,8 +89,8 @@ class TicketServiceTest {
 
     @Test
     void createTicketShouldSaveTicketForExistingUser() {
-        when(userRepository.findById(userId))
-                .thenReturn(Optional.of(user));
+        when(currentUserService.getCurrentUser())
+                .thenReturn(user);
 
         when(ticketRepository.save(any(Ticket.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -87,8 +99,7 @@ class TicketServiceTest {
                 "Laptop not connecting",
                 "Laptop cannot connect to Wi-Fi",
                 TicketPriority.HIGH,
-                TicketCategory.NETWORK,
-                userId
+                TicketCategory.NETWORK
         );
 
         assertNotNull(result);
@@ -102,34 +113,16 @@ class TicketServiceTest {
         assertEquals(TicketCategory.NETWORK, result.getCategory());
         assertEquals(user, result.getCreatedBy());
 
-        verify(userRepository).findById(userId);
+        verify(currentUserService).getCurrentUser();
         verify(ticketRepository).save(any(Ticket.class));
-    }
 
-    @Test
-    void createTicketShouldFailWhenUserDoesNotExist() {
-        when(userRepository.findById(userId))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketService.createTicket(
-                        "Laptop not connecting",
-                        "Laptop cannot connect to Wi-Fi",
-                        TicketPriority.HIGH,
-                        TicketCategory.NETWORK,
-                        userId
-                )
-        );
-
-        verify(userRepository).findById(userId);
-        verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
     @Test
     void createTicketShouldGenerateTicketNumber() {
-        when(userRepository.findById(userId))
-                .thenReturn(Optional.of(user));
+
+        when(currentUserService.getCurrentUser())
+                .thenReturn(user);
 
         ArgumentCaptor<Ticket> ticketCaptor =
                 ArgumentCaptor.forClass(Ticket.class);
@@ -141,8 +134,7 @@ class TicketServiceTest {
                 "Laptop not connecting",
                 "Laptop cannot connect to Wi-Fi",
                 TicketPriority.HIGH,
-                TicketCategory.NETWORK,
-                userId
+                TicketCategory.NETWORK
         );
 
         verify(ticketRepository).save(ticketCaptor.capture());
