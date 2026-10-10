@@ -20,7 +20,7 @@ class TicketAssignmentIntegrationTest
     void assignTicket_shouldAssignUserAndPersistAssignment()
             throws Exception {
 
-        UUID agentId = createTestUser();
+        UUID agentId = createTestUser().getUserId();
 
         createTicket("Laptop issue");
 

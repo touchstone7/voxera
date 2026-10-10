@@ -2,6 +2,8 @@ package com.voxera.backend.ticket.controller;
 
 import com.voxera.backend.ticket.entity.Ticket;
 import com.voxera.backend.ticket.enums.TicketStatus;
+import com.voxera.backend.user.entity.User;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -60,12 +62,25 @@ class TicketRetrievalIntegrationTest
     void getTicketsForUser_shouldReturnTicketsForRequestedUser()
             throws Exception {
 
-        UUID secondUserId = createTestUser();
+    // User A: seeded user
+    createTicket("First user's ticket");
 
-        createTicket("First user's ticket");
+    // User B: new test user
+    User secondUser = createTestUser();
 
-        createTicket(
-                "Second user's ticket");
+    createTestUserCredentials(
+            secondUser.getUserId(),
+            "TestPassword123!"
+    );
+
+    // Obtain tokenB using second user's email
+    String tokenB = loginAndGetAccessToken(
+            secondUser.getEmail(),
+            "TestPassword123!"
+    );
+
+    // Create ticket as user B
+    createTicket("Second user's ticket", tokenB);
 
         mockMvc.perform(
                         authenticated(

@@ -1,24 +1,28 @@
 package com.voxera.backend.ticket.controller;
 
-import com.jayway.jsonpath.JsonPath;
-import com.voxera.backend.ticket.repository.TicketRepository;
-import com.voxera.backend.user.entity.User;
-import com.voxera.backend.user.repository.UserRepository;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.jayway.jsonpath.JsonPath;
+import com.voxera.backend.security.authentication.PasswordService;
+import com.voxera.backend.ticket.repository.TicketRepository;
+import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.entity.UserCredential;
+import com.voxera.backend.user.repository.UserCredentialRepository;
+import com.voxera.backend.user.repository.UserRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -36,12 +40,31 @@ abstract class AbstractTicketControllerIntegrationTest {
     @Autowired
     protected UserRepository userRepository;
 
+    @Autowired
+    protected UserCredentialRepository userCredentialRepository;
+
+    @Autowired
+    protected PasswordService passwordService;
+
     protected String accessToken;
 
     @BeforeEach
     void setUp() throws Exception {
         ticketRepository.deleteAll();
-        accessToken = loginAndGetAccessToken();
+        accessToken = loginAndGetAccessToken(
+            "emp001@voxera.local",
+            "VoxeraDev123!");
+    }
+
+    //overloaded function to support other users than the seeded user
+    protected MockHttpServletRequestBuilder authenticated(
+        MockHttpServletRequestBuilder request,
+        String token) {
+
+    return request.header(
+            "Authorization",
+            "Bearer " + token
+        );
     }
 
     protected MockHttpServletRequestBuilder authenticated(
@@ -51,6 +74,27 @@ abstract class AbstractTicketControllerIntegrationTest {
                 "Authorization",
                 "Bearer " + accessToken
         );
+    }
+
+    protected void createTicket(
+            String title,
+            String token
+    ) throws Exception {
+
+        String requestBody = createTicketRequest(
+                title,
+                "Integration test description",
+                "HIGH",
+                "NETWORK"
+        );
+
+        mockMvc.perform(
+                        authenticated(
+                                post("/api/v1/tickets")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(requestBody),
+                                token))
+                .andExpect(status().isCreated());
     }
 
     protected void createTicket(String title) throws Exception{
@@ -91,7 +135,7 @@ abstract class AbstractTicketControllerIntegrationTest {
         );
     }
 
-    protected UUID createTestUser() {
+    protected User createTestUser() {
 
         UUID userId = UUID.randomUUID();
         String employeeId = "TEST-" + userId;
@@ -112,20 +156,39 @@ abstract class AbstractTicketControllerIntegrationTest {
 
         userRepository.save(user);
 
-        return userId;
+        return user;
     }
 
-    private String loginAndGetAccessToken() throws Exception {
+    protected void createTestUserCredentials(
+            UUID userId,
+            String rawPassword
+    ) {
+        String passwordHash = passwordService.hash(rawPassword);
+        LocalDateTime now = LocalDateTime.now();
+        UserCredential credential = new UserCredential(
+                userId,
+                passwordHash,
+                now,
+                now
+        );
+
+        userCredentialRepository.save(credential);
+    }
+
+    protected String loginAndGetAccessToken(
+        String email,String password ) throws Exception {
+
+        String requestBody = """
+                {
+                    "email": "%s",
+                    "password": "%s"
+                }
+                """.formatted(email, password);
 
         MvcResult result = mockMvc.perform(
                         post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "email": "emp001@voxera.local",
-                                            "password": "VoxeraDev123!"
-                                        }
-                                        """))
+                                .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andReturn();
