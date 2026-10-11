@@ -1,11 +1,13 @@
 package com.voxera.backend.security.authentication;
 
-import com.voxera.backend.user.entity.User;
-import com.voxera.backend.user.entity.UserCredential;
-import com.voxera.backend.user.repository.UserCredentialRepository;
-import com.voxera.backend.user.repository.UserRepository;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+
+import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.entity.UserCredential;
+import com.voxera.backend.user.enums.UserStatus;
+import com.voxera.backend.user.repository.UserCredentialRepository;
+import com.voxera.backend.user.repository.UserRepository;
 
 @Service
 public class AuthenticationService {
@@ -28,7 +30,7 @@ public class AuthenticationService {
                 .orElseThrow(() ->
                         new BadCredentialsException("Invalid credentials"));
 
-        if (!"ACTIVE".equals(user.getStatus())) {
+        if (user.getStatus() != UserStatus.ACTIVE) {
             throw new BadCredentialsException("Invalid credentials");
         }
 

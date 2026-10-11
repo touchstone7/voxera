@@ -21,6 +21,8 @@ import com.voxera.backend.security.authentication.PasswordService;
 import com.voxera.backend.ticket.repository.TicketRepository;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.entity.UserCredential;
+import com.voxera.backend.user.enums.UserRole;
+import com.voxera.backend.user.enums.UserStatus;
 import com.voxera.backend.user.repository.UserCredentialRepository;
 import com.voxera.backend.user.repository.UserRepository;
 
@@ -135,28 +137,28 @@ abstract class AbstractTicketControllerIntegrationTest {
         );
     }
 
-    protected User createTestUser() {
-
+    protected User createTestUser(UserRole role) {
         UUID userId = UUID.randomUUID();
         String employeeId = "TEST-" + userId;
-
         LocalDateTime now = LocalDateTime.now();
 
         User user = new User(
                 userId,
                 employeeId,
-                "Test Agent",
+                "Test User",
                 employeeId.toLowerCase() + "@voxera.local",
                 "IT",
-                "AGENT",
-                "ACTIVE",
+                role,
+                UserStatus.ACTIVE,
                 now,
                 now
         );
 
-        userRepository.save(user);
+        return userRepository.save(user);
+    }
 
-        return user;
+    protected User createTestUser() {
+        return createTestUser(UserRole.AGENT);
     }
 
     protected void createTestUserCredentials(

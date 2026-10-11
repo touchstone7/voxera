@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.voxera.backend.user.enums.UserRole;
+import com.voxera.backend.user.enums.UserStatus;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -24,11 +27,13 @@ public class User {
     @Column(length = 100)
     private String department;
 
-    @Column(nullable = false, length = 50)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private UserRole role;
 
-    @Column(nullable = false, length = 30)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private UserStatus status;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -45,8 +50,8 @@ public class User {
             String name,
             String email,
             String department,
-            String role,
-            String status,
+            UserRole role,
+            UserStatus status,
             LocalDateTime createdAt,
             LocalDateTime updatedAt) {
         this.userId = userId;
@@ -80,11 +85,11 @@ public class User {
         return department;
     }
 
-    public String getRole() {
+    public UserRole getRole() {
         return role;
     }
 
-    public String getStatus() {
+    public UserStatus getStatus() {
         return status;
     }
 

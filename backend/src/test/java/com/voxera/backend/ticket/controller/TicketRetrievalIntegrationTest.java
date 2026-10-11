@@ -3,6 +3,7 @@ package com.voxera.backend.ticket.controller;
 import com.voxera.backend.ticket.entity.Ticket;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.enums.UserRole;
 
 import org.junit.jupiter.api.Test;
 
@@ -66,7 +67,7 @@ class TicketRetrievalIntegrationTest
     createTicket("First user's ticket");
 
     // User B: new test user
-    User secondUser = createTestUser();
+    User secondUser = createTestUser(UserRole.EMPLOYEE);
 
     createTestUserCredentials(
             secondUser.getUserId(),

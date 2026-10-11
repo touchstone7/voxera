@@ -1,16 +1,19 @@
 package com.voxera.backend.security.jwt;
 
+import java.util.Date;
+import java.util.UUID;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import com.voxera.backend.user.entity.User;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.UUID;
 
 @Service
 public class JwtService {
@@ -40,7 +43,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(user.getUserId().toString())
                 .claim("employeeId", user.getEmployeeId())
-                .claim("role", user.getRole())
+                .claim("role", user.getRole().name())
                 .issuedAt(issuedAt)
                 .expiration(expiresAt)
                 .signWith(signingKey)

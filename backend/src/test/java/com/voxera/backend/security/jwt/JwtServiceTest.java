@@ -1,18 +1,27 @@
 package com.voxera.backend.security.jwt;
 
-import com.voxera.backend.user.entity.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import javax.crypto.SecretKey;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.enums.UserRole;
+import com.voxera.backend.user.enums.UserStatus;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 class JwtServiceTest {
 
@@ -34,8 +43,8 @@ class JwtServiceTest {
                 "Test User",
                 "test@example.com",
                 "IT",
-                "EMPLOYEE",
-                "ACTIVE",
+                UserRole.EMPLOYEE,
+                UserStatus.ACTIVE,
                 now,
                 now
         );
@@ -49,7 +58,7 @@ class JwtServiceTest {
 
         assertEquals(user.getUserId().toString(), claims.getSubject());
         assertEquals(user.getEmployeeId(), claims.get("employeeId"));
-        assertEquals(user.getRole(), claims.get("role"));
+        assertEquals(user.getRole().name(), claims.get("role"));
         assertNotNull(claims.getIssuedAt());
         assertNotNull(claims.getExpiration());
     }
@@ -73,8 +82,8 @@ class JwtServiceTest {
                 "Another Test User",
                 "another@example.com",
                 "IT",
-                "EMPLOYEE",
-                "ACTIVE",
+                UserRole.EMPLOYEE,
+                UserStatus.ACTIVE,
                 now,
                 now
         );

@@ -1,6 +1,7 @@
 package com.voxera.backend.security.jwt;
 
 import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.enums.UserStatus;
 import com.voxera.backend.user.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -57,12 +58,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .orElse(null);
 
             if (user != null
-                    && "ACTIVE".equals(user.getStatus())
+                    && user.getStatus() == UserStatus.ACTIVE
                     && jwtService.isTokenValid(token, user)) {
 
-                var authority =
-                        new SimpleGrantedAuthority(
-                                "ROLE_" + user.getRole());
+                var authority = new SimpleGrantedAuthority(user.getRole().getAuthority());
 
                 var authentication =
                         new UsernamePasswordAuthenticationToken(

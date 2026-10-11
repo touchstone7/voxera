@@ -1,6 +1,8 @@
 package com.voxera.backend.security;
 
 import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.enums.UserRole;
+import com.voxera.backend.user.enums.UserStatus;
 import com.voxera.backend.user.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -41,8 +43,8 @@ class CurrentUserServiceTest {
                 "Test User",
                 "test@example.com",
                 "IT",
-                "EMPLOYEE",
-                "ACTIVE",
+                UserRole.EMPLOYEE,
+                UserStatus.ACTIVE,
                 now,
                 now
         );

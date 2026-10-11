@@ -29,6 +29,8 @@ import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import com.voxera.backend.ticket.repository.TicketRepository;
 import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.enums.UserRole;
+import com.voxera.backend.user.enums.UserStatus;
 import com.voxera.backend.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,8 +71,8 @@ class TicketServiceTest {
                 "Test User",
                 "test@voxera.local",
                 "IT",
-                "EMPLOYEE",
-                "ACTIVE",
+                UserRole.EMPLOYEE,
+                UserStatus.ACTIVE,
                 now,
                 now
         );
@@ -265,8 +267,8 @@ class TicketServiceTest {
                 "Assignee User",
                 "assignee@voxera.local",
                 "IT",
-                "EMPLOYEE",
-                "ACTIVE",
+                UserRole.EMPLOYEE,
+                UserStatus.ACTIVE,
                 now,
                 now
         );

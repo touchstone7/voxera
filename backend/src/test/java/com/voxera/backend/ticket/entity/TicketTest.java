@@ -4,6 +4,9 @@ import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.enums.UserRole;
+import com.voxera.backend.user.enums.UserStatus;
+
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -22,8 +25,8 @@ class TicketTest {
                 "Test User",
                 "test@voxera.local",
                 "IT",
-                "EMPLOYEE",
-                "ACTIVE",
+                UserRole.EMPLOYEE,
+                UserStatus.ACTIVE,
                 now,
                 now
         );

@@ -1,6 +1,8 @@
 package com.voxera.backend.security.authentication;
 
 import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.enums.UserStatus;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,7 +26,7 @@ class AuthenticationServiceIntegrationTest {
         assertNotNull(user);
         assertEquals("emp001@voxera.local", user.getEmail());
         assertEquals("EMP001", user.getEmployeeId());
-        assertEquals("ACTIVE", user.getStatus());
+        assertEquals(UserStatus.ACTIVE, user.getStatus());
     }
 
     @Test

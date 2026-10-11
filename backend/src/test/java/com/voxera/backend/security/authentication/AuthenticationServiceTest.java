@@ -2,6 +2,8 @@ package com.voxera.backend.security.authentication;
 
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.entity.UserCredential;
+import com.voxera.backend.user.enums.UserRole;
+import com.voxera.backend.user.enums.UserStatus;
 import com.voxera.backend.user.repository.UserCredentialRepository;
 import com.voxera.backend.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -32,7 +34,7 @@ class AuthenticationServiceTest {
     private final UUID userId =
             UUID.fromString("11111111-1111-1111-1111-111111111111");
 
-    private User createUser(String status) {
+    private User createUser(UserStatus status) {
         LocalDateTime now = LocalDateTime.now();
 
         return new User(
@@ -41,7 +43,7 @@ class AuthenticationServiceTest {
                 "Ranjan Kumar",
                 "emp001@voxera.local",
                 "IT",
-                "EMPLOYEE",
+                UserRole.EMPLOYEE,
                 status,
                 now,
                 now);
@@ -59,7 +61,7 @@ class AuthenticationServiceTest {
 
     @Test
     void authenticate_shouldReturnUserForValidCredentials() {
-        User user = createUser("ACTIVE");
+        User user = createUser(UserStatus.ACTIVE);
         UserCredential credential = createCredential();
 
         when(userRepository.findByEmail("emp001@voxera.local"))
@@ -103,7 +105,7 @@ class AuthenticationServiceTest {
 
     @Test
     void authenticate_shouldRejectWrongPassword() {
-        User user = createUser("ACTIVE");
+        User user = createUser(UserStatus.ACTIVE);
         UserCredential credential = createCredential();
 
         when(userRepository.findByEmail("emp001@voxera.local"))
@@ -128,7 +130,7 @@ class AuthenticationServiceTest {
 
     @Test
     void authenticate_shouldRejectInactiveUser() {
-        User user = createUser("INACTIVE");
+        User user = createUser(UserStatus.INACTIVE);
 
         when(userRepository.findByEmail("emp001@voxera.local"))
                 .thenReturn(Optional.of(user));
@@ -151,7 +153,7 @@ class AuthenticationServiceTest {
 
     @Test
     void authenticate_shouldRejectMissingCredential() {
-        User user = createUser("ACTIVE");
+        User user = createUser(UserStatus.ACTIVE);
 
         when(userRepository.findByEmail("emp001@voxera.local"))
                 .thenReturn(Optional.of(user));
