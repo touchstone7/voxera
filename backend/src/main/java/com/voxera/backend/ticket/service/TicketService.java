@@ -21,14 +21,17 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
+    private final TicketAuthorizationService ticketAuthorizationService;
 
     public TicketService(
             TicketRepository ticketRepository,
             UserRepository userRepository,
-            CurrentUserService currentUserService) {
+            CurrentUserService currentUserService,
+            TicketAuthorizationService ticketAuthorizationService) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.currentUserService = currentUserService;
+        this.ticketAuthorizationService = ticketAuthorizationService;
     }
 
     @Transactional
@@ -58,10 +61,15 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public Ticket getTicket(UUID ticketId) {
-        return ticketRepository.findById(ticketId)
+        Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Ticket not found: " + ticketId));
+
+        User actor = currentUserService.getCurrentUser();
+        ticketAuthorizationService.requireResourceAccess(actor, ticket);
+
+        return ticket;
     }
 
     @Transactional(readOnly = true)
