@@ -74,11 +74,15 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public List<Ticket> getTicketsForUser(UUID userId) {
+        User actor = currentUserService.getCurrentUser();
+        ticketAuthorizationService.requireTicketListAccess(actor, userId);
         return ticketRepository.findByCreatedBy_UserId(userId);
     }
 
     @Transactional
     public Ticket startProgress(UUID ticketId) {
+        ticketAuthorizationService.requireAgentOrAdmin(
+                currentUserService.getCurrentUser());
         Ticket ticket = getTicket(ticketId);
         ticket.startProgress();
         return ticket;
@@ -86,6 +90,8 @@ public class TicketService {
 
     @Transactional
     public Ticket markPending(UUID ticketId) {
+        ticketAuthorizationService.requireAgentOrAdmin(
+                currentUserService.getCurrentUser());
         Ticket ticket = getTicket(ticketId);
         ticket.markPending();
         return ticket;
@@ -93,6 +99,8 @@ public class TicketService {
 
     @Transactional
     public Ticket resolveTicket(UUID ticketId) {
+        ticketAuthorizationService.requireAgentOrAdmin(
+                currentUserService.getCurrentUser());
         Ticket ticket = getTicket(ticketId);
         ticket.resolve();
         return ticket;
@@ -100,6 +108,8 @@ public class TicketService {
 
     @Transactional
     public Ticket closeTicket(UUID ticketId) {
+        ticketAuthorizationService.requireAgentOrAdmin(
+                currentUserService.getCurrentUser());
         Ticket ticket = getTicket(ticketId);
         ticket.close();
         return ticket;
@@ -114,6 +124,8 @@ public class TicketService {
 
     @Transactional
     public Ticket assignTicket(UUID ticketId, UUID userId) {
+        ticketAuthorizationService.requireAgentOrAdmin(
+                currentUserService.getCurrentUser());
         Ticket ticket = getTicket(ticketId);
 
         User user = userRepository.findById(userId)

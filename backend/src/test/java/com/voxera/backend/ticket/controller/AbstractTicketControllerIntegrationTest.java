@@ -177,6 +177,13 @@ abstract class AbstractTicketControllerIntegrationTest {
         userCredentialRepository.save(credential);
     }
 
+    protected String createAgentToken() throws Exception {
+        User agent = createTestUser(UserRole.AGENT);
+        String password = "AgentPassword123!";
+        createTestUserCredentials(agent.getUserId(), password);
+        return loginAndGetAccessToken(agent.getEmail(), password);
+    }
+
     protected String loginAndGetAccessToken(
         String email,String password ) throws Exception {
 

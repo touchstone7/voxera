@@ -30,6 +30,7 @@ class TicketLifecycleIntegrationTest
                 .orElseThrow();
 
         UUID ticketId = ticket.getTicketId();
+        accessToken = createAgentToken();
 
         mockMvc.perform(
                         authenticated(

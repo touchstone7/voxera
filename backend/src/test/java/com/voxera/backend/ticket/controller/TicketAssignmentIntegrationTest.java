@@ -20,6 +20,7 @@ class TicketAssignmentIntegrationTest
     void assignTicket_shouldAssignUserAndPersistAssignment()
             throws Exception {
 
+        accessToken = createAgentToken();
         UUID agentId = createTestUser().getUserId();
 
         createTicket("Laptop issue");
@@ -62,6 +63,7 @@ class TicketAssignmentIntegrationTest
     void assignTicket_shouldReturn404ForUnknownUser()
             throws Exception {
 
+        accessToken = createAgentToken();
         createTicket("Laptop issue");
 
         Ticket ticket = ticketRepository.findAll()
@@ -95,6 +97,7 @@ class TicketAssignmentIntegrationTest
     void assignTicket_shouldRejectMissingAssignedUser()
             throws Exception {
 
+        accessToken = createAgentToken();
         createTicket("Laptop issue");
 
         Ticket ticket = ticketRepository.findAll()
