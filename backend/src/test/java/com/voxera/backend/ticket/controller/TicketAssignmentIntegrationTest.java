@@ -119,4 +119,40 @@ class TicketAssignmentIntegrationTest
                                         .content(requestBody)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void assignTicket_shouldForbidEmployeeAndLeaveTicketUnassigned()
+            throws Exception {
+
+        createTicket("Assignment authorization test");
+
+        Ticket ticket = ticketRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow();
+
+        UUID assigneeId = createTestUser().getUserId();
+
+        String requestBody = """
+                {
+                    "assignedTo": "%s"
+                }
+                """.formatted(assigneeId);
+
+        mockMvc.perform(
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/assign",
+                                        ticket.getTicketId())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(requestBody)))
+                .andExpect(status().isForbidden());
+
+        Ticket persistedTicket = ticketRepository
+                .findById(ticket.getTicketId())
+                .orElseThrow();
+
+        org.junit.jupiter.api.Assertions.assertNull(
+                persistedTicket.getAssignedTo());
+    }
+
 }

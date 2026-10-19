@@ -141,5 +141,32 @@ class TicketLifecycleIntegrationTest
 
         assertEquals(TicketStatus.OPEN, persistedTicket.getStatus());
     }
+
+    @Test
+    void employeeCannotPerformAgentOnlyLifecycleActions() throws Exception {
+        createTicket("Employee lifecycle authorization test");
+
+        Ticket ticket = ticketRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow();
+
+        String[] actions = {"start", "pending", "resolve", "close"};
+
+        for (String action : actions) {
+            mockMvc.perform(
+                            authenticated(
+                                    post("/api/v1/tickets/{ticketId}/" + action,
+                                            ticket.getTicketId())))
+                    .andExpect(status().isForbidden());
+
+            Ticket persistedTicket = ticketRepository
+                    .findById(ticket.getTicketId())
+                    .orElseThrow();
+
+            assertEquals(TicketStatus.OPEN, persistedTicket.getStatus());
+        }
+    }
+
 }
 
