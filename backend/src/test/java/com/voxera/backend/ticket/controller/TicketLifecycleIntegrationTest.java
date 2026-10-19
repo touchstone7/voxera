@@ -2,6 +2,9 @@ package com.voxera.backend.ticket.controller;
 
 import com.voxera.backend.ticket.entity.Ticket;
 import com.voxera.backend.ticket.enums.TicketStatus;
+import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.enums.UserRole;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -79,4 +82,64 @@ class TicketLifecycleIntegrationTest
         assertNotNull(persistedTicket.getResolvedAt());
         assertNotNull(persistedTicket.getClosedAt());
     }
+        @Test
+    void employeeCanCancelOwnTicket() throws Exception {
+        createTicket("Employee-owned ticket");
+
+        Ticket ticket = ticketRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow();
+
+        mockMvc.perform(
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/cancel",
+                                        ticket.getTicketId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status")
+                        .value(TicketStatus.CANCELLED.name()));
+
+        Ticket persistedTicket = ticketRepository
+                .findById(ticket.getTicketId())
+                .orElseThrow();
+
+        assertEquals(
+                TicketStatus.CANCELLED,
+                persistedTicket.getStatus());
+    }
+
+    @Test
+    void employeeCannotCancelAnotherEmployeesTicket()
+            throws Exception {
+        createTicket("Another employee's ticket");
+
+        Ticket ticket = ticketRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow();
+
+        User anotherEmployee = createTestUser(UserRole.EMPLOYEE);
+
+        createTestUserCredentials(
+                anotherEmployee.getUserId(),
+                "TestPassword123!");
+
+        String anotherEmployeeToken = loginAndGetAccessToken(
+                anotherEmployee.getEmail(),
+                "TestPassword123!");
+
+        mockMvc.perform(
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/cancel",
+                                        ticket.getTicketId()),
+                                anotherEmployeeToken))
+                .andExpect(status().isForbidden());
+
+        Ticket persistedTicket = ticketRepository
+                .findById(ticket.getTicketId())
+                .orElseThrow();
+
+        assertEquals(TicketStatus.OPEN, persistedTicket.getStatus());
+    }
 }
+
