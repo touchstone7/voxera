@@ -1,0 +1,1037 @@
+VOXERA METADATA SNAPSHOT
+Captured at: Sun Oct 25 21:25:48 IST 2026
+Git commit: 2b77203c7cc2b4378ec49b41c494dcc9295d3b16
+
+
+
+============================================================
+FILE: docs/metadata/PROJECT_STRUCTURE.md
+============================================================
+# Project Structure and Java Inventory
+
+> Generated: 2026-10-25T15:16:43.072428+00:00
+> Git commit: `36ca442`
+> Generator: `scripts/generate_metadata.py`
+
+
+## Source and test files
+
+- `backend/src/main/java/com/voxera/backend/BackendApplication.java`
+- `backend/src/main/java/com/voxera/backend/exception/GlobalExceptionHandler.java`
+- `backend/src/main/java/com/voxera/backend/exception/ResourceNotFoundException.java`
+- `backend/src/main/java/com/voxera/backend/security/CurrentUserService.java`
+- `backend/src/main/java/com/voxera/backend/security/authentication/AuthController.java`
+- `backend/src/main/java/com/voxera/backend/security/authentication/AuthenticationService.java`
+- `backend/src/main/java/com/voxera/backend/security/authentication/BCryptPasswordService.java`
+- `backend/src/main/java/com/voxera/backend/security/authentication/PasswordService.java`
+- `backend/src/main/java/com/voxera/backend/security/authentication/dto/LoginRequest.java`
+- `backend/src/main/java/com/voxera/backend/security/authentication/dto/LoginResponse.java`
+- `backend/src/main/java/com/voxera/backend/security/config/SecurityConfig.java`
+- `backend/src/main/java/com/voxera/backend/security/jwt/JwtAuthenticationFilter.java`
+- `backend/src/main/java/com/voxera/backend/security/jwt/JwtService.java`
+- `backend/src/main/java/com/voxera/backend/team/entity/Team.java`
+- `backend/src/main/java/com/voxera/backend/team/repository/TeamRepository.java`
+- `backend/src/main/java/com/voxera/backend/team/service/TeamService.java`
+- `backend/src/main/java/com/voxera/backend/ticket/controller/TicketController.java`
+- `backend/src/main/java/com/voxera/backend/ticket/dto/AssignTicketRequest.java`
+- `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketRequest.java`
+- `backend/src/main/java/com/voxera/backend/ticket/dto/TicketResponse.java`
+- `backend/src/main/java/com/voxera/backend/ticket/entity/Ticket.java`
+- `backend/src/main/java/com/voxera/backend/ticket/entity/TicketComment.java`
+- `backend/src/main/java/com/voxera/backend/ticket/entity/TicketHistory.java`
+- `backend/src/main/java/com/voxera/backend/ticket/enums/TicketCategory.java`
+- `backend/src/main/java/com/voxera/backend/ticket/enums/TicketPriority.java`
+- `backend/src/main/java/com/voxera/backend/ticket/enums/TicketStatus.java`
+- `backend/src/main/java/com/voxera/backend/ticket/repository/TicketCommentRepository.java`
+- `backend/src/main/java/com/voxera/backend/ticket/repository/TicketHistoryRepository.java`
+- `backend/src/main/java/com/voxera/backend/ticket/repository/TicketRepository.java`
+- `backend/src/main/java/com/voxera/backend/ticket/service/TicketAuthorizationService.java`
+- `backend/src/main/java/com/voxera/backend/ticket/service/TicketService.java`
+- `backend/src/main/java/com/voxera/backend/user/entity/User.java`
+- `backend/src/main/java/com/voxera/backend/user/entity/UserCredential.java`
+- `backend/src/main/java/com/voxera/backend/user/enums/UserRole.java`
+- `backend/src/main/java/com/voxera/backend/user/enums/UserStatus.java`
+- `backend/src/main/java/com/voxera/backend/user/repository/UserCredentialRepository.java`
+- `backend/src/main/java/com/voxera/backend/user/repository/UserRepository.java`
+- `backend/src/main/java/com/voxera/backend/user/service/UserService.java`
+- `backend/src/test/java/com/voxera/backend/BackendApplicationTests.java`
+- `backend/src/test/java/com/voxera/backend/security/CurrentUserServiceTest.java`
+- `backend/src/test/java/com/voxera/backend/security/authentication/AuthControllerIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/security/authentication/AuthenticationServiceIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/security/authentication/AuthenticationServiceTest.java`
+- `backend/src/test/java/com/voxera/backend/security/authentication/BCryptPasswordServiceTest.java`
+- `backend/src/test/java/com/voxera/backend/security/jwt/JwtServiceTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/controller/AbstractTicketControllerIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAssignmentIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAuthorizationIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCreationIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/controller/TicketLifecycleIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/controller/TicketRetrievalIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/service/TicketServiceTest.java`
+
+## Java classes and method signatures
+
+
+### `BackendApplication`
+- File: `backend/src/main/java/com/voxera/backend/BackendApplication.java`
+- Package: `com.voxera.backend`
+- `void main(String[] args)`
+
+### `GlobalExceptionHandler`
+- File: `backend/src/main/java/com/voxera/backend/exception/GlobalExceptionHandler.java`
+- Package: `com.voxera.backend.exception`
+- `Map<String, Object> handleNotFound(ResourceNotFoundException exception)`
+- `Map<String, Object> handleAccessDenied(AccessDeniedException exception)`
+- `Map<String, Object> handleInvalidState(IllegalStateException exception)`
+- `Map<String, Object> handleBadCredentials(BadCredentialsException exception)`
+
+### `ResourceNotFoundException`
+- File: `backend/src/main/java/com/voxera/backend/exception/ResourceNotFoundException.java`
+- Package: `com.voxera.backend.exception`
+- `ResourceNotFoundException(String message)`
+
+### `CurrentUserService`
+- File: `backend/src/main/java/com/voxera/backend/security/CurrentUserService.java`
+- Package: `com.voxera.backend.security`
+- `CurrentUserService(UserRepository userRepository)`
+- `User getCurrentUser()`
+- ` if(authentication == null || !authentication.isAuthenticated())`
+
+### `AuthController`
+- File: `backend/src/main/java/com/voxera/backend/security/authentication/AuthController.java`
+- Package: `com.voxera.backend.security.authentication`
+- `AuthController(AuthenticationService authenticationService, JwtService jwtService)`
+- `ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request)`
+
+### `AuthenticationService`
+- File: `backend/src/main/java/com/voxera/backend/security/authentication/AuthenticationService.java`
+- Package: `com.voxera.backend.security.authentication`
+- `AuthenticationService(UserRepository userRepository, UserCredentialRepository userCredentialRepository, PasswordService passwordService)`
+- `User authenticate(String email, String rawPassword)`
+- ` if(user.getStatus() != UserStatus.ACTIVE)`
+- ` if(!passwordService.matches(rawPassword, credential.getPasswordHash()))`
+
+### `BCryptPasswordService`
+- File: `backend/src/main/java/com/voxera/backend/security/authentication/BCryptPasswordService.java`
+- Package: `com.voxera.backend.security.authentication`
+- `BCryptPasswordService()`
+- `String hash(String rawPassword)`
+- `boolean matches(String rawPassword, String passwordHash)`
+
+### `PasswordService`
+- File: `backend/src/main/java/com/voxera/backend/security/authentication/PasswordService.java`
+- Package: `com.voxera.backend.security.authentication`
+- No method signatures extracted.
+
+### `LoginRequest`
+- File: `backend/src/main/java/com/voxera/backend/security/authentication/dto/LoginRequest.java`
+- Package: `com.voxera.backend.security.authentication.dto`
+- `LoginRequest(@NotBlank @Email String email, @NotBlank String password)`
+
+### `LoginResponse`
+- File: `backend/src/main/java/com/voxera/backend/security/authentication/dto/LoginResponse.java`
+- Package: `com.voxera.backend.security.authentication.dto`
+- `LoginResponse(UUID userId, String employeeId, String name, String email, UserRole role, String accessToken)`
+
+### `SecurityConfig`
+- File: `backend/src/main/java/com/voxera/backend/security/config/SecurityConfig.java`
+- Package: `com.voxera.backend.security.config`
+- `SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter)`
+- `SecurityFilterChain securityFilterChain(HttpSecurity http)`
+
+### `JwtAuthenticationFilter`
+- File: `backend/src/main/java/com/voxera/backend/security/jwt/JwtAuthenticationFilter.java`
+- Package: `com.voxera.backend.security.jwt`
+- `JwtAuthenticationFilter(JwtService jwtService, UserRepository userRepository)`
+- `void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)`
+- ` if(authorizationHeader == null || !authorizationHeader.startsWith("Bearer "))`
+- ` if(user != null && user.getStatus() == UserStatus.ACTIVE && jwtService.isTokenValid(token, user))`
+
+### `JwtService`
+- File: `backend/src/main/java/com/voxera/backend/security/jwt/JwtService.java`
+- Package: `com.voxera.backend.security.jwt`
+- ` if(expirationMs <= 0)`
+- `String generateToken(User user)`
+- `Claims extractClaims(String token)`
+- `UUID extractUserId(String token)`
+- `boolean isTokenValid(String token, User user)`
+
+### `Team`
+- File: `backend/src/main/java/com/voxera/backend/team/entity/Team.java`
+- Package: `com.voxera.backend.team.entity`
+- `Team()`
+- `Team(UUID teamId, String name, String description, LocalDateTime createdAt, LocalDateTime updatedAt)`
+- `UUID getTeamId()`
+- `String getName()`
+- `String getDescription()`
+- `LocalDateTime getCreatedAt()`
+- `LocalDateTime getUpdatedAt()`
+
+### `TeamRepository`
+- File: `backend/src/main/java/com/voxera/backend/team/repository/TeamRepository.java`
+- Package: `com.voxera.backend.team.repository`
+- No method signatures extracted.
+
+### `TeamService`
+- File: `backend/src/main/java/com/voxera/backend/team/service/TeamService.java`
+- Package: `com.voxera.backend.team.service`
+- `TeamService(TeamRepository teamRepository)`
+- `Team getTeam(UUID teamId)`
+
+### `TicketController`
+- File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketController.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `TicketController(TicketService ticketService)`
+- `TicketResponse createTicket(@Valid @RequestBody CreateTicketRequest request)`
+- `TicketResponse getTicket(@PathVariable UUID ticketId)`
+- `List<TicketResponse> getTickets(@RequestParam UUID createdBy)`
+- `TicketResponse startProgress(@PathVariable UUID ticketId)`
+- `TicketResponse markPending(@PathVariable UUID ticketId)`
+- `TicketResponse resolveTicket(@PathVariable UUID ticketId)`
+- `TicketResponse closeTicket(@PathVariable UUID ticketId)`
+- `TicketResponse cancelTicket(@PathVariable UUID ticketId)`
+- `ResponseEntity<TicketResponse> assignTicket(@PathVariable UUID ticketId, @Valid @RequestBody AssignTicketRequest request)`
+
+### `AssignTicketRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/AssignTicketRequest.java`
+- Package: `com.voxera.backend.ticket.dto`
+- `AssignTicketRequest(@NotNull UUID assignedTo)`
+
+### `CreateTicketRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketRequest.java`
+- Package: `com.voxera.backend.ticket.dto`
+- `CreateTicketRequest(@NotBlank String title, @NotBlank String description, @NotNull TicketPriority priority, @NotNull TicketCategory category)`
+
+### `TicketResponse`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketResponse.java`
+- Package: `com.voxera.backend.ticket.dto`
+- `TicketResponse(UUID ticketId, String ticketNumber, String title, String description, TicketStatus status, TicketPriority priority, TicketCategory category, UUID createdBy, UUID assignedTo, UUID assignedTeam, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime resolvedAt, LocalDateTime closedAt)`
+- `TicketResponse from(Ticket ticket)`
+
+### `Ticket`
+- File: `backend/src/main/java/com/voxera/backend/ticket/entity/Ticket.java`
+- Package: `com.voxera.backend.ticket.entity`
+- `Ticket()`
+- `Ticket(UUID ticketId, String ticketNumber, String title, String description, TicketPriority priority, TicketCategory category, User createdBy, LocalDateTime createdAt)`
+- `void startProgress()`
+- `void markPending()`
+- `void resolve()`
+- ` if(status != TicketStatus.IN_PROGRESS && status != TicketStatus.PENDING)`
+- `void close()`
+- `void cancel()`
+- ` if(status == TicketStatus.CLOSED || status == TicketStatus.CANCELLED)`
+- `void assignTo(User user)`
+- `void assignToTeam(Team team)`
+- `void requireStatus(TicketStatus expected)`
+- ` if(status != expected)`
+- `void touch()`
+- `UUID getTicketId()`
+- `String getTicketNumber()`
+- `String getTitle()`
+- `String getDescription()`
+- `TicketStatus getStatus()`
+- `TicketPriority getPriority()`
+- `TicketCategory getCategory()`
+- `User getCreatedBy()`
+- `User getAssignedTo()`
+- `Team getAssignedTeam()`
+- `LocalDateTime getCreatedAt()`
+- `LocalDateTime getUpdatedAt()`
+- `LocalDateTime getResolvedAt()`
+- `LocalDateTime getClosedAt()`
+- `Long getVersion()`
+
+### `TicketComment`
+- File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketComment.java`
+- Package: `com.voxera.backend.ticket.entity`
+- `TicketComment()`
+- `UUID getCommentId()`
+- `Ticket getTicket()`
+- `User getAuthor()`
+- `String getContent()`
+- `LocalDateTime getCreatedAt()`
+- `LocalDateTime getUpdatedAt()`
+
+### `TicketHistory`
+- File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketHistory.java`
+- Package: `com.voxera.backend.ticket.entity`
+- `TicketHistory()`
+- `UUID getHistoryId()`
+- `Ticket getTicket()`
+- `String getActorType()`
+- `UUID getActorId()`
+- `String getAction()`
+- `String getOldValue()`
+- `String getNewValue()`
+- `LocalDateTime getCreatedAt()`
+
+### `TicketCategory`
+- File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketCategory.java`
+- Package: `com.voxera.backend.ticket.enums`
+- No method signatures extracted.
+
+### `TicketPriority`
+- File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketPriority.java`
+- Package: `com.voxera.backend.ticket.enums`
+- No method signatures extracted.
+
+### `TicketStatus`
+- File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketStatus.java`
+- Package: `com.voxera.backend.ticket.enums`
+- No method signatures extracted.
+
+### `TicketCommentRepository`
+- File: `backend/src/main/java/com/voxera/backend/ticket/repository/TicketCommentRepository.java`
+- Package: `com.voxera.backend.ticket.repository`
+- No method signatures extracted.
+
+### `TicketHistoryRepository`
+- File: `backend/src/main/java/com/voxera/backend/ticket/repository/TicketHistoryRepository.java`
+- Package: `com.voxera.backend.ticket.repository`
+- No method signatures extracted.
+
+### `TicketRepository`
+- File: `backend/src/main/java/com/voxera/backend/ticket/repository/TicketRepository.java`
+- Package: `com.voxera.backend.ticket.repository`
+- No method signatures extracted.
+
+### `TicketAuthorizationService`
+- File: `backend/src/main/java/com/voxera/backend/ticket/service/TicketAuthorizationService.java`
+- Package: `com.voxera.backend.ticket.service`
+- `void requireResourceAccess(User actor, Ticket ticket)`
+- ` if(actor.getRole() == UserRole.EMPLOYEE && !ticket.getCreatedBy().getUserId() .equals(actor.getUserId()))`
+- `void requireAgentOrAdmin(User actor)`
+- ` if(actor.getRole() != UserRole.AGENT && actor.getRole() != UserRole.ADMIN)`
+- `void requireTicketListAccess(User actor, UUID requestedUserId)`
+- ` if(actor.getRole() == UserRole.EMPLOYEE && !actor.getUserId().equals(requestedUserId))`
+
+### `TicketService`
+- File: `backend/src/main/java/com/voxera/backend/ticket/service/TicketService.java`
+- Package: `com.voxera.backend.ticket.service`
+- `TicketService(TicketRepository ticketRepository, UserRepository userRepository, CurrentUserService currentUserService, TicketAuthorizationService ticketAuthorizationService)`
+- `Ticket createTicket(String title, String description, TicketPriority priority, TicketCategory category)`
+- `Ticket getTicket(UUID ticketId)`
+- `List<Ticket> getTicketsForUser(UUID userId)`
+- `Ticket startProgress(UUID ticketId)`
+- `Ticket markPending(UUID ticketId)`
+- `Ticket resolveTicket(UUID ticketId)`
+- `Ticket closeTicket(UUID ticketId)`
+- `Ticket cancelTicket(UUID ticketId)`
+- `Ticket assignTicket(UUID ticketId, UUID userId)`
+- `String generateTicketNumber()`
+
+### `User`
+- File: `backend/src/main/java/com/voxera/backend/user/entity/User.java`
+- Package: `com.voxera.backend.user.entity`
+- `User()`
+- `User(UUID userId, String employeeId, String name, String email, String department, UserRole role, UserStatus status, LocalDateTime createdAt, LocalDateTime updatedAt)`
+- `UUID getUserId()`
+- `String getEmployeeId()`
+- `String getName()`
+- `String getEmail()`
+- `String getDepartment()`
+- `UserRole getRole()`
+- `UserStatus getStatus()`
+- `LocalDateTime getCreatedAt()`
+- `LocalDateTime getUpdatedAt()`
+
+### `UserCredential`
+- File: `backend/src/main/java/com/voxera/backend/user/entity/UserCredential.java`
+- Package: `com.voxera.backend.user.entity`
+- `UserCredential()`
+- `UserCredential(UUID userId, String passwordHash, LocalDateTime createdAt, LocalDateTime updatedAt)`
+- `UUID getUserId()`
+- `String getPasswordHash()`
+- `LocalDateTime getCreatedAt()`
+- `LocalDateTime getUpdatedAt()`
+
+### `UserRole`
+- File: `backend/src/main/java/com/voxera/backend/user/enums/UserRole.java`
+- Package: `com.voxera.backend.user.enums`
+- `String getAuthority()`
+
+### `UserStatus`
+- File: `backend/src/main/java/com/voxera/backend/user/enums/UserStatus.java`
+- Package: `com.voxera.backend.user.enums`
+- No method signatures extracted.
+
+### `UserCredentialRepository`
+- File: `backend/src/main/java/com/voxera/backend/user/repository/UserCredentialRepository.java`
+- Package: `com.voxera.backend.user.repository`
+- No method signatures extracted.
+
+### `UserRepository`
+- File: `backend/src/main/java/com/voxera/backend/user/repository/UserRepository.java`
+- Package: `com.voxera.backend.user.repository`
+- No method signatures extracted.
+
+### `UserService`
+- File: `backend/src/main/java/com/voxera/backend/user/service/UserService.java`
+- Package: `com.voxera.backend.user.service`
+- `UserService(UserRepository userRepository)`
+- `User getUser(UUID userId)`
+- `User getUserByEmployeeId(String employeeId)`
+
+### `BackendApplicationTests`
+- File: `backend/src/test/java/com/voxera/backend/BackendApplicationTests.java`
+- Package: `com.voxera.backend`
+- `void contextLoads()`
+
+### `CurrentUserServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/security/CurrentUserServiceTest.java`
+- Package: `com.voxera.backend.security`
+- `void tearDown()`
+- `void getCurrentUser_shouldReturnAuthenticatedUser()`
+- `void getCurrentUser_shouldRejectUnauthenticatedRequest()`
+- `void getCurrentUser_shouldRejectUnknownUser()`
+
+### `AuthControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/security/authentication/AuthControllerIntegrationTest.java`
+- Package: `com.voxera.backend.security.authentication`
+- `void login_shouldAuthenticateValidCredentials()`
+- `void login_shouldRejectInvalidPassword()`
+- `void login_shouldRejectUnknownEmail()`
+- `void login_shouldRejectInvalidRequest()`
+
+### `AuthenticationServiceIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/security/authentication/AuthenticationServiceIntegrationTest.java`
+- Package: `com.voxera.backend.security.authentication`
+- `void authenticate_shouldAuthenticateSeededDevelopmentUser()`
+- `void authenticate_shouldRejectInvalidPassword()`
+
+### `AuthenticationServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/security/authentication/AuthenticationServiceTest.java`
+- Package: `com.voxera.backend.security.authentication`
+- `User createUser(UserStatus status)`
+- `UserCredential createCredential()`
+- `void authenticate_shouldReturnUserForValidCredentials()`
+- `void authenticate_shouldRejectUnknownEmail()`
+- `void authenticate_shouldRejectWrongPassword()`
+- `void authenticate_shouldRejectInactiveUser()`
+- `void authenticate_shouldRejectMissingCredential()`
+
+### `BCryptPasswordServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/security/authentication/BCryptPasswordServiceTest.java`
+- Package: `com.voxera.backend.security.authentication`
+- `void hash_shouldNotReturnRawPassword()`
+- `void matches_shouldReturnTrueForCorrectPassword()`
+- `void matches_shouldReturnFalseForIncorrectPassword()`
+- `void hash_shouldProduceDifferentHashesForSamePassword()`
+
+### `JwtServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/security/jwt/JwtServiceTest.java`
+- Package: `com.voxera.backend.security.jwt`
+- `void setUp()`
+- `void generateToken_shouldContainExpectedClaims()`
+- `void isTokenValid_shouldReturnTrueForCorrectUser()`
+- `void isTokenValid_shouldReturnFalseForDifferentUser()`
+- `void extractClaims_shouldRejectMalformedToken()`
+- `void extractClaims_shouldRejectTokenSignedWithDifferentKey()`
+
+### `AbstractTicketControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/AbstractTicketControllerIntegrationTest.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `void setUp()`
+- `MockHttpServletRequestBuilder authenticated(MockHttpServletRequestBuilder request, String token)`
+- `MockHttpServletRequestBuilder authenticated(MockHttpServletRequestBuilder request)`
+- `void createTicket(String title, String token)`
+- `void createTicket(String title)`
+- `String createTicketRequest(String title, String description, String priority, String category)`
+- `User createTestUser(UserRole role)`
+- `User createTestUser()`
+- `void createTestUserCredentials(UUID userId, String rawPassword)`
+- `String createAgentToken()`
+- `String loginAndGetAccessToken(String email,String password)`
+
+### `TicketAssignmentIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAssignmentIntegrationTest.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `void assignTicket_shouldAssignUserAndPersistAssignment()`
+- `void assignTicket_shouldReturn404ForUnknownUser()`
+- `void assignTicket_shouldRejectMissingAssignedUser()`
+- `void assignTicket_shouldForbidEmployeeAndLeaveTicketUnassigned()`
+
+### `TicketAuthorizationIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAuthorizationIntegrationTest.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `void ticketEndpoint_shouldRejectUnauthenticatedRequest()`
+- `void employeeCannotReadAnotherEmployeesTicket()`
+
+### `TicketCreationIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCreationIntegrationTest.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `void createTicket_shouldReturnCreatedTicketAndPersistIt()`
+- `void createTicket_shouldRejectInvalidRequest()`
+
+### `TicketLifecycleIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketLifecycleIntegrationTest.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `void ticketLifecycle_shouldPersistStateTransitions()`
+- `void employeeCanCancelOwnTicket()`
+- `void employeeCannotCancelAnotherEmployeesTicket()`
+- `void employeeCannotPerformAgentOnlyLifecycleActions()`
+- ` for(String action : actions)`
+
+### `TicketRetrievalIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketRetrievalIntegrationTest.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `void getTicket_shouldReturnExistingTicket()`
+- `void getTicket_shouldReturn404ForUnknownTicket()`
+- `void getTicketsForUser_shouldReturnTicketsForRequestedUser()`
+
+### `TicketTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`
+- Package: `com.voxera.backend.ticket.entity`
+- `Ticket createTicket()`
+- `void newTicketShouldStartAsOpen()`
+- `void openTicketCanStartProgress()`
+- `void inProgressTicketCanBeMarkedPending()`
+- `void inProgressTicketCanBeResolved()`
+- `void pendingTicketCanBeResolved()`
+- `void resolvedTicketCanBeClosed()`
+- `void closedTicketCannotBeCancelled()`
+- `void openTicketCannotBeResolvedDirectly()`
+- `void openTicketCannotBeClosed()`
+
+### `TicketServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/service/TicketServiceTest.java`
+- Package: `com.voxera.backend.ticket.service`
+- `void setUp()`
+- `void createTicketShouldSaveTicketForExistingUser()`
+- `void createTicketShouldGenerateTicketNumber()`
+- `void getTicketShouldReturnExistingTicket()`
+- `void getTicketShouldFailWhenTicketDoesNotExist()`
+- `void startProgressShouldChangeTicketStatus()`
+- `void markPendingShouldChangeTicketStatus()`
+- `void resolveTicketShouldChangeTicketStatus()`
+- `void closeTicketShouldChangeTicketStatus()`
+- `void cancelTicketShouldChangeTicketStatus()`
+- `void lifecycleOperationShouldFailWhenTicketDoesNotExist()`
+- `void assignTicketShouldAssignExistingUser()`
+- `void assignTicketShouldFailWhenAssigneeDoesNotExist()`
+- `void assignTicketShouldFailWhenTicketDoesNotExist()`
+
+
+============================================================
+FILE: docs/metadata/API_CONTRACTS.md
+============================================================
+# API Contracts
+
+> Generated: 2026-10-25T15:16:43.196765+00:00
+> Git commit: `36ca442`
+> Generator: `scripts/generate_metadata.py`
+
+
+> Extracted from Spring mapping annotations. Verify request/response semantics and status codes against controller code and tests.
+
+
+## `GlobalExceptionHandler`
+- File: `backend/src/main/java/com/voxera/backend/exception/GlobalExceptionHandler.java`
+- Class-level path: `(none detected)`
+
+## `AuthController`
+- File: `backend/src/main/java/com/voxera/backend/security/authentication/AuthController.java`
+- Class-level path: `/api/v1/auth`
+- **POST `/api/v1/auth/login`** — `login(@Valid @RequestBody LoginRequest request)`
+  - Mapping: `@PostMapping("/login")`
+
+## `TicketController`
+- File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketController.java`
+- Class-level path: `/api/v1/tickets`
+- **GET `/api/v1/tickets/{ticketId}`** — `getTicket(@PathVariable UUID ticketId)`
+  - Mapping: `@GetMapping("/{ticketId}")`
+- **GET `/api/v1/tickets`** — `getTickets(@RequestParam UUID createdBy)`
+  - Mapping: `@GetMapping`
+- **POST `/api/v1/tickets/{ticketId}/start`** — `startProgress(@PathVariable UUID ticketId)`
+  - Mapping: `@PostMapping("/{ticketId}/start")`
+- **POST `/api/v1/tickets/{ticketId}/pending`** — `markPending(@PathVariable UUID ticketId)`
+  - Mapping: `@PostMapping("/{ticketId}/pending")`
+- **POST `/api/v1/tickets/{ticketId}/resolve`** — `resolveTicket(@PathVariable UUID ticketId)`
+  - Mapping: `@PostMapping("/{ticketId}/resolve")`
+- **POST `/api/v1/tickets/{ticketId}/close`** — `closeTicket(@PathVariable UUID ticketId)`
+  - Mapping: `@PostMapping("/{ticketId}/close")`
+- **POST `/api/v1/tickets/{ticketId}/cancel`** — `cancelTicket(@PathVariable UUID ticketId)`
+  - Mapping: `@PostMapping("/{ticketId}/cancel")`
+- **POST `/api/v1/tickets/{ticketId}/assign`** — `assignTicket(@PathVariable UUID ticketId, @Valid @RequestBody AssignTicketRequest request)`
+  - Mapping: `@PostMapping("/{ticketId}/assign")`
+
+## Contract verification checklist
+- Confirm authentication requirements and role/resource permissions.
+- Confirm request DTO fields and validation constraints.
+- Confirm response DTO shape and HTTP status codes.
+- Confirm error response format using the exception handler.
+
+
+============================================================
+FILE: docs/metadata/DOMAIN_MODEL.md
+============================================================
+# Domain Model, DTOs, and Enums
+
+> Generated: 2026-10-25T15:16:43.208559+00:00
+> Git commit: `36ca442`
+> Generator: `scripts/generate_metadata.py`
+
+
+
+## `LoginRequest`
+- File: `backend/src/main/java/com/voxera/backend/security/authentication/dto/LoginRequest.java`
+- Kind: DTO / request / response
+- No fields/components extracted.
+
+## `LoginResponse`
+- File: `backend/src/main/java/com/voxera/backend/security/authentication/dto/LoginResponse.java`
+- Kind: DTO / request / response
+- Fields/components:
+  - `userId: UUID`
+  - `employeeId: String`
+  - `name: String`
+  - `email: String`
+  - `role: UserRole`
+  - `accessToken: String`
+
+## `Team`
+- File: `backend/src/main/java/com/voxera/backend/team/entity/Team.java`
+- Kind: JPA entity
+- Persistence annotation: `@Table(name = "teams")`
+- Persistence annotation: `@Id`
+- Persistence annotation: `@Column(name = "team_id")`
+- Persistence annotation: `@Column(nullable = false, unique = true, length = 150)`
+- Persistence annotation: `@Column(length = 500)`
+- Persistence annotation: `@Column(name = "created_at", nullable = false)`
+- Persistence annotation: `@Column(name = "updated_at", nullable = false)`
+- Fields/components:
+  - `teamId: UUID`
+    - Nearby annotations (verify scope): `@Table(name = "teams")`, `@Id`, `@Column(name = "team_id")`
+  - `name: String`
+    - Nearby annotations (verify scope): `@Id`, `@Column(name = "team_id")`, `@Column(nullable = false, unique = true, length = 150)`
+  - `description: String`
+    - Nearby annotations (verify scope): `@Column(name = "team_id")`, `@Column(nullable = false, unique = true, length = 150)`, `@Column(length = 500)`
+  - `createdAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(nullable = false, unique = true, length = 150)`, `@Column(length = 500)`, `@Column(name = "created_at", nullable = false)`
+  - `updatedAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(length = 500)`, `@Column(name = "created_at", nullable = false)`, `@Column(name = "updated_at", nullable = false)`
+
+## `AssignTicketRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/AssignTicketRequest.java`
+- Kind: DTO / request / response
+- No fields/components extracted.
+
+## `CreateTicketRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketRequest.java`
+- Kind: DTO / request / response
+- No fields/components extracted.
+
+## `TicketResponse`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketResponse.java`
+- Kind: DTO / request / response
+- Fields/components:
+  - `ticketId: UUID`
+  - `ticketNumber: String`
+  - `title: String`
+  - `description: String`
+  - `status: TicketStatus`
+  - `priority: TicketPriority`
+  - `category: TicketCategory`
+  - `createdBy: UUID`
+  - `assignedTo: UUID`
+  - `assignedTeam: UUID`
+  - `createdAt: LocalDateTime`
+  - `updatedAt: LocalDateTime`
+  - `resolvedAt: LocalDateTime`
+  - `closedAt: LocalDateTime`
+
+## `Ticket`
+- File: `backend/src/main/java/com/voxera/backend/ticket/entity/Ticket.java`
+- Kind: JPA entity
+- Persistence annotation: `@Table(name = "tickets")`
+- Persistence annotation: `@Id`
+- Persistence annotation: `@Column(name = "ticket_id")`
+- Persistence annotation: `@Column(name = "ticket_number", nullable = false, unique = true, length = 30)`
+- Persistence annotation: `@Column(nullable = false, length = 255)`
+- Persistence annotation: `@Column(nullable = false, columnDefinition = "TEXT")`
+- Persistence annotation: `@Enumerated(EnumType.STRING)`
+- Persistence annotation: `@Column(nullable = false, length = 30)`
+- Persistence annotation: `@Enumerated(EnumType.STRING)`
+- Persistence annotation: `@Column(nullable = false, length = 30)`
+- Persistence annotation: `@Enumerated(EnumType.STRING)`
+- Persistence annotation: `@Column(nullable = false, length = 50)`
+- Persistence annotation: `@ManyToOne(fetch = FetchType.LAZY, optional = false)`
+- Persistence annotation: `@JoinColumn(name = "created_by", nullable = false)`
+- Persistence annotation: `@ManyToOne(fetch = FetchType.LAZY)`
+- Persistence annotation: `@JoinColumn(name = "assigned_to")`
+- Persistence annotation: `@ManyToOne(fetch = FetchType.LAZY)`
+- Persistence annotation: `@JoinColumn(name = "assigned_team")`
+- Persistence annotation: `@Column(name = "created_at", nullable = false)`
+- Persistence annotation: `@Column(name = "updated_at", nullable = false)`
+- Persistence annotation: `@Column(name = "resolved_at")`
+- Persistence annotation: `@Column(name = "closed_at")`
+- Persistence annotation: `@Version`
+- Persistence annotation: `@Column(nullable = false)`
+- Fields/components:
+  - `ticketId: UUID`
+    - Nearby annotations (verify scope): `@Table(name = "tickets")`, `@Id`, `@Column(name = "ticket_id")`
+  - `ticketNumber: String`
+    - Nearby annotations (verify scope): `@Id`, `@Column(name = "ticket_id")`, `@Column(name = "ticket_number", nullable = false, unique = true, length = 30)`
+  - `title: String`
+    - Nearby annotations (verify scope): `@Column(name = "ticket_id")`, `@Column(name = "ticket_number", nullable = false, unique = true, length = 30)`, `@Column(nullable = false, length = 255)`
+  - `description: String`
+    - Nearby annotations (verify scope): `@Column(name = "ticket_number", nullable = false, unique = true, length = 30)`, `@Column(nullable = false, length = 255)`, `@Column(nullable = false, columnDefinition = "TEXT")`
+  - `status: TicketStatus`
+    - Nearby annotations (verify scope): `@Column(nullable = false, columnDefinition = "TEXT")`, `@Enumerated(EnumType.STRING)`, `@Column(nullable = false, length = 30)`
+  - `priority: TicketPriority`
+    - Nearby annotations (verify scope): `@Column(nullable = false, length = 30)`, `@Enumerated(EnumType.STRING)`, `@Column(nullable = false, length = 30)`
+  - `category: TicketCategory`
+    - Nearby annotations (verify scope): `@Column(nullable = false, length = 30)`, `@Enumerated(EnumType.STRING)`, `@Column(nullable = false, length = 50)`
+  - `createdBy: User`
+    - Nearby annotations (verify scope): `@Column(nullable = false, length = 50)`, `@ManyToOne(fetch = FetchType.LAZY, optional = false)`, `@JoinColumn(name = "created_by", nullable = false)`
+  - `assignedTo: User`
+    - Nearby annotations (verify scope): `@JoinColumn(name = "created_by", nullable = false)`, `@ManyToOne(fetch = FetchType.LAZY)`, `@JoinColumn(name = "assigned_to")`
+  - `assignedTeam: Team`
+    - Nearby annotations (verify scope): `@JoinColumn(name = "assigned_to")`, `@ManyToOne(fetch = FetchType.LAZY)`, `@JoinColumn(name = "assigned_team")`
+  - `createdAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@ManyToOne(fetch = FetchType.LAZY)`, `@JoinColumn(name = "assigned_team")`, `@Column(name = "created_at", nullable = false)`
+  - `updatedAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@JoinColumn(name = "assigned_team")`, `@Column(name = "created_at", nullable = false)`, `@Column(name = "updated_at", nullable = false)`
+  - `resolvedAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(name = "created_at", nullable = false)`, `@Column(name = "updated_at", nullable = false)`, `@Column(name = "resolved_at")`
+  - `closedAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(name = "updated_at", nullable = false)`, `@Column(name = "resolved_at")`, `@Column(name = "closed_at")`
+  - `version: Long`
+    - Nearby annotations (verify scope): `@Column(name = "closed_at")`, `@Version`, `@Column(nullable = false)`
+
+## `TicketComment`
+- File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketComment.java`
+- Kind: JPA entity
+- Persistence annotation: `@Table(name = "ticket_comments")`
+- Persistence annotation: `@Id`
+- Persistence annotation: `@Column(name = "comment_id")`
+- Persistence annotation: `@ManyToOne(fetch = FetchType.LAZY, optional = false)`
+- Persistence annotation: `@JoinColumn(name = "ticket_id", nullable = false)`
+- Persistence annotation: `@ManyToOne(fetch = FetchType.LAZY, optional = false)`
+- Persistence annotation: `@JoinColumn(name = "author_id", nullable = false)`
+- Persistence annotation: `@Column(nullable = false, columnDefinition = "TEXT")`
+- Persistence annotation: `@Column(name = "created_at", nullable = false)`
+- Persistence annotation: `@Column(name = "updated_at", nullable = false)`
+- Fields/components:
+  - `commentId: UUID`
+    - Nearby annotations (verify scope): `@Table(name = "ticket_comments")`, `@Id`, `@Column(name = "comment_id")`
+  - `ticket: Ticket`
+    - Nearby annotations (verify scope): `@Column(name = "comment_id")`, `@ManyToOne(fetch = FetchType.LAZY, optional = false)`, `@JoinColumn(name = "ticket_id", nullable = false)`
+  - `author: User`
+    - Nearby annotations (verify scope): `@JoinColumn(name = "ticket_id", nullable = false)`, `@ManyToOne(fetch = FetchType.LAZY, optional = false)`, `@JoinColumn(name = "author_id", nullable = false)`
+  - `content: String`
+    - Nearby annotations (verify scope): `@ManyToOne(fetch = FetchType.LAZY, optional = false)`, `@JoinColumn(name = "author_id", nullable = false)`, `@Column(nullable = false, columnDefinition = "TEXT")`
+  - `createdAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@JoinColumn(name = "author_id", nullable = false)`, `@Column(nullable = false, columnDefinition = "TEXT")`, `@Column(name = "created_at", nullable = false)`
+  - `updatedAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(nullable = false, columnDefinition = "TEXT")`, `@Column(name = "created_at", nullable = false)`, `@Column(name = "updated_at", nullable = false)`
+
+## `TicketHistory`
+- File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketHistory.java`
+- Kind: JPA entity
+- Persistence annotation: `@Table(name = "ticket_history")`
+- Persistence annotation: `@Id`
+- Persistence annotation: `@Column(name = "history_id")`
+- Persistence annotation: `@ManyToOne(fetch = FetchType.LAZY, optional = false)`
+- Persistence annotation: `@JoinColumn(name = "ticket_id", nullable = false)`
+- Persistence annotation: `@Column(name = "actor_type", nullable = false, length = 30)`
+- Persistence annotation: `@Column(name = "actor_id")`
+- Persistence annotation: `@Column(nullable = false, length = 100)`
+- Persistence annotation: `@Column(name = "old_value", columnDefinition = "TEXT")`
+- Persistence annotation: `@Column(name = "new_value", columnDefinition = "TEXT")`
+- Persistence annotation: `@Column(name = "created_at", nullable = false)`
+- Fields/components:
+  - `historyId: UUID`
+    - Nearby annotations (verify scope): `@Table(name = "ticket_history")`, `@Id`, `@Column(name = "history_id")`
+  - `ticket: Ticket`
+    - Nearby annotations (verify scope): `@Column(name = "history_id")`, `@ManyToOne(fetch = FetchType.LAZY, optional = false)`, `@JoinColumn(name = "ticket_id", nullable = false)`
+  - `actorType: String`
+    - Nearby annotations (verify scope): `@ManyToOne(fetch = FetchType.LAZY, optional = false)`, `@JoinColumn(name = "ticket_id", nullable = false)`, `@Column(name = "actor_type", nullable = false, length = 30)`
+  - `actorId: UUID`
+    - Nearby annotations (verify scope): `@JoinColumn(name = "ticket_id", nullable = false)`, `@Column(name = "actor_type", nullable = false, length = 30)`, `@Column(name = "actor_id")`
+  - `action: String`
+    - Nearby annotations (verify scope): `@Column(name = "actor_type", nullable = false, length = 30)`, `@Column(name = "actor_id")`, `@Column(nullable = false, length = 100)`
+  - `oldValue: String`
+    - Nearby annotations (verify scope): `@Column(name = "actor_id")`, `@Column(nullable = false, length = 100)`, `@Column(name = "old_value", columnDefinition = "TEXT")`
+  - `newValue: String`
+    - Nearby annotations (verify scope): `@Column(nullable = false, length = 100)`, `@Column(name = "old_value", columnDefinition = "TEXT")`, `@Column(name = "new_value", columnDefinition = "TEXT")`
+  - `createdAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(name = "old_value", columnDefinition = "TEXT")`, `@Column(name = "new_value", columnDefinition = "TEXT")`, `@Column(name = "created_at", nullable = false)`
+
+## `TicketCategory`
+- File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketCategory.java`
+- Kind: enum
+- Values: `HARDWARE`, `SOFTWARE`, `NETWORK`, `ACCESS`, `SECURITY`, `ACCOUNT`, `OTHER`
+- No fields/components extracted.
+
+## `TicketPriority`
+- File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketPriority.java`
+- Kind: enum
+- Values: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+- No fields/components extracted.
+
+## `TicketStatus`
+- File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketStatus.java`
+- Kind: enum
+- Values: `OPEN`, `IN_PROGRESS`, `PENDING`, `RESOLVED`, `CLOSED`, `CANCELLED`
+- No fields/components extracted.
+
+## `User`
+- File: `backend/src/main/java/com/voxera/backend/user/entity/User.java`
+- Kind: JPA entity
+- Persistence annotation: `@Table(name = "users")`
+- Persistence annotation: `@Id`
+- Persistence annotation: `@Column(name = "user_id")`
+- Persistence annotation: `@Column(name = "employee_id", nullable = false, unique = true, length = 50)`
+- Persistence annotation: `@Column(nullable = false, length = 150)`
+- Persistence annotation: `@Column(nullable = false, unique = true, length = 255)`
+- Persistence annotation: `@Column(length = 100)`
+- Persistence annotation: `@Enumerated(EnumType.STRING)`
+- Persistence annotation: `@Column(name = "role", nullable = false)`
+- Persistence annotation: `@Enumerated(EnumType.STRING)`
+- Persistence annotation: `@Column(name = "status", nullable = false)`
+- Persistence annotation: `@Column(name = "created_at", nullable = false)`
+- Persistence annotation: `@Column(name = "updated_at", nullable = false)`
+- Fields/components:
+  - `userId: UUID`
+    - Nearby annotations (verify scope): `@Table(name = "users")`, `@Id`, `@Column(name = "user_id")`
+  - `employeeId: String`
+    - Nearby annotations (verify scope): `@Id`, `@Column(name = "user_id")`, `@Column(name = "employee_id", nullable = false, unique = true, length = 50)`
+  - `name: String`
+    - Nearby annotations (verify scope): `@Column(name = "user_id")`, `@Column(name = "employee_id", nullable = false, unique = true, length = 50)`, `@Column(nullable = false, length = 150)`
+  - `email: String`
+    - Nearby annotations (verify scope): `@Column(name = "employee_id", nullable = false, unique = true, length = 50)`, `@Column(nullable = false, length = 150)`, `@Column(nullable = false, unique = true, length = 255)`
+  - `department: String`
+    - Nearby annotations (verify scope): `@Column(nullable = false, length = 150)`, `@Column(nullable = false, unique = true, length = 255)`, `@Column(length = 100)`
+  - `role: UserRole`
+    - Nearby annotations (verify scope): `@Column(length = 100)`, `@Enumerated(EnumType.STRING)`, `@Column(name = "role", nullable = false)`
+  - `status: UserStatus`
+    - Nearby annotations (verify scope): `@Column(name = "role", nullable = false)`, `@Enumerated(EnumType.STRING)`, `@Column(name = "status", nullable = false)`
+  - `createdAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Enumerated(EnumType.STRING)`, `@Column(name = "status", nullable = false)`, `@Column(name = "created_at", nullable = false)`
+  - `updatedAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(name = "status", nullable = false)`, `@Column(name = "created_at", nullable = false)`, `@Column(name = "updated_at", nullable = false)`
+
+## `UserCredential`
+- File: `backend/src/main/java/com/voxera/backend/user/entity/UserCredential.java`
+- Kind: JPA entity
+- Persistence annotation: `@Table(name = "user_credentials")`
+- Persistence annotation: `@Id`
+- Persistence annotation: `@Column(name = "user_id")`
+- Persistence annotation: `@Column(name = "password_hash", nullable = false, length = 255)`
+- Persistence annotation: `@Column(name = "created_at", nullable = false)`
+- Persistence annotation: `@Column(name = "updated_at", nullable = false)`
+- Fields/components:
+  - `userId: UUID`
+    - Nearby annotations (verify scope): `@Table(name = "user_credentials")`, `@Id`, `@Column(name = "user_id")`
+  - `passwordHash: String`
+    - Nearby annotations (verify scope): `@Id`, `@Column(name = "user_id")`, `@Column(name = "password_hash", nullable = false, length = 255)`
+  - `createdAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(name = "user_id")`, `@Column(name = "password_hash", nullable = false, length = 255)`, `@Column(name = "created_at", nullable = false)`
+  - `updatedAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(name = "password_hash", nullable = false, length = 255)`, `@Column(name = "created_at", nullable = false)`, `@Column(name = "updated_at", nullable = false)`
+
+## `UserRole`
+- File: `backend/src/main/java/com/voxera/backend/user/enums/UserRole.java`
+- Kind: enum
+- Values: `EMPLOYEE`, `AGENT`, `ADMIN`
+- No fields/components extracted.
+
+## `UserStatus`
+- File: `backend/src/main/java/com/voxera/backend/user/enums/UserStatus.java`
+- Kind: enum
+- Values: `ACTIVE`, `INACTIVE`
+- No fields/components extracted.
+
+> This is a structural inventory, not a guarantee of database constraints or runtime validation. Verify annotations in source.
+
+
+============================================================
+FILE: docs/metadata/SECURITY_AND_RULES.md
+============================================================
+# Security and Business Rules
+
+> Manually maintained decisions. Verify implementation before treating these as current behavior.
+
+## Authentication
+- Record the current login, token validation, and active-user policy here.
+
+## Authorization policy
+- EMPLOYEE: access tickets they created; may cancel their own tickets.
+- AGENT: access and work only on tickets assigned to them.
+- ADMIN: may access all tickets.
+- Team-based authorization is deferred.
+- Ticket assignment remains manual; no automatic assignment.
+
+## Ticket lifecycle
+- OPEN -> IN_PROGRESS -> PENDING / RESOLVED -> CLOSED, subject to implementation rules.
+- IN_PROGRESS may also transition to RESOLVED.
+- Cancellation and terminal-state rules must match the current entity implementation.
+
+## Open questions
+- Record unresolved policy decisions here.
+
+
+============================================================
+FILE: docs/metadata/TEST_MAP.md
+============================================================
+# Test Map
+
+> Generated: 2026-10-25T15:16:43.225080+00:00
+> Git commit: `36ca442`
+> Generator: `scripts/generate_metadata.py`
+
+
+
+## `BackendApplicationTests`
+- File: `backend/src/test/java/com/voxera/backend/BackendApplicationTests.java`
+- Test methods detected: 1
+  - `contextLoads()`
+
+## `CurrentUserServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/security/CurrentUserServiceTest.java`
+- Test methods detected: 3
+  - `getCurrentUser_shouldReturnAuthenticatedUser()`
+  - `getCurrentUser_shouldRejectUnauthenticatedRequest()`
+  - `getCurrentUser_shouldRejectUnknownUser()`
+
+## `AuthControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/security/authentication/AuthControllerIntegrationTest.java`
+- Test methods detected: 4
+  - `login_shouldAuthenticateValidCredentials()`
+  - `login_shouldRejectInvalidPassword()`
+  - `login_shouldRejectUnknownEmail()`
+  - `login_shouldRejectInvalidRequest()`
+
+## `AuthenticationServiceIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/security/authentication/AuthenticationServiceIntegrationTest.java`
+- Test methods detected: 2
+  - `authenticate_shouldAuthenticateSeededDevelopmentUser()`
+  - `authenticate_shouldRejectInvalidPassword()`
+
+## `AuthenticationServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/security/authentication/AuthenticationServiceTest.java`
+- Test methods detected: 5
+  - `authenticate_shouldReturnUserForValidCredentials()`
+  - `authenticate_shouldRejectUnknownEmail()`
+  - `authenticate_shouldRejectWrongPassword()`
+  - `authenticate_shouldRejectInactiveUser()`
+  - `authenticate_shouldRejectMissingCredential()`
+
+## `BCryptPasswordServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/security/authentication/BCryptPasswordServiceTest.java`
+- Test methods detected: 4
+  - `hash_shouldNotReturnRawPassword()`
+  - `matches_shouldReturnTrueForCorrectPassword()`
+  - `matches_shouldReturnFalseForIncorrectPassword()`
+  - `hash_shouldProduceDifferentHashesForSamePassword()`
+
+## `JwtServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/security/jwt/JwtServiceTest.java`
+- Test methods detected: 5
+  - `generateToken_shouldContainExpectedClaims()`
+  - `isTokenValid_shouldReturnTrueForCorrectUser()`
+  - `isTokenValid_shouldReturnFalseForDifferentUser()`
+  - `extractClaims_shouldRejectMalformedToken()`
+  - `extractClaims_shouldRejectTokenSignedWithDifferentKey()`
+
+## `AbstractTicketControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/AbstractTicketControllerIntegrationTest.java`
+- Test methods detected: 0
+
+## `TicketAssignmentIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAssignmentIntegrationTest.java`
+- Test methods detected: 4
+  - `assignTicket_shouldAssignUserAndPersistAssignment()`
+  - `assignTicket_shouldReturn404ForUnknownUser()`
+  - `assignTicket_shouldRejectMissingAssignedUser()`
+  - `assignTicket_shouldForbidEmployeeAndLeaveTicketUnassigned()`
+
+## `TicketAuthorizationIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAuthorizationIntegrationTest.java`
+- Test methods detected: 2
+  - `ticketEndpoint_shouldRejectUnauthenticatedRequest()`
+  - `employeeCannotReadAnotherEmployeesTicket()`
+
+## `TicketCreationIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCreationIntegrationTest.java`
+- Test methods detected: 2
+  - `createTicket_shouldReturnCreatedTicketAndPersistIt()`
+  - `createTicket_shouldRejectInvalidRequest()`
+
+## `TicketLifecycleIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketLifecycleIntegrationTest.java`
+- Test methods detected: 4
+  - `ticketLifecycle_shouldPersistStateTransitions()`
+  - `employeeCanCancelOwnTicket()`
+  - `employeeCannotCancelAnotherEmployeesTicket()`
+  - `employeeCannotPerformAgentOnlyLifecycleActions()`
+
+## `TicketRetrievalIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketRetrievalIntegrationTest.java`
+- Test methods detected: 3
+  - `getTicket_shouldReturnExistingTicket()`
+  - `getTicket_shouldReturn404ForUnknownTicket()`
+  - `getTicketsForUser_shouldReturnTicketsForRequestedUser()`
+
+## `TicketTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`
+- Test methods detected: 9
+  - `newTicketShouldStartAsOpen()`
+  - `openTicketCanStartProgress()`
+  - `inProgressTicketCanBeMarkedPending()`
+  - `inProgressTicketCanBeResolved()`
+  - `pendingTicketCanBeResolved()`
+  - `resolvedTicketCanBeClosed()`
+  - `closedTicketCannotBeCancelled()`
+  - `openTicketCannotBeResolvedDirectly()`
+  - `openTicketCannotBeClosed()`
+
+## `TicketServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/service/TicketServiceTest.java`
+- Test methods detected: 13
+  - `createTicketShouldSaveTicketForExistingUser()`
+  - `createTicketShouldGenerateTicketNumber()`
+  - `getTicketShouldReturnExistingTicket()`
+  - `getTicketShouldFailWhenTicketDoesNotExist()`
+  - `startProgressShouldChangeTicketStatus()`
+  - `markPendingShouldChangeTicketStatus()`
+  - `resolveTicketShouldChangeTicketStatus()`
+  - `closeTicketShouldChangeTicketStatus()`
+  - `cancelTicketShouldChangeTicketStatus()`
+  - `lifecycleOperationShouldFailWhenTicketDoesNotExist()`
+  - `assignTicketShouldAssignExistingUser()`
+  - `assignTicketShouldFailWhenAssigneeDoesNotExist()`
+  - `assignTicketShouldFailWhenTicketDoesNotExist()`
+
+> Test names indicate intended coverage, not proof that a behavior is correctly tested. Use test source and test results for verification.
+
+
+============================================================
+FILE: docs/metadata/PROJECT_STATUS.md
+============================================================
+# Voxera Project Status
+
+> Manually maintained. Update after meaningful implementation milestones.
+
+## Current checkpoint
+- Last verified commit: update after checking Git.
+- Build/test status: not verified by this metadata generator.
+- Active milestone: resource-based ticket authorization.
+
+## Decisions
+- Assignment remains manual.
+- Agent access is limited to individually assigned tickets.
+- Team-based authorization is deferred.
+- Avoid unnecessary expansion of tests; prioritize meaningful regression coverage.
+
+## Completed
+- Update from the current roadmap and verified repository state.
+
+## In progress
+- Resource-based ticket authorization and role-scoped ticket listing.
+
+## Next
+- Verify focused authorization tests, then run the full test suite.
+- Refresh metadata and record the resulting checkpoint.
