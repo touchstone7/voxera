@@ -1,5 +1,7 @@
 package com.voxera.backend.ticket.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.voxera.backend.ticket.dto.AssignTicketRequest;
 import com.voxera.backend.ticket.dto.CreateTicketRequest;
 import com.voxera.backend.ticket.dto.TicketResponse;
@@ -53,24 +55,28 @@ public class TicketController {
                 .toList();
     }
 
+    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN')")
     @PostMapping("/{ticketId}/start")
     public TicketResponse startProgress(@PathVariable UUID ticketId) {
         return TicketResponse.from(
                 ticketService.startProgress(ticketId));
     }
 
+    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN')")
     @PostMapping("/{ticketId}/pending")
     public TicketResponse markPending(@PathVariable UUID ticketId) {
         return TicketResponse.from(
                 ticketService.markPending(ticketId));
     }
 
+    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN')")
     @PostMapping("/{ticketId}/resolve")
     public TicketResponse resolveTicket(@PathVariable UUID ticketId) {
         return TicketResponse.from(
                 ticketService.resolveTicket(ticketId));
     }
 
+    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN')")
     @PostMapping("/{ticketId}/close")
     public TicketResponse closeTicket(@PathVariable UUID ticketId) {
         return TicketResponse.from(
@@ -83,6 +89,7 @@ public class TicketController {
                 ticketService.cancelTicket(ticketId));
     }
 
+    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN')")
     @PostMapping("/{ticketId}/assign")
     public ResponseEntity<TicketResponse> assignTicket(
             @PathVariable UUID ticketId,
