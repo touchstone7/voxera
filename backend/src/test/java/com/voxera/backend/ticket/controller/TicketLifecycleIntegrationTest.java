@@ -68,7 +68,13 @@ class TicketLifecycleIntegrationTest
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status")
                         .value(TicketStatus.CLOSED.name()))
+                .andExpect(jsonPath("$.resolvedAt",
+                        notNullValue()))
                 .andExpect(jsonPath("$.closedAt",
+                        notNullValue()))
+                .andExpect(jsonPath("$.createdAt",
+                        notNullValue()))
+                .andExpect(jsonPath("$.updatedAt",
                         notNullValue()));
 
         Ticket persistedTicket = ticketRepository
@@ -79,10 +85,23 @@ class TicketLifecycleIntegrationTest
                 TicketStatus.CLOSED,
                 persistedTicket.getStatus());
 
+        assertNotNull(persistedTicket.getCreatedAt());
+        assertNotNull(persistedTicket.getUpdatedAt());
         assertNotNull(persistedTicket.getResolvedAt());
         assertNotNull(persistedTicket.getClosedAt());
+
+        assertEquals(
+                true,
+                !persistedTicket.getUpdatedAt()
+                        .isBefore(persistedTicket.getCreatedAt()));
+
+        assertEquals(
+                true,
+                !persistedTicket.getResolvedAt()
+                        .isAfter(persistedTicket.getClosedAt()));
     }
-        @Test
+
+    @Test
     void employeeCanCancelOwnTicket() throws Exception {
         createTicket("Employee-owned ticket");
 
@@ -106,6 +125,12 @@ class TicketLifecycleIntegrationTest
         assertEquals(
                 TicketStatus.CANCELLED,
                 persistedTicket.getStatus());
+        assertNotNull(persistedTicket.getCreatedAt());
+        assertNotNull(persistedTicket.getUpdatedAt());
+        assertEquals(
+                true,
+                !persistedTicket.getUpdatedAt()
+                        .isBefore(persistedTicket.getCreatedAt()));
     }
 
     @Test
