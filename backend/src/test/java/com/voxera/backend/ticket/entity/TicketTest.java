@@ -89,6 +89,7 @@ class TicketTest {
         ticket.resolve();
 
         assertEquals(TicketStatus.RESOLVED, ticket.getStatus());
+        assertNotNull(ticket.getResolvedAt());
     }
 
     @Test
@@ -100,6 +101,7 @@ class TicketTest {
         ticket.close();
 
         assertEquals(TicketStatus.CLOSED, ticket.getStatus());
+        assertNotNull(ticket.getResolvedAt());
         assertNotNull(ticket.getClosedAt());
     }
 
@@ -111,6 +113,10 @@ class TicketTest {
         ticket.resolve();
         ticket.close();
 
+        LocalDateTime updatedAtBefore = ticket.getUpdatedAt();
+        LocalDateTime resolvedAtBefore = ticket.getResolvedAt();
+        LocalDateTime closedAtBefore = ticket.getClosedAt();
+
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
                 ticket::cancel
@@ -120,29 +126,96 @@ class TicketTest {
                 "Closed or cancelled tickets cannot be cancelled",
                 exception.getMessage()
         );
+        assertEquals(TicketStatus.CLOSED, ticket.getStatus());
+        assertEquals(updatedAtBefore, ticket.getUpdatedAt());
+        assertEquals(resolvedAtBefore, ticket.getResolvedAt());
+        assertEquals(closedAtBefore, ticket.getClosedAt());
     }
 
     @Test
-    void openTicketCannotBeResolvedDirectly() {
+    void openTicketCannotBeResolvedDirectlyWithoutChangingStateOrTimestamps() {
         Ticket ticket = createTicket();
 
-        assertThrows(
-                IllegalStateException.class,
-                ticket::resolve
-        );
+        LocalDateTime updatedAtBefore = ticket.getUpdatedAt();
+        LocalDateTime resolvedAtBefore = ticket.getResolvedAt();
+        LocalDateTime closedAtBefore = ticket.getClosedAt();
+
+        assertThrows(IllegalStateException.class, ticket::resolve);
 
         assertEquals(TicketStatus.OPEN, ticket.getStatus());
+        assertEquals(updatedAtBefore, ticket.getUpdatedAt());
+        assertEquals(resolvedAtBefore, ticket.getResolvedAt());
+        assertEquals(closedAtBefore, ticket.getClosedAt());
     }
 
     @Test
-    void openTicketCannotBeClosed() {
+    void openTicketCannotBeClosedWithoutChangingStateOrTimestamps() {
         Ticket ticket = createTicket();
 
-        assertThrows(
-                IllegalStateException.class,
-                ticket::close
-        );
-        System.out.println("");
+        LocalDateTime updatedAtBefore = ticket.getUpdatedAt();
+        LocalDateTime resolvedAtBefore = ticket.getResolvedAt();
+        LocalDateTime closedAtBefore = ticket.getClosedAt();
+
+        assertThrows(IllegalStateException.class, ticket::close);
+
         assertEquals(TicketStatus.OPEN, ticket.getStatus());
+        assertEquals(updatedAtBefore, ticket.getUpdatedAt());
+        assertEquals(resolvedAtBefore, ticket.getResolvedAt());
+        assertEquals(closedAtBefore, ticket.getClosedAt());
+    }
+
+    @Test
+    void cancelledTicketCannotBeCancelledAgain() {
+        Ticket ticket = createTicket();
+        ticket.cancel();
+
+        LocalDateTime updatedAtBefore = ticket.getUpdatedAt();
+        LocalDateTime resolvedAtBefore = ticket.getResolvedAt();
+        LocalDateTime closedAtBefore = ticket.getClosedAt();
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                ticket::cancel
+        );
+
+        assertEquals(
+                "Closed or cancelled tickets cannot be cancelled",
+                exception.getMessage()
+        );
+        assertEquals(TicketStatus.CANCELLED, ticket.getStatus());
+        assertEquals(updatedAtBefore, ticket.getUpdatedAt());
+        assertEquals(resolvedAtBefore, ticket.getResolvedAt());
+        assertEquals(closedAtBefore, ticket.getClosedAt());
+    }
+
+    @Test
+    void resolvedTicketCanBeCancelledAndRetainsResolutionTimestamp() {
+        Ticket ticket = createTicket();
+        ticket.startProgress();
+        ticket.resolve();
+
+        LocalDateTime resolvedAtBefore = ticket.getResolvedAt();
+
+        ticket.cancel();
+
+        assertEquals(TicketStatus.CANCELLED, ticket.getStatus());
+        assertEquals(resolvedAtBefore, ticket.getResolvedAt());
+        assertNull(ticket.getClosedAt());
+    }
+
+    @Test
+    void lifecycleTimestampsRemainConsistent() {
+        Ticket ticket = createTicket();
+
+        assertFalse(ticket.getUpdatedAt().isBefore(ticket.getCreatedAt()));
+
+        ticket.startProgress();
+        ticket.resolve();
+        ticket.close();
+
+        assertNotNull(ticket.getResolvedAt());
+        assertNotNull(ticket.getClosedAt());
+        assertFalse(ticket.getResolvedAt().isAfter(ticket.getClosedAt()));
+        assertFalse(ticket.getUpdatedAt().isBefore(ticket.getCreatedAt()));
     }
 }
