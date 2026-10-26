@@ -1,6 +1,9 @@
 package com.voxera.backend.ticket.controller;
 
 import com.voxera.backend.ticket.entity.Ticket;
+import com.voxera.backend.ticket.enums.TicketStatus;
+import com.voxera.backend.user.entity.User;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -9,6 +12,7 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -153,6 +157,100 @@ class TicketAssignmentIntegrationTest
 
         org.junit.jupiter.api.Assertions.assertNull(
                 persistedTicket.getAssignedTo());
+    }
+
+
+    @Test
+    void reassignTicket_shouldChangeAssigneeWithoutChangingLifecycleStatus()
+            throws Exception {
+
+        accessToken = createAgentToken();
+
+        User firstAssignee = createTestUser();
+        User secondAssignee = createTestUser();
+
+        createTicket("Reassignment workflow test");
+
+        Ticket ticket = ticketRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow();
+
+        String firstRequest = """
+                {"assignedTo": "%s"}
+                """.formatted(firstAssignee.getUserId());
+
+        mockMvc.perform(
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/assign",
+                                        ticket.getTicketId())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(firstRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignedTo")
+                        .value(firstAssignee.getUserId().toString()));
+
+        String secondRequest = """
+                {"assignedTo": "%s"}
+                """.formatted(secondAssignee.getUserId());
+
+        mockMvc.perform(
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/assign",
+                                        ticket.getTicketId())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(secondRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignedTo")
+                        .value(secondAssignee.getUserId().toString()))
+                .andExpect(jsonPath("$.status")
+                        .value(TicketStatus.OPEN.name()));
+
+        Ticket persistedTicket = ticketRepository
+                .findById(ticket.getTicketId())
+                .orElseThrow();
+
+        assertEquals(
+                secondAssignee.getUserId(),
+                persistedTicket.getAssignedTo().getUserId());
+
+        assertEquals(TicketStatus.OPEN, persistedTicket.getStatus());
+    }
+
+    @Test
+    void agentCanAccessTicketAssignedToAnotherAgent()
+            throws Exception {
+
+        accessToken = createAgentToken();
+
+        User assignee = createTestUser();
+
+        createTicket("Agent access independent of assignment");
+
+        Ticket ticket = ticketRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow();
+
+        String requestBody = """
+                {"assignedTo": "%s"}
+                """.formatted(assignee.getUserId());
+
+        mockMvc.perform(
+                        authenticated(
+                                post("/api/v1/tickets/{ticketId}/assign",
+                                        ticket.getTicketId())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(requestBody)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(
+                        authenticated(
+                                get("/api/v1/tickets/{ticketId}",
+                                        ticket.getTicketId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignedTo")
+                        .value(assignee.getUserId().toString()));
     }
 
 }
