@@ -1,7 +1,7 @@
 # Project Structure and Java Inventory
 
-> Generated: 2026-10-25T15:16:43.072428+00:00
-> Git commit: `36ca442`
+> Generated: 2026-10-27T11:38:46.582846+00:00
+> Git commit: `0b363fd`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -23,9 +23,12 @@
 - `backend/src/main/java/com/voxera/backend/team/entity/Team.java`
 - `backend/src/main/java/com/voxera/backend/team/repository/TeamRepository.java`
 - `backend/src/main/java/com/voxera/backend/team/service/TeamService.java`
+- `backend/src/main/java/com/voxera/backend/ticket/controller/TicketCommentController.java`
 - `backend/src/main/java/com/voxera/backend/ticket/controller/TicketController.java`
 - `backend/src/main/java/com/voxera/backend/ticket/dto/AssignTicketRequest.java`
+- `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketCommentRequest.java`
 - `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketRequest.java`
+- `backend/src/main/java/com/voxera/backend/ticket/dto/TicketCommentResponse.java`
 - `backend/src/main/java/com/voxera/backend/ticket/dto/TicketResponse.java`
 - `backend/src/main/java/com/voxera/backend/ticket/entity/Ticket.java`
 - `backend/src/main/java/com/voxera/backend/ticket/entity/TicketComment.java`
@@ -37,6 +40,7 @@
 - `backend/src/main/java/com/voxera/backend/ticket/repository/TicketHistoryRepository.java`
 - `backend/src/main/java/com/voxera/backend/ticket/repository/TicketRepository.java`
 - `backend/src/main/java/com/voxera/backend/ticket/service/TicketAuthorizationService.java`
+- `backend/src/main/java/com/voxera/backend/ticket/service/TicketCommentService.java`
 - `backend/src/main/java/com/voxera/backend/ticket/service/TicketService.java`
 - `backend/src/main/java/com/voxera/backend/user/entity/User.java`
 - `backend/src/main/java/com/voxera/backend/user/entity/UserCredential.java`
@@ -55,6 +59,7 @@
 - `backend/src/test/java/com/voxera/backend/ticket/controller/AbstractTicketControllerIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAssignmentIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAuthorizationIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCommentIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCreationIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketLifecycleIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketRetrievalIntegrationTest.java`
@@ -170,6 +175,13 @@
 - `TeamService(TeamRepository teamRepository)`
 - `Team getTeam(UUID teamId)`
 
+### `TicketCommentController`
+- File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketCommentController.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `TicketCommentController(TicketCommentService ticketCommentService)`
+- `TicketCommentResponse addComment(@PathVariable UUID ticketId, @Valid @RequestBody CreateTicketCommentRequest request)`
+- `List<TicketCommentResponse> getComments(@PathVariable UUID ticketId)`
+
 ### `TicketController`
 - File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketController.java`
 - Package: `com.voxera.backend.ticket.controller`
@@ -189,10 +201,21 @@
 - Package: `com.voxera.backend.ticket.dto`
 - `AssignTicketRequest(@NotNull UUID assignedTo)`
 
+### `CreateTicketCommentRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketCommentRequest.java`
+- Package: `com.voxera.backend.ticket.dto`
+- `CreateTicketCommentRequest(@NotBlank @Size(max = 5000) String content)`
+
 ### `CreateTicketRequest`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketRequest.java`
 - Package: `com.voxera.backend.ticket.dto`
 - `CreateTicketRequest(@NotBlank String title, @NotBlank String description, @NotNull TicketPriority priority, @NotNull TicketCategory category)`
+
+### `TicketCommentResponse`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketCommentResponse.java`
+- Package: `com.voxera.backend.ticket.dto`
+- `TicketCommentResponse(UUID commentId, UUID ticketId, UUID authorId, String authorName, String content, LocalDateTime createdAt, LocalDateTime updatedAt)`
+- `TicketCommentResponse from(TicketComment comment)`
 
 ### `TicketResponse`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketResponse.java`
@@ -237,6 +260,7 @@
 - File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketComment.java`
 - Package: `com.voxera.backend.ticket.entity`
 - `TicketComment()`
+- `TicketComment(UUID commentId, Ticket ticket, User author, String content, LocalDateTime createdAt)`
 - `UUID getCommentId()`
 - `Ticket getTicket()`
 - `User getAuthor()`
@@ -296,6 +320,13 @@
 - ` if(actor.getRole() != UserRole.AGENT && actor.getRole() != UserRole.ADMIN)`
 - `void requireTicketListAccess(User actor, UUID requestedUserId)`
 - ` if(actor.getRole() == UserRole.EMPLOYEE && !actor.getUserId().equals(requestedUserId))`
+
+### `TicketCommentService`
+- File: `backend/src/main/java/com/voxera/backend/ticket/service/TicketCommentService.java`
+- Package: `com.voxera.backend.ticket.service`
+- `TicketCommentService(TicketCommentRepository ticketCommentRepository, TicketService ticketService, CurrentUserService currentUserService)`
+- `TicketCommentResponse addComment(UUID ticketId, String content)`
+- `List<TicketCommentResponse> getComments(UUID ticketId)`
 
 ### `TicketService`
 - File: `backend/src/main/java/com/voxera/backend/ticket/service/TicketService.java`
@@ -442,12 +473,23 @@
 - `void assignTicket_shouldReturn404ForUnknownUser()`
 - `void assignTicket_shouldRejectMissingAssignedUser()`
 - `void assignTicket_shouldForbidEmployeeAndLeaveTicketUnassigned()`
+- `void reassignTicket_shouldChangeAssigneeWithoutChangingLifecycleStatus()`
+- `void agentCanAccessTicketAssignedToAnotherAgent()`
 
 ### `TicketAuthorizationIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAuthorizationIntegrationTest.java`
 - Package: `com.voxera.backend.ticket.controller`
 - `void ticketEndpoint_shouldRejectUnauthenticatedRequest()`
 - `void employeeCannotReadAnotherEmployeesTicket()`
+
+### `TicketCommentIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCommentIntegrationTest.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `void employeeCanCreateAndRetrieveCommentsOnOwnTicket()`
+- `void agentCanReadCommentsOnTicketRegardlessOfAssignment()`
+- `void employeeCannotReadCommentsOnAnotherUsersTicket()`
+- `void blankCommentShouldBeRejected()`
+- `void commentOnUnknownTicketShouldReturnNotFound()`
 
 ### `TicketCreationIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCreationIntegrationTest.java`
@@ -482,8 +524,11 @@
 - `void pendingTicketCanBeResolved()`
 - `void resolvedTicketCanBeClosed()`
 - `void closedTicketCannotBeCancelled()`
-- `void openTicketCannotBeResolvedDirectly()`
-- `void openTicketCannotBeClosed()`
+- `void openTicketCannotBeResolvedDirectlyWithoutChangingStateOrTimestamps()`
+- `void openTicketCannotBeClosedWithoutChangingStateOrTimestamps()`
+- `void cancelledTicketCannotBeCancelledAgain()`
+- `void resolvedTicketCanBeCancelledAndRetainsResolutionTimestamp()`
+- `void lifecycleTimestampsRemainConsistent()`
 
 ### `TicketServiceTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/service/TicketServiceTest.java`

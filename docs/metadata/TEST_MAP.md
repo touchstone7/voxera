@@ -1,7 +1,7 @@
 # Test Map
 
-> Generated: 2026-10-25T15:16:43.225080+00:00
-> Git commit: `36ca442`
+> Generated: 2026-10-27T11:38:46.732495+00:00
+> Git commit: `0b363fd`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -64,17 +64,28 @@
 
 ## `TicketAssignmentIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAssignmentIntegrationTest.java`
-- Test methods detected: 4
+- Test methods detected: 6
   - `assignTicket_shouldAssignUserAndPersistAssignment()`
   - `assignTicket_shouldReturn404ForUnknownUser()`
   - `assignTicket_shouldRejectMissingAssignedUser()`
   - `assignTicket_shouldForbidEmployeeAndLeaveTicketUnassigned()`
+  - `reassignTicket_shouldChangeAssigneeWithoutChangingLifecycleStatus()`
+  - `agentCanAccessTicketAssignedToAnotherAgent()`
 
 ## `TicketAuthorizationIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAuthorizationIntegrationTest.java`
 - Test methods detected: 2
   - `ticketEndpoint_shouldRejectUnauthenticatedRequest()`
   - `employeeCannotReadAnotherEmployeesTicket()`
+
+## `TicketCommentIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCommentIntegrationTest.java`
+- Test methods detected: 5
+  - `employeeCanCreateAndRetrieveCommentsOnOwnTicket()`
+  - `agentCanReadCommentsOnTicketRegardlessOfAssignment()`
+  - `employeeCannotReadCommentsOnAnotherUsersTicket()`
+  - `blankCommentShouldBeRejected()`
+  - `commentOnUnknownTicketShouldReturnNotFound()`
 
 ## `TicketCreationIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCreationIntegrationTest.java`
@@ -99,7 +110,7 @@
 
 ## `TicketTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`
-- Test methods detected: 9
+- Test methods detected: 12
   - `newTicketShouldStartAsOpen()`
   - `openTicketCanStartProgress()`
   - `inProgressTicketCanBeMarkedPending()`
@@ -107,8 +118,11 @@
   - `pendingTicketCanBeResolved()`
   - `resolvedTicketCanBeClosed()`
   - `closedTicketCannotBeCancelled()`
-  - `openTicketCannotBeResolvedDirectly()`
-  - `openTicketCannotBeClosed()`
+  - `openTicketCannotBeResolvedDirectlyWithoutChangingStateOrTimestamps()`
+  - `openTicketCannotBeClosedWithoutChangingStateOrTimestamps()`
+  - `cancelledTicketCannotBeCancelledAgain()`
+  - `resolvedTicketCanBeCancelledAndRetainsResolutionTimestamp()`
+  - `lifecycleTimestampsRemainConsistent()`
 
 ## `TicketServiceTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/service/TicketServiceTest.java`

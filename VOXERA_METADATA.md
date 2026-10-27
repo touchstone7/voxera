@@ -24,12 +24,15 @@ security/rules and project-status documents are preserved for manual editing.
 
 ## Repository checkpoint
 
-- Generated at UTC: 2026-10-25T15:16:43.235487+00:00
-- Git commit: `36ca442`
-- Git working tree status: `?? docs/
-?? scripts/`
-- Main Java files found: 38
-- Test Java files found: 15
+- Generated at UTC: 2026-10-27T11:38:46.744549+00:00
+- Git commit: `0b363fd`
+- Git working tree status: `M VOXERA_METADATA.md
+ M docs/metadata/API_CONTRACTS.md
+ M docs/metadata/DOMAIN_MODEL.md
+ M docs/metadata/PROJECT_STRUCTURE.md
+ M docs/metadata/TEST_MAP.md`
+- Main Java files found: 42
+- Test Java files found: 16
 
 ## Important limitation
 

@@ -1,7 +1,7 @@
 # API Contracts
 
-> Generated: 2026-10-25T15:16:43.196765+00:00
-> Git commit: `36ca442`
+> Generated: 2026-10-27T11:38:46.703368+00:00
+> Git commit: `0b363fd`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -17,6 +17,12 @@
 - Class-level path: `/api/v1/auth`
 - **POST `/api/v1/auth/login`** — `login(@Valid @RequestBody LoginRequest request)`
   - Mapping: `@PostMapping("/login")`
+
+## `TicketCommentController`
+- File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketCommentController.java`
+- Class-level path: `/api/v1/tickets/{ticketId}/comments`
+- **GET `/api/v1/tickets/{ticketId}/comments`** — `getComments(@PathVariable UUID ticketId)`
+  - Mapping: `@GetMapping`
 
 ## `TicketController`
 - File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketController.java`

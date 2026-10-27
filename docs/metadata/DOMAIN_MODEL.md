@@ -1,7 +1,7 @@
 # Domain Model, DTOs, and Enums
 
-> Generated: 2026-10-25T15:16:43.208559+00:00
-> Git commit: `36ca442`
+> Generated: 2026-10-27T11:38:46.715093+00:00
+> Git commit: `0b363fd`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -49,10 +49,27 @@
 - Kind: DTO / request / response
 - No fields/components extracted.
 
+## `CreateTicketCommentRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketCommentRequest.java`
+- Kind: DTO / request / response
+- No fields/components extracted.
+
 ## `CreateTicketRequest`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketRequest.java`
 - Kind: DTO / request / response
 - No fields/components extracted.
+
+## `TicketCommentResponse`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketCommentResponse.java`
+- Kind: DTO / request / response
+- Fields/components:
+  - `commentId: UUID`
+  - `ticketId: UUID`
+  - `authorId: UUID`
+  - `authorName: String`
+  - `content: String`
+  - `createdAt: LocalDateTime`
+  - `updatedAt: LocalDateTime`
 
 ## `TicketResponse`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketResponse.java`
