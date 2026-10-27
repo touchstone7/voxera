@@ -33,6 +33,20 @@ public class TicketComment {
     protected TicketComment() {
     }
 
+    public TicketComment(
+            UUID commentId,
+            Ticket ticket,
+            User author,
+            String content,
+            LocalDateTime createdAt) {
+        this.commentId = commentId;
+        this.ticket = ticket;
+        this.author = author;
+        this.content = content;
+        this.createdAt = createdAt;
+        this.updatedAt = createdAt;
+    }
+
     public UUID getCommentId() {
         return commentId;
     }

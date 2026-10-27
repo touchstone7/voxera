@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import com.jayway.jsonpath.JsonPath;
 import com.voxera.backend.security.authentication.PasswordService;
 import com.voxera.backend.ticket.repository.TicketRepository;
+import com.voxera.backend.ticket.repository.TicketCommentRepository;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.entity.UserCredential;
 import com.voxera.backend.user.enums.UserRole;
@@ -40,6 +41,9 @@ abstract class AbstractTicketControllerIntegrationTest {
     protected TicketRepository ticketRepository;
 
     @Autowired
+    protected TicketCommentRepository ticketCommentRepository;
+
+    @Autowired
     protected UserRepository userRepository;
 
     @Autowired
@@ -52,6 +56,7 @@ abstract class AbstractTicketControllerIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        ticketCommentRepository.deleteAll();
         ticketRepository.deleteAll();
         accessToken = loginAndGetAccessToken(
             "emp001@voxera.local",
