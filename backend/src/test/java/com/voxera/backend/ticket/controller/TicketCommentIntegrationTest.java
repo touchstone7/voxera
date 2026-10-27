@@ -6,7 +6,6 @@ import com.voxera.backend.user.enums.UserRole;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
