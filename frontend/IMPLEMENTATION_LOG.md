@@ -21,3 +21,25 @@
 - Run production build and lint checks.
 - Manually test every route and navigation path at desktop and mobile widths.
 - Refine visual details based on screenshots.
+
+## CHECKPOINT — Authentication Frontend COMPLETE
+**Verified by user:** 2026-10-29
+
+Status: COMPLETE for frontend UI, navigation, and demo behavior.
+
+Verified flows:
+- Login page
+- Sign Up page
+- Forgot Password page
+- Reset Password page
+- Authentication Callback flow for Google and Apple
+- Login <-> Sign Up navigation
+- Password recovery navigation
+- Google and Apple buttons navigate to the callback page
+- Basic form validation and demo feedback
+
+Scope boundary:
+- Google and Apple share the same callback route; provider identity is passed through frontend navigation.
+- No real authentication, OAuth, account creation, password-reset email delivery, or backend/API integration is included in this checkpoint.
+
+This checkpoint must remain intact when subsequent frontend milestones are implemented.
