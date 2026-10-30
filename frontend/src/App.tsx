@@ -17,8 +17,11 @@ import {
   NotificationsPage,
   ProfilePage,
 } from './EmployeePages';
-import { AllTicketsPage, TeamQueuePage } from './AgentPages';
-
+import {
+  AllTicketsPage,
+  TeamQueuePage,
+  TicketAssignmentPage,
+} from './AgentPages';
 type Provider = 'Google' | 'Apple';
 
 function BrandPanel() {
@@ -333,6 +336,7 @@ export default function App() {
         <Route path="/agent" element={<Navigate to="/agent/tickets" replace />} />
         <Route path="/agent/tickets" element={<AllTicketsPage />} />
         <Route path="/agent/queue" element={<TeamQueuePage />} />
+        <Route path="/agent/tickets/:ticketId/assign" element={<TicketAssignmentPage />} />
 
         {/* Keep the fallback route last */}
         <Route path="*" element={<NotFoundPage />} />

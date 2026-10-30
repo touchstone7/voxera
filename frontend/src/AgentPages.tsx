@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useParams } from 'react-router-dom';
 import './agent.css';
 
 type TicketStatus = 'Open' | 'In Progress' | 'Pending' | 'Resolved';
@@ -530,9 +530,25 @@ export function AllTicketsPage() {
             </div>
 
             <div className="agent-detail-note">
-              <span>✳</span>
-              <p>Ticket detail actions and assignment will be available in the next workflow pages.</p>
+                <span>✳</span>
+                <p>
+                    Assign this request to an agent or change its current owner.
+                </p>
             </div>
+
+            <Link
+                to={`/agent/tickets/${selectedTicket.id}/assign`}
+                className="agent-detail-done"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textDecoration: 'none',
+                    marginTop: '12px',
+                }}
+            >
+                Assign / Reassign ticket →
+            </Link>
 
             <button
               className="agent-detail-done"
@@ -801,6 +817,245 @@ export function TeamQueuePage() {
           </span>
           <span>Assignment is manual</span>
         </div>
+      </div>
+    </AgentLayout>
+  );
+}
+
+const availableAgents = [
+  {
+    name: 'Alex Morgan',
+    initials: 'AM',
+    role: 'Senior Support Agent',
+    availability: 'Available',
+  },
+  {
+    name: 'Priya Shah',
+    initials: 'PS',
+    role: 'Technical Support Agent',
+    availability: 'Available',
+  },
+  {
+    name: 'Daniel Kim',
+    initials: 'DK',
+    role: 'Infrastructure Support Agent',
+    availability: 'Busy',
+  },
+];
+
+export function TicketAssignmentPage() {
+  const { ticketId } = useParams<{ ticketId: string }>();
+
+  const ticket = initialTickets.find(
+    (item) => item.id === ticketId
+  );
+
+  const [selectedAgent, setSelectedAgent] = useState(
+    ticket?.assignedTo ?? ''
+  );
+  const [assigned, setAssigned] = useState(false);
+
+  if (!ticket) {
+    return (
+      <AgentLayout
+        title="Ticket not found"
+        subtitle="The requested ticket could not be found."
+      >
+        <div className="agent-ticket-panel">
+          <div className="agent-empty-state">
+            <span>⌕</span>
+            <h3>Ticket not found</h3>
+            <p>Check the ticket reference and try again.</p>
+            <Link className="agent-assignment-back" to="/agent/tickets">
+              Back to all tickets
+            </Link>
+          </div>
+        </div>
+      </AgentLayout>
+    );
+  }
+
+  const currentAgent = availableAgents.find(
+    (agent) => agent.name === ticket.assignedTo
+  );
+
+  function handleAssignment(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!selectedAgent) return;
+
+    setAssigned(true);
+  }
+
+  return (
+    <AgentLayout
+      title="Ticket Assignment"
+      subtitle="Choose the right support agent to take ownership of this request."
+    >
+      <div className="agent-assignment-back-row">
+        <Link to="/agent/tickets" className="agent-assignment-back">
+          ← Back to all tickets
+        </Link>
+        <span>Ticket assignment</span>
+      </div>
+
+      {assigned && (
+        <div className="agent-queue-confirmation">
+          <span>✓</span>
+          {ticket.id} has been assigned to {selectedAgent}.
+        </div>
+      )}
+
+      <div className="agent-assignment-layout">
+        <section className="agent-assignment-main">
+          <div className="agent-assignment-card">
+            <div className="agent-assignment-card-heading">
+              <div>
+                <span className="agent-detail-id">{ticket.id}</span>
+                <h2>{ticket.title}</h2>
+                <p>
+                  Review the request before selecting an owner.
+                </p>
+              </div>
+
+              <StatusBadge status={ticket.status} />
+            </div>
+
+            <div className="agent-detail-badges">
+              <PriorityBadge priority={ticket.priority} />
+              <span className="agent-assignment-category">
+                {ticket.category}
+              </span>
+            </div>
+
+            <div className="agent-assignment-description">
+              <span>REQUEST DESCRIPTION</span>
+              <p>{ticket.description}</p>
+            </div>
+
+            <div className="agent-assignment-ticket-meta">
+              <div>
+                <span>Requester</span>
+                <strong>{ticket.requester}</strong>
+              </div>
+              <div>
+                <span>Created</span>
+                <strong>{ticket.created}</strong>
+              </div>
+              <div>
+                <span>Current assignee</span>
+                <strong>{ticket.assignedTo ?? 'Unassigned'}</strong>
+              </div>
+            </div>
+          </div>
+
+          <form
+            className="agent-assignment-card agent-assignment-form"
+            onSubmit={handleAssignment}
+          >
+            <div className="agent-assignment-card-heading">
+              <div>
+                <h2>Choose an agent</h2>
+                <p>
+                  Select an agent to assign responsibility for this ticket.
+                </p>
+              </div>
+            </div>
+
+            <div className="agent-assignment-agent-list">
+              {availableAgents.map((agent) => {
+                const workload = initialTickets.filter(
+                  (item) => item.assignedTo === agent.name
+                ).length;
+
+                const isSelected = selectedAgent === agent.name;
+
+                return (
+                  <label
+                    key={agent.name}
+                    className={`agent-assignment-agent${isSelected ? ' selected' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="assignedAgent"
+                      value={agent.name}
+                      checked={isSelected}
+                      onChange={() => {
+                        setSelectedAgent(agent.name);
+                        setAssigned(false);
+                      }}
+                    />
+
+                    <span className="agent-assignment-avatar">
+                      {agent.initials}
+                    </span>
+
+                    <span className="agent-assignment-agent-info">
+                      <strong>{agent.name}</strong>
+                      <span>{agent.role}</span>
+                    </span>
+
+                    <span className="agent-assignment-agent-meta">
+                      <span className={`agent-agent-status ${agent.availability === 'Available' ? 'available' : 'busy'}`}>
+                        {agent.availability}
+                      </span>
+                      <span>{workload} active tickets</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            <div className="agent-assignment-form-footer">
+              <span>
+                {currentAgent && !assigned
+                  ? `Currently assigned to ${currentAgent.name}`
+                  : 'Assignment is a manual action'}
+              </span>
+
+              <button
+                type="submit"
+                className="agent-assignment-submit"
+                disabled={!selectedAgent || (assigned && selectedAgent === ticket.assignedTo)}
+              >
+                {assigned
+                  ? 'Assignment confirmed'
+                  : ticket.assignedTo
+                    ? 'Reassign ticket'
+                    : 'Assign ticket'}
+                <span>→</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <aside className="agent-assignment-sidebar">
+          <div className="agent-assignment-summary">
+            <span className="agent-assignment-summary-icon">♧</span>
+            <h3>Assignment guidance</h3>
+            <p>
+              Consider the ticket category, priority and agent workload when
+              choosing an owner.
+            </p>
+            <div>
+              <span>Ticket priority</span>
+              <PriorityBadge priority={ticket.priority} />
+            </div>
+            <div>
+              <span>Ticket category</span>
+              <strong>{ticket.category}</strong>
+            </div>
+          </div>
+
+          <div className="agent-assignment-summary agent-assignment-note">
+            <span className="agent-assignment-summary-icon">✳</span>
+            <h3>Manual assignment</h3>
+            <p>
+              The selected agent becomes the ticket owner. This demo does not
+              send notifications or update the backend.
+            </p>
+          </div>
+        </aside>
       </div>
     </AgentLayout>
   );
