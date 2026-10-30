@@ -17,6 +17,7 @@ import {
   NotificationsPage,
   ProfilePage,
 } from './EmployeePages';
+import { AllTicketsPage } from './AgentPages';
 
 type Provider = 'Google' | 'Apple';
 
@@ -311,12 +312,15 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Authentication */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/callback" element={<CallbackPage />} />
-        <Route path="*" element={<NotFoundPage />} />
+
+        {/* Employee workspace */}
         <Route path="/employee" element={<Navigate to="/employee/dashboard" replace />} />
         <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
         <Route path="/employee/tickets" element={<MyTicketsPage />} />
@@ -324,6 +328,13 @@ export default function App() {
         <Route path="/employee/tickets/:ticketId" element={<TicketDetailsPage />} />
         <Route path="/employee/notifications" element={<NotificationsPage />} />
         <Route path="/employee/profile" element={<ProfilePage />} />
+
+        {/* Agent workspace */}
+        <Route path="/agent" element={<Navigate to="/agent/tickets" replace />} />
+        <Route path="/agent/tickets" element={<AllTicketsPage />} />
+
+        {/* Keep the fallback route last */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );
