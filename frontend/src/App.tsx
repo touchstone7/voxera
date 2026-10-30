@@ -9,6 +9,14 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import './App.css';
+import {
+  EmployeeDashboard,
+  MyTicketsPage,
+  CreateTicketPage,
+  TicketDetailsPage,
+  NotificationsPage,
+  ProfilePage,
+} from './EmployeePages';
 
 type Provider = 'Google' | 'Apple';
 
@@ -309,6 +317,13 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/callback" element={<CallbackPage />} />
         <Route path="*" element={<NotFoundPage />} />
+        <Route path="/employee" element={<Navigate to="/employee/dashboard" replace />} />
+        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+        <Route path="/employee/tickets" element={<MyTicketsPage />} />
+        <Route path="/employee/tickets/new" element={<CreateTicketPage />} />
+        <Route path="/employee/tickets/:ticketId" element={<TicketDetailsPage />} />
+        <Route path="/employee/notifications" element={<NotificationsPage />} />
+        <Route path="/employee/profile" element={<ProfilePage />} />
       </Routes>
     </BrowserRouter>
   );
