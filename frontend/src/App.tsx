@@ -17,7 +17,7 @@ import {
   NotificationsPage,
   ProfilePage,
 } from './EmployeePages';
-import { AllTicketsPage } from './AgentPages';
+import { AllTicketsPage, TeamQueuePage } from './AgentPages';
 
 type Provider = 'Google' | 'Apple';
 
@@ -332,6 +332,7 @@ export default function App() {
         {/* Agent workspace */}
         <Route path="/agent" element={<Navigate to="/agent/tickets" replace />} />
         <Route path="/agent/tickets" element={<AllTicketsPage />} />
+        <Route path="/agent/queue" element={<TeamQueuePage />} />
 
         {/* Keep the fallback route last */}
         <Route path="*" element={<NotFoundPage />} />

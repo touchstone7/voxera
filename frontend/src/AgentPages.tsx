@@ -179,9 +179,6 @@ function AgentLayout({
             >
               <span className="agent-nav-icon">{item.icon}</span>
               <span>{item.label}</span>
-              {item.to === '/agent/queue' && (
-                <span className="agent-nav-count">3</span>
-              )}
             </NavLink>
           ))}
 
@@ -547,6 +544,264 @@ export function AllTicketsPage() {
           </section>
         </div>
       )}
+    </AgentLayout>
+  );
+}
+
+export function TeamQueuePage() {
+  const [tickets, setTickets] = useState(initialTickets);
+  const [priorityFilter, setPriorityFilter] = useState('All priorities');
+  const [categoryFilter, setCategoryFilter] = useState('All categories');
+  const [confirmation, setConfirmation] = useState('');
+
+  const queueTickets = tickets.filter(
+    (ticket) => !ticket.assignedTo && ticket.status !== 'Resolved'
+  );
+
+  const categories = Array.from(
+    new Set(queueTickets.map((ticket) => ticket.category))
+  );
+
+  const filteredTickets = useMemo(
+    () =>
+      queueTickets.filter((ticket) => {
+        const matchesPriority =
+          priorityFilter === 'All priorities' ||
+          ticket.priority === priorityFilter;
+
+        const matchesCategory =
+          categoryFilter === 'All categories' ||
+          ticket.category === categoryFilter;
+
+        return matchesPriority && matchesCategory;
+      }),
+    [queueTickets, priorityFilter, categoryFilter]
+  );
+
+  const urgentCount = queueTickets.filter(
+    (ticket) => ticket.priority === 'Urgent'
+  ).length;
+
+  const highPriorityCount = queueTickets.filter(
+    (ticket) => ticket.priority === 'High'
+  ).length;
+
+  function takeOwnership(ticket: AgentTicket) {
+    setTickets((currentTickets) =>
+      currentTickets.map((currentTicket) =>
+        currentTicket.id === ticket.id
+          ? { ...currentTicket, assignedTo: 'Alex Morgan' }
+          : currentTicket
+      )
+    );
+
+    setConfirmation(`${ticket.id} has been assigned to you.`);
+  }
+
+  function clearFilters() {
+    setPriorityFilter('All priorities');
+    setCategoryFilter('All categories');
+  }
+
+  return (
+    <AgentLayout
+      title="Team Queue"
+      subtitle="Review unassigned requests and take ownership of tickets that need attention."
+    >
+      <div className="agent-stats-grid">
+        <div className="agent-stat-card">
+          <div className="agent-stat-top">
+            <span className="agent-stat-icon purple">◫</span>
+            <span className="agent-stat-caption">Awaiting an owner</span>
+          </div>
+          <span className="agent-stat-number">{queueTickets.length}</span>
+          <span className="agent-stat-label">Unassigned tickets</span>
+        </div>
+
+        <div className="agent-stat-card">
+          <div className="agent-stat-top">
+            <span className="agent-stat-icon red">!</span>
+            <span className="agent-stat-caption">Immediate attention</span>
+          </div>
+          <span className="agent-stat-number">{urgentCount}</span>
+          <span className="agent-stat-label">Urgent tickets</span>
+        </div>
+
+        <div className="agent-stat-card">
+          <div className="agent-stat-top">
+            <span className="agent-stat-icon amber">↑</span>
+            <span className="agent-stat-caption">High priority</span>
+          </div>
+          <span className="agent-stat-number">{highPriorityCount}</span>
+          <span className="agent-stat-label">High priority tickets</span>
+        </div>
+
+        <div className="agent-stat-card">
+          <div className="agent-stat-top">
+            <span className="agent-stat-icon blue">✓</span>
+            <span className="agent-stat-caption">Your ownership</span>
+          </div>
+          <span className="agent-stat-number">
+            {tickets.filter((ticket) => ticket.assignedTo === 'Alex Morgan').length}
+          </span>
+          <span className="agent-stat-label">Assigned to you</span>
+        </div>
+      </div>
+
+      {confirmation && (
+        <div className="agent-queue-confirmation">
+          <span>✓</span>
+          {confirmation}
+          <button
+            type="button"
+            onClick={() => setConfirmation('')}
+            aria-label="Dismiss confirmation"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <div className="agent-section-heading">
+        <div>
+          <h2>Unassigned tickets</h2>
+          <p>
+            Requests that are waiting for an agent to take ownership.
+          </p>
+        </div>
+        <span className="agent-record-count">
+          {filteredTickets.length} of {queueTickets.length} tickets
+        </span>
+      </div>
+
+      <div className="agent-ticket-panel">
+        <div className="agent-queue-toolbar">
+          <div className="agent-queue-toolbar-label">
+            <span>⌕</span>
+            Filter queue
+          </div>
+
+          <div className="agent-queue-filters">
+            <select
+              value={priorityFilter}
+              onChange={(event) => setPriorityFilter(event.target.value)}
+              aria-label="Filter by priority"
+            >
+              <option>All priorities</option>
+              <option>Urgent</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+
+            <select
+              value={categoryFilter}
+              onChange={(event) => setCategoryFilter(event.target.value)}
+              aria-label="Filter by category"
+            >
+              <option>All categories</option>
+              {categories.map((category) => (
+                <option key={category}>{category}</option>
+              ))}
+            </select>
+
+            {(priorityFilter !== 'All priorities' ||
+              categoryFilter !== 'All categories') && (
+              <button
+                type="button"
+                className="agent-queue-clear"
+                onClick={clearFilters}
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredTickets.length > 0 ? (
+          <div className="agent-table-wrap">
+            <table className="agent-table agent-queue-table">
+              <thead>
+                <tr>
+                  <th>Ticket</th>
+                  <th>Requester</th>
+                  <th>Priority</th>
+                  <th>Category</th>
+                  <th>Created</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredTickets.map((ticket) => (
+                  <tr key={ticket.id}>
+                    <td>
+                      <div className="agent-queue-ticket">
+                        <strong>{ticket.title}</strong>
+                        <span>{ticket.id}</span>
+                      </div>
+                    </td>
+
+                    <td>
+                      <div className="agent-requester">
+                        <span className="agent-requester-avatar">
+                          {ticket.initials}
+                        </span>
+                        {ticket.requester}
+                      </div>
+                    </td>
+
+                    <td>
+                      <PriorityBadge priority={ticket.priority} />
+                    </td>
+
+                    <td>{ticket.category}</td>
+
+                    <td className="agent-date">{ticket.created}</td>
+
+                    <td>
+                      <button
+                        type="button"
+                        className="agent-queue-take-button"
+                        onClick={() => takeOwnership(ticket)}
+                      >
+                        Take ticket <span>→</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="agent-empty-state">
+            <span>✓</span>
+            <h3>
+              {queueTickets.length === 0
+                ? 'The queue is clear'
+                : 'No matching tickets'}
+            </h3>
+            <p>
+              {queueTickets.length === 0
+                ? 'There are currently no unassigned tickets waiting for an agent.'
+                : 'Try changing your filters to see more tickets.'}
+            </p>
+            {(priorityFilter !== 'All priorities' ||
+              categoryFilter !== 'All categories') && (
+              <button type="button" onClick={clearFilters}>
+                Clear filters
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className="agent-table-footer">
+          <span>
+            Showing <strong>{filteredTickets.length}</strong> unassigned tickets
+          </span>
+          <span>Assignment is manual</span>
+        </div>
+      </div>
     </AgentLayout>
   );
 }

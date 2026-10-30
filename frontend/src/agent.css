@@ -1045,3 +1045,149 @@
     transition-duration: .01ms !important;
   }
 }
+
+/* Team Queue */
+
+.agent-queue-confirmation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 15px;
+  border: 1px solid #345344;
+  border-radius: 9px;
+  color: #a8d9bb;
+  background: #192b25;
+  font-size: 11px;
+}
+
+.agent-queue-confirmation > span {
+  color: #7dd5a0;
+  font-size: 15px;
+}
+
+.agent-queue-confirmation button {
+  margin-left: auto;
+  padding: 0 4px;
+  border: 0;
+  color: #a8d9bb;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.agent-queue-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 13px 17px;
+  border-bottom: 1px solid #292a3b;
+}
+
+.agent-queue-toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #b9b6ce;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.agent-queue-toolbar-label span {
+  color: #a99aff;
+  font-size: 17px;
+}
+
+.agent-queue-filters {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.agent-queue-filters select {
+  min-width: 125px;
+  padding: 8px 10px;
+  border: 1px solid #35364b;
+  border-radius: 7px;
+  outline: none;
+  color: #c4c1d7;
+  background: #1b1c2a;
+  font-size: 10px;
+}
+
+.agent-queue-filters select:focus {
+  border-color: #7667c1;
+}
+
+.agent-queue-clear {
+  padding: 7px 9px;
+  border: 0;
+  color: #b9aaff;
+  background: transparent;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.agent-queue-clear:hover {
+  color: #ddd5ff;
+}
+
+.agent-queue-ticket {
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.agent-queue-ticket strong {
+  overflow: hidden;
+  color: #e3e1f0;
+  font-size: 10px;
+  font-weight: 620;
+  text-overflow: ellipsis;
+}
+
+.agent-queue-ticket span {
+  color: #85879d;
+  font-size: 9px;
+}
+
+.agent-queue-take-button {
+  white-space: nowrap;
+  padding: 7px 10px;
+  border: 1px solid #51447f;
+  border-radius: 7px;
+  color: #d0c6ff;
+  background: #292440;
+  font-size: 9px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+
+.agent-queue-take-button:hover {
+  border-color: #8a78d4;
+  background: #393052;
+}
+
+.agent-queue-take-button span {
+  margin-left: 5px;
+}
+
+@media (max-width: 760px) {
+  .agent-queue-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .agent-queue-filters {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .agent-queue-filters select {
+    flex: 1;
+    min-width: 110px;
+  }
+}
