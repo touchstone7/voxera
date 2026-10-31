@@ -22,6 +22,7 @@ import {
   TeamQueuePage,
   TicketAssignmentPage,
   UserManagementPage,
+  AdministrationPage,
 } from './AgentPages';
 type Provider = 'Google' | 'Apple';
 
@@ -339,6 +340,7 @@ export default function App() {
         <Route path="/agent/queue" element={<TeamQueuePage />} />
         <Route path="/agent/tickets/:ticketId/assign" element={<TicketAssignmentPage />} />
         <Route path="/admin/users" element={<UserManagementPage />} />
+        <Route path="/admin/settings" element={<AdministrationPage />} />
 
         {/* Keep the fallback route last */}
         <Route path="*" element={<NotFoundPage />} />

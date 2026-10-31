@@ -182,20 +182,32 @@ function AgentLayout({
             </NavLink>
           ))}
 
-          <div className="agent-nav-section agent-nav-section-spaced">
-            MANAGEMENT
-          </div>
-            <NavLink
-                to="/admin/users"
-                className={({ isActive }) =>
-                    `agent-nav-link${isActive ? ' active' : ''}`
-                }
-            >
-                <span className="agent-nav-icon">♙</span>
-                <span>User Management</span>
-                <span className="agent-coming-soon">ADMIN</span>
-            </NavLink>
-        </nav>
+                  <div className="agent-nav-section agent-nav-section-spaced">
+                      MANAGEMENT
+                  </div>
+
+                  <NavLink
+                      to="/admin/users"
+                      className={({ isActive }) =>
+                          `agent-nav-link${isActive ? ' active' : ''}`
+                      }
+                  >
+                      <span className="agent-nav-icon">♙</span>
+                      <span>User Management</span>
+                      <span className="agent-coming-soon">ADMIN</span>
+                  </NavLink>
+
+                  <NavLink
+                      to="/admin/settings"
+                      className={({ isActive }) =>
+                          `agent-nav-link${isActive ? ' active' : ''}`
+                      }
+                  >
+                      <span className="agent-nav-icon">⚙</span>
+                      <span>Administration</span>
+                      <span className="agent-coming-soon">ADMIN</span>
+                  </NavLink>
+              </nav>
 
         <div className="agent-sidebar-bottom">
           <div className="agent-status-card">
@@ -1471,6 +1483,549 @@ export function UserManagementPage() {
                             </div>
                         )}
                     </aside>
+                </div>
+            </div>
+        </AgentLayout>
+    );
+}
+
+type SettingsSection =
+    | 'General'
+    | 'Tickets'
+    | 'Workflow'
+    | 'Notifications'
+    | 'Voice Agent';
+
+type VoxeraSettings = {
+    workspaceName: string;
+    organization: string;
+    timezone: string;
+    ticketPrefix: string;
+    defaultPriority: 'Low' | 'Medium' | 'High' | 'Urgent';
+    categories: string;
+    allowReopening: boolean;
+    requireAssignment: boolean;
+    notifyNewTicket: boolean;
+    notifyAssignment: boolean;
+    notifyStatusChange: boolean;
+    notifyByEmail: boolean;
+    notifyInApp: boolean;
+    voiceEnabled: boolean;
+    voiceGreeting: string;
+    voiceLanguage: string;
+};
+
+const defaultVoxeraSettings: VoxeraSettings = {
+    workspaceName: 'Voxera Support',
+    organization: 'Voxera Technologies',
+    timezone: 'Asia/Kolkata',
+    ticketPrefix: 'VXR',
+    defaultPriority: 'Medium',
+    categories: 'Hardware, Software, Network, Database, Access, Other',
+    allowReopening: true,
+    requireAssignment: false,
+    notifyNewTicket: true,
+    notifyAssignment: true,
+    notifyStatusChange: true,
+    notifyByEmail: true,
+    notifyInApp: true,
+    voiceEnabled: true,
+    voiceGreeting: 'Hello! Welcome to Voxera Support. How can I help you today?',
+    voiceLanguage: 'English',
+};
+
+const settingsNavigation: {
+    name: SettingsSection;
+    icon: string;
+    description: string;
+}[] = [
+        {
+            name: 'General',
+            icon: '⚙',
+            description: 'Workspace identity and regional preferences',
+        },
+        {
+            name: 'Tickets',
+            icon: '▤',
+            description: 'Ticket defaults and categories',
+        },
+        {
+            name: 'Workflow',
+            icon: '⇄',
+            description: 'Ticket lifecycle and assignment rules',
+        },
+        {
+            name: 'Notifications',
+            icon: '♧',
+            description: 'Updates and notification preferences',
+        },
+        {
+            name: 'Voice Agent',
+            icon: '⌁',
+            description: 'Voice support configuration',
+        },
+    ];
+
+export function AdministrationPage() {
+    const [activeSection, setActiveSection] =
+        useState<SettingsSection>('General');
+    const [settings, setSettings] = useState(defaultVoxeraSettings);
+    const [saveMessage, setSaveMessage] = useState('');
+
+    function updateSetting<K extends keyof VoxeraSettings>(
+        key: K,
+        value: VoxeraSettings[K],
+    ) {
+        setSettings((current) => ({ ...current, [key]: value }));
+        setSaveMessage('');
+    }
+
+    function toggleSetting(key: keyof VoxeraSettings) {
+        const currentValue = settings[key];
+
+        if (typeof currentValue === 'boolean') {
+            updateSetting(key, !currentValue);
+        }
+    }
+
+    function saveSettings() {
+        setSaveMessage('Your changes have been saved in this demo session.');
+    }
+
+    const currentNavigation = settingsNavigation.find(
+        (item) => item.name === activeSection,
+    );
+
+    return (
+        <AgentLayout
+            title="Administration"
+            subtitle="Configure your workspace and manage support operations."
+        >
+            <div className="as-page">
+                <div className="as-heading-row">
+                    <div>
+                        <span className="as-section-label">WORKSPACE CONFIGURATION</span>
+                        <h2>Settings</h2>
+                        <p>Manage how your Voxera support workspace operates.</p>
+                    </div>
+                    <span className="as-demo-indicator">
+                        <span />
+                        DEMO CONFIGURATION
+                    </span>
+                </div>
+
+                <div className="as-layout">
+                    <aside className="as-navigation">
+                        <div className="as-navigation-title">SETTINGS</div>
+
+                        {settingsNavigation.map((item) => (
+                            <button
+                                type="button"
+                                key={item.name}
+                                className={`as-nav-item${activeSection === item.name ? ' active' : ''
+                                    }`}
+                                onClick={() => {
+                                    setActiveSection(item.name);
+                                    setSaveMessage('');
+                                }}
+                            >
+                                <span className="as-nav-icon">{item.icon}</span>
+                                <span className="as-nav-copy">
+                                    <strong>{item.name}</strong>
+                                    <small>{item.description}</small>
+                                </span>
+                                <span className="as-nav-arrow">›</span>
+                            </button>
+                        ))}
+
+                        <div className="as-navigation-note">
+                            <span>ⓘ</span>
+                            Settings are currently managed in demo mode.
+                        </div>
+                    </aside>
+
+                    <section className="as-panel">
+                        <div className="as-panel-heading">
+                            <div>
+                                <h2>{activeSection}</h2>
+                                <p>{currentNavigation?.description}</p>
+                            </div>
+                            <span className="as-panel-icon">
+                                {currentNavigation?.icon}
+                            </span>
+                        </div>
+
+                        {activeSection === 'General' && (
+                            <div className="as-section-content">
+                                <div className="as-group-heading">
+                                    <h3>Workspace information</h3>
+                                    <p>Basic details used to identify your support workspace.</p>
+                                </div>
+
+                                <div className="as-form-grid">
+                                    <div className="as-field">
+                                        <label htmlFor="as-workspace">Workspace name</label>
+                                        <input
+                                            id="as-workspace"
+                                            value={settings.workspaceName}
+                                            onChange={(event) =>
+                                                updateSetting('workspaceName', event.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="as-field">
+                                        <label htmlFor="as-organization">Organization</label>
+                                        <input
+                                            id="as-organization"
+                                            value={settings.organization}
+                                            onChange={(event) =>
+                                                updateSetting('organization', event.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="as-field as-field-full">
+                                        <label htmlFor="as-timezone">Workspace timezone</label>
+                                        <select
+                                            id="as-timezone"
+                                            value={settings.timezone}
+                                            onChange={(event) =>
+                                                updateSetting('timezone', event.target.value)
+                                            }
+                                        >
+                                            <option value="Asia/Kolkata">
+                                                India Standard Time (UTC+05:30)
+                                            </option>
+                                            <option value="Europe/London">
+                                                London (UTC+00:00 / UTC+01:00)
+                                            </option>
+                                            <option value="Asia/Singapore">
+                                                Singapore (UTC+08:00)
+                                            </option>
+                                            <option value="America/New_York">
+                                                Eastern Time (UTC-05:00 / UTC-04:00)
+                                            </option>
+                                            <option value="UTC">Coordinated Universal Time (UTC)</option>
+                                        </select>
+                                        <small>
+                                            Used for displaying ticket timestamps and activity.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'Tickets' && (
+                            <div className="as-section-content">
+                                <div className="as-group-heading">
+                                    <h3>Ticket defaults</h3>
+                                    <p>Set the default values used when new tickets are created.</p>
+                                </div>
+
+                                <div className="as-form-grid">
+                                    <div className="as-field">
+                                        <label htmlFor="as-prefix">Ticket number prefix</label>
+                                        <input
+                                            id="as-prefix"
+                                            maxLength={6}
+                                            value={settings.ticketPrefix}
+                                            onChange={(event) =>
+                                                updateSetting(
+                                                    'ticketPrefix',
+                                                    event.target.value.toUpperCase(),
+                                                )
+                                            }
+                                        />
+                                        <small>Example: {settings.ticketPrefix || 'VXR'}-1053</small>
+                                    </div>
+
+                                    <div className="as-field">
+                                        <label htmlFor="as-priority">Default priority</label>
+                                        <select
+                                            id="as-priority"
+                                            value={settings.defaultPriority}
+                                            onChange={(event) =>
+                                                updateSetting(
+                                                    'defaultPriority',
+                                                    event.target.value as VoxeraSettings['defaultPriority'],
+                                                )
+                                            }
+                                        >
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Urgent">Urgent</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="as-field as-field-full">
+                                        <label htmlFor="as-categories">Ticket categories</label>
+                                        <textarea
+                                            id="as-categories"
+                                            rows={3}
+                                            value={settings.categories}
+                                            onChange={(event) =>
+                                                updateSetting('categories', event.target.value)
+                                            }
+                                        />
+                                        <small>
+                                            Separate categories with commas. This is demo
+                                            configuration and does not change the ticket forms.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'Workflow' && (
+                            <div className="as-section-content">
+                                <div className="as-group-heading">
+                                    <h3>Ticket lifecycle</h3>
+                                    <p>Configure basic behavior for ticket handling.</p>
+                                </div>
+
+                                <div className="as-static-workflow">
+                                    <span>AVAILABLE STATUSES</span>
+                                    <div className="as-status-list">
+                                        {['Open', 'In Progress', 'Pending', 'Resolved', 'Closed', 'Cancelled'].map(
+                                            (status) => (
+                                                <span key={status} className="as-status-chip">
+                                                    <span />
+                                                    {status}
+                                                </span>
+                                            ),
+                                        )}
+                                    </div>
+                                    <small>
+                                        These are the current Voxera ticket statuses. Their
+                                        lifecycle definitions are not editable here.
+                                    </small>
+                                </div>
+
+                                <div className="as-setting-list">
+                                    <div className="as-setting-row">
+                                        <div>
+                                            <strong>Allow ticket reopening</strong>
+                                            <p>
+                                                Allow resolved tickets to be reopened when further
+                                                attention is needed.
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={settings.allowReopening}
+                                            className={`as-switch${settings.allowReopening ? ' enabled' : ''
+                                                }`}
+                                            onClick={() => toggleSetting('allowReopening')}
+                                        >
+                                            <span />
+                                        </button>
+                                    </div>
+
+                                    <div className="as-setting-row">
+                                        <div>
+                                            <strong>Require assignment</strong>
+                                            <p>
+                                                Indicate that tickets should be assigned to an agent
+                                                before work begins.
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={settings.requireAssignment}
+                                            className={`as-switch${settings.requireAssignment ? ' enabled' : ''
+                                                }`}
+                                            onClick={() => toggleSetting('requireAssignment')}
+                                        >
+                                            <span />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'Notifications' && (
+                            <div className="as-section-content">
+                                <div className="as-group-heading">
+                                    <h3>Notification preferences</h3>
+                                    <p>Choose which workspace events should generate notifications.</p>
+                                </div>
+
+                                <div className="as-setting-list">
+                                    <div className="as-setting-row">
+                                        <div>
+                                            <strong>New ticket created</strong>
+                                            <p>Notify when a new support ticket is submitted.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={settings.notifyNewTicket}
+                                            className={`as-switch${settings.notifyNewTicket ? ' enabled' : ''}`}
+                                            onClick={() => toggleSetting('notifyNewTicket')}
+                                        >
+                                            <span />
+                                        </button>
+                                    </div>
+
+                                    <div className="as-setting-row">
+                                        <div>
+                                            <strong>Ticket assigned</strong>
+                                            <p>Notify the relevant user when a ticket is assigned.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={settings.notifyAssignment}
+                                            className={`as-switch${settings.notifyAssignment ? ' enabled' : ''}`}
+                                            onClick={() => toggleSetting('notifyAssignment')}
+                                        >
+                                            <span />
+                                        </button>
+                                    </div>
+
+                                    <div className="as-setting-row">
+                                        <div>
+                                            <strong>Ticket status changed</strong>
+                                            <p>Notify when a ticket moves to another status.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={settings.notifyStatusChange}
+                                            className={`as-switch${settings.notifyStatusChange ? ' enabled' : ''}`}
+                                            onClick={() => toggleSetting('notifyStatusChange')}
+                                        >
+                                            <span />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="as-group-heading as-group-secondary">
+                                    <h3>Delivery channels</h3>
+                                    <p>Choose the channels enabled for workspace notifications.</p>
+                                </div>
+
+                                <div className="as-setting-list">
+                                    <div className="as-setting-row">
+                                        <div>
+                                            <strong>Email notifications</strong>
+                                            <p>Notification delivery through email.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={settings.notifyByEmail}
+                                            className={`as-switch${settings.notifyByEmail ? ' enabled' : ''}`}
+                                            onClick={() => toggleSetting('notifyByEmail')}
+                                        >
+                                            <span />
+                                        </button>
+                                    </div>
+
+                                    <div className="as-setting-row">
+                                        <div>
+                                            <strong>In-app notifications</strong>
+                                            <p>Notification delivery inside the Voxera workspace.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={settings.notifyInApp}
+                                            className={`as-switch${settings.notifyInApp ? ' enabled' : ''}`}
+                                            onClick={() => toggleSetting('notifyInApp')}
+                                        >
+                                            <span />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'Voice Agent' && (
+                            <div className="as-section-content">
+                                <div className="as-group-heading">
+                                    <h3>Voice support</h3>
+                                    <p>Configure the basic voice support experience.</p>
+                                </div>
+
+                                <div className="as-setting-row as-voice-enable">
+                                    <div>
+                                        <strong>Enable voice support</strong>
+                                        <p>
+                                            Show voice support as an available workspace capability.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        role="switch"
+                                        aria-checked={settings.voiceEnabled}
+                                        className={`as-switch${settings.voiceEnabled ? ' enabled' : ''}`}
+                                        onClick={() => toggleSetting('voiceEnabled')}
+                                    >
+                                        <span />
+                                    </button>
+                                </div>
+
+                                <div className="as-form-grid as-voice-fields">
+                                    <div className="as-field as-field-full">
+                                        <label htmlFor="as-greeting">Welcome greeting</label>
+                                        <textarea
+                                            id="as-greeting"
+                                            rows={3}
+                                            value={settings.voiceGreeting}
+                                            disabled={!settings.voiceEnabled}
+                                            onChange={(event) =>
+                                                updateSetting('voiceGreeting', event.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="as-field">
+                                        <label htmlFor="as-language">Language</label>
+                                        <select
+                                            id="as-language"
+                                            value={settings.voiceLanguage}
+                                            disabled={!settings.voiceEnabled}
+                                            onChange={(event) =>
+                                                updateSetting('voiceLanguage', event.target.value)
+                                            }
+                                        >
+                                            <option value="English">English</option>
+                                            <option value="Hindi">Hindi</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="as-voice-note">
+                                    <span>ⓘ</span>
+                                    These preferences are illustrative. No voice provider,
+                                    speech service, or live agent connection is configured here.
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="as-save-footer">
+                            <div>
+                                {saveMessage && (
+                                    <span className="as-save-message">
+                                        <span>✓</span>
+                                        {saveMessage}
+                                    </span>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                className="as-save-button"
+                                onClick={saveSettings}
+                            >
+                                Save Changes <span>→</span>
+                            </button>
+                        </div>
+                    </section>
                 </div>
             </div>
         </AgentLayout>
