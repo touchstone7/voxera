@@ -185,11 +185,16 @@ function AgentLayout({
           <div className="agent-nav-section agent-nav-section-spaced">
             MANAGEMENT
           </div>
-          <div className="agent-nav-static">
-            <span className="agent-nav-icon">♙</span>
-            <span>User Management</span>
-            <span className="agent-coming-soon">ADMIN</span>
-          </div>
+            <NavLink
+                to="/admin/users"
+                className={({ isActive }) =>
+                    `agent-nav-link${isActive ? ' active' : ''}`
+                }
+            >
+                <span className="agent-nav-icon">♙</span>
+                <span>User Management</span>
+                <span className="agent-coming-soon">ADMIN</span>
+            </NavLink>
         </nav>
 
         <div className="agent-sidebar-bottom">
@@ -1059,4 +1064,415 @@ export function TicketAssignmentPage() {
       </div>
     </AgentLayout>
   );
+}
+type ManagedUser = {
+    id: string;
+    name: string;
+    email: string;
+    initials: string;
+    department: string;
+    role: 'EMPLOYEE' | 'AGENT' | 'ADMIN';
+    status: 'ACTIVE' | 'INACTIVE';
+    joined: string;
+    lastActive: string;
+};
+
+const initialUsers: ManagedUser[] = [
+    {
+        id: 'USR-1001',
+        name: 'Alex Morgan',
+        email: 'alex.morgan@voxera.demo',
+        initials: 'AM',
+        department: 'IT Support',
+        role: 'AGENT',
+        status: 'ACTIVE',
+        joined: 'Jan 12, 2026',
+        lastActive: 'Online now',
+    },
+    {
+        id: 'USR-1002',
+        name: 'Jordan Davis',
+        email: 'jordan.davis@voxera.demo',
+        initials: 'JD',
+        department: 'Operations',
+        role: 'EMPLOYEE',
+        status: 'ACTIVE',
+        joined: 'Feb 04, 2026',
+        lastActive: '12 minutes ago',
+    },
+    {
+        id: 'USR-1003',
+        name: 'Priya Shah',
+        email: 'priya.shah@voxera.demo',
+        initials: 'PS',
+        department: 'IT Support',
+        role: 'AGENT',
+        status: 'ACTIVE',
+        joined: 'Feb 18, 2026',
+        lastActive: 'Online now',
+    },
+    {
+        id: 'USR-1004',
+        name: 'Daniel Kim',
+        email: 'daniel.kim@voxera.demo',
+        initials: 'DK',
+        department: 'IT Support',
+        role: 'AGENT',
+        status: 'ACTIVE',
+        joined: 'Mar 02, 2026',
+        lastActive: '1 hour ago',
+    },
+    {
+        id: 'USR-1005',
+        name: 'Olivia Martinez',
+        email: 'olivia.martinez@voxera.demo',
+        initials: 'OM',
+        department: 'Finance',
+        role: 'EMPLOYEE',
+        status: 'ACTIVE',
+        joined: 'Mar 14, 2026',
+        lastActive: 'Yesterday',
+    },
+    {
+        id: 'USR-1006',
+        name: 'Ethan Wilson',
+        email: 'ethan.wilson@voxera.demo',
+        initials: 'EW',
+        department: 'Human Resources',
+        role: 'EMPLOYEE',
+        status: 'INACTIVE',
+        joined: 'Apr 09, 2026',
+        lastActive: 'Oct 12, 2026',
+    },
+    {
+        id: 'USR-1007',
+        name: 'Sophia Chen',
+        email: 'sophia.chen@voxera.demo',
+        initials: 'SC',
+        department: 'Administration',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        joined: 'Jan 08, 2026',
+        lastActive: 'Online now',
+    },
+    {
+        id: 'USR-1008',
+        name: 'Noah Patel',
+        email: 'noah.patel@voxera.demo',
+        initials: 'NP',
+        department: 'Sales',
+        role: 'EMPLOYEE',
+        status: 'INACTIVE',
+        joined: 'May 21, 2026',
+        lastActive: 'Sep 28, 2026',
+    },
+];
+
+export function UserManagementPage() {
+    const [users, setUsers] = useState(initialUsers);
+    const [search, setSearch] = useState('');
+    const [roleFilter, setRoleFilter] = useState('ALL');
+    const [statusFilter, setStatusFilter] = useState('ALL');
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(
+        initialUsers[0].id,
+    );
+
+    const filteredUsers = useMemo(() => {
+        const query = search.trim().toLowerCase();
+
+        return users.filter((user) => {
+            const matchesSearch =
+                !query ||
+                user.name.toLowerCase().includes(query) ||
+                user.email.toLowerCase().includes(query) ||
+                user.id.toLowerCase().includes(query) ||
+                user.department.toLowerCase().includes(query);
+
+            const matchesRole =
+                roleFilter === 'ALL' || user.role === roleFilter;
+
+            const matchesStatus =
+                statusFilter === 'ALL' || user.status === statusFilter;
+
+            return matchesSearch && matchesRole && matchesStatus;
+        });
+    }, [users, search, roleFilter, statusFilter]);
+
+    const selectedUser =
+        users.find((user) => user.id === selectedUserId) ?? null;
+
+    const activeCount = users.filter((user) => user.status === 'ACTIVE').length;
+    const agentCount = users.filter((user) => user.role === 'AGENT').length;
+    const adminCount = users.filter((user) => user.role === 'ADMIN').length;
+
+    function updateUserRole(userId: string, role: ManagedUser['role']) {
+        setUsers((current) =>
+            current.map((user) =>
+                user.id === userId ? { ...user, role } : user,
+            ),
+        );
+    }
+
+    function toggleUserStatus(userId: string) {
+        setUsers((current) =>
+            current.map((user) =>
+                user.id === userId
+                    ? {
+                        ...user,
+                        status: user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+                    }
+                    : user,
+            ),
+        );
+    }
+
+    return (
+        <AgentLayout
+            title="User Management"
+            subtitle="Manage workspace users, access roles, and account status."
+        >
+            <div className="um-page">
+                <div className="um-stats">
+                    <div className="um-stat-card">
+                        <span className="um-stat-label">TOTAL USERS</span>
+                        <strong>{users.length}</strong>
+                        <span className="um-stat-note">Registered accounts</span>
+                    </div>
+                    <div className="um-stat-card">
+                        <span className="um-stat-label">ACTIVE USERS</span>
+                        <strong>{activeCount}</strong>
+                        <span className="um-stat-note">Currently enabled</span>
+                    </div>
+                    <div className="um-stat-card">
+                        <span className="um-stat-label">SUPPORT AGENTS</span>
+                        <strong>{agentCount}</strong>
+                        <span className="um-stat-note">Agent accounts</span>
+                    </div>
+                    <div className="um-stat-card">
+                        <span className="um-stat-label">ADMINISTRATORS</span>
+                        <strong>{adminCount}</strong>
+                        <span className="um-stat-note">Admin accounts</span>
+                    </div>
+                </div>
+
+                <div className="um-toolbar">
+                    <div className="um-search">
+                        <span>⌕</span>
+                        <input
+                            type="search"
+                            placeholder="Search users by name, email, or ID..."
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                        />
+                    </div>
+
+                    <div className="um-filters">
+                        <select
+                            aria-label="Filter by role"
+                            value={roleFilter}
+                            onChange={(event) => setRoleFilter(event.target.value)}
+                        >
+                            <option value="ALL">All roles</option>
+                            <option value="EMPLOYEE">Employee</option>
+                            <option value="AGENT">Agent</option>
+                            <option value="ADMIN">Admin</option>
+                        </select>
+
+                        <select
+                            aria-label="Filter by status"
+                            value={statusFilter}
+                            onChange={(event) => setStatusFilter(event.target.value)}
+                        >
+                            <option value="ALL">All statuses</option>
+                            <option value="ACTIVE">Active</option>
+                            <option value="INACTIVE">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="um-content">
+                    <div className="um-table-card">
+                        <div className="um-table-heading">
+                            <div>
+                                <h2>Workspace users</h2>
+                                <p>
+                                    {filteredUsers.length} of {users.length} users
+                                </p>
+                            </div>
+                            <span className="um-demo-tag">DEMO DATA</span>
+                        </div>
+
+                        <div className="um-table-scroll">
+                            <table className="um-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Department</th>
+                                        <th />
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredUsers.map((user) => (
+                                        <tr
+                                            key={user.id}
+                                            className={
+                                                selectedUserId === user.id ? 'selected' : ''
+                                            }
+                                            onClick={() => setSelectedUserId(user.id)}
+                                        >
+                                            <td>
+                                                <div className="um-user-cell">
+                                                    <div className="um-avatar">{user.initials}</div>
+                                                    <div>
+                                                        <strong>{user.name}</strong>
+                                                        <span>{user.email}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className={`um-role ${user.role.toLowerCase()}`}>
+                                                    {user.role}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    className={`um-status ${user.status.toLowerCase()}`}
+                                                >
+                                                    <span />
+                                                    {user.status === 'ACTIVE' ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="um-department">{user.department}</td>
+                                            <td>
+                                                <button
+                                                    type="button"
+                                                    className="um-view-button"
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        setSelectedUserId(user.id);
+                                                    }}
+                                                >
+                                                    View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+
+                                    {filteredUsers.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="um-empty">
+                                                <strong>No users found</strong>
+                                                <span>Try changing your search or filters.</span>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <aside className="um-details">
+                        {selectedUser ? (
+                            <>
+                                <div className="um-details-heading">
+                                    <span>USER DETAILS</span>
+                                    <span className="um-details-id">{selectedUser.id}</span>
+                                </div>
+
+                                <div className="um-profile">
+                                    <div className="um-profile-avatar">
+                                        {selectedUser.initials}
+                                    </div>
+                                    <h2>{selectedUser.name}</h2>
+                                    <p>{selectedUser.email}</p>
+                                    <span
+                                        className={`um-status ${selectedUser.status.toLowerCase()}`}
+                                    >
+                                        <span />
+                                        {selectedUser.status === 'ACTIVE' ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+
+                                <div className="um-detail-divider" />
+
+                                <div className="um-detail-fields">
+                                    <div>
+                                        <span>Department</span>
+                                        <strong>{selectedUser.department}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Account created</span>
+                                        <strong>{selectedUser.joined}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Last active</span>
+                                        <strong>{selectedUser.lastActive}</strong>
+                                    </div>
+                                </div>
+
+                                <div className="um-detail-divider" />
+
+                                <div className="um-control">
+                                    <label htmlFor="um-role-select">Access role</label>
+                                    <select
+                                        id="um-role-select"
+                                        value={selectedUser.role}
+                                        onChange={(event) =>
+                                            updateUserRole(
+                                                selectedUser.id,
+                                                event.target.value as ManagedUser['role'],
+                                            )
+                                        }
+                                    >
+                                        <option value="EMPLOYEE">Employee</option>
+                                        <option value="AGENT">Agent</option>
+                                        <option value="ADMIN">Admin</option>
+                                    </select>
+                                    <p>Controls the user's workspace permissions.</p>
+                                </div>
+
+                                <div className="um-account-action">
+                                    <div>
+                                        <strong>
+                                            {selectedUser.status === 'ACTIVE'
+                                                ? 'Deactivate account'
+                                                : 'Activate account'}
+                                        </strong>
+                                        <span>
+                                            {selectedUser.status === 'ACTIVE'
+                                                ? 'Prevent this user from accessing the workspace.'
+                                                : 'Restore this user’s workspace access.'}
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className={
+                                            selectedUser.status === 'ACTIVE'
+                                                ? 'um-deactivate-button'
+                                                : 'um-activate-button'
+                                        }
+                                        onClick={() => toggleUserStatus(selectedUser.id)}
+                                    >
+                                        {selectedUser.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                </div>
+
+                                <div className="um-demo-notice">
+                                    <span>ⓘ</span>
+                                    Changes are simulated and will reset when the page reloads.
+                                </div>
+                            </>
+                        ) : (
+                            <div className="um-no-selection">
+                                <strong>Select a user</strong>
+                                <span>Choose a user from the list to view their details.</span>
+                            </div>
+                        )}
+                    </aside>
+                </div>
+            </div>
+        </AgentLayout>
+    );
 }
