@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, NavLink, useParams } from 'react-router-dom';
 import './agent.css';
+
 
 type TicketStatus = 'Open' | 'In Progress' | 'Pending' | 'Resolved';
 type TicketPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
@@ -2027,6 +2028,275 @@ export function AdministrationPage() {
                         </div>
                     </section>
                 </div>
+            </div>
+        </AgentLayout>
+    );
+}
+
+
+type VoiceMessage = {
+    id: number;
+    speaker: 'caller' | 'ai' | 'agent';
+    text: string;
+    time: string;
+};
+
+export function VoiceSupportPage() {
+    const [sessionActive, setSessionActive] = React.useState(false);
+    const [muted, setMuted] = React.useState(false);
+    const [aiStatus, setAiStatus] = React.useState('Idle');
+    const [messages, setMessages] = React.useState<VoiceMessage[]>([]);
+    const [messageInput, setMessageInput] = React.useState('');
+    const [sessionEnded, setSessionEnded] = React.useState(false);
+
+    const startSession = () => {
+        setSessionActive(true);
+        setSessionEnded(false);
+        setAiStatus('Listening');
+        setMessages([
+            {
+                id: 1,
+                speaker: 'caller',
+                text: 'Hi, I am unable to connect to the office VPN. It keeps showing an authentication error.',
+                time: '10:42 AM',
+            },
+            {
+                id: 2,
+                speaker: 'ai',
+                text: 'I can help you with that. Are you able to sign in to other company applications?',
+                time: '10:42 AM',
+            },
+            {
+                id: 3,
+                speaker: 'caller',
+                text: 'Yes, email works fine. Only the VPN is giving me trouble.',
+                time: '10:43 AM',
+            },
+        ]);
+    };
+
+    const endSession = () => {
+        setSessionActive(false);
+        setAiStatus('Session ended');
+        setSessionEnded(true);
+    };
+
+    const sendMessage = () => {
+        const text = messageInput.trim();
+
+        if (!text || !sessionActive) return;
+
+        setMessages((current) => [
+            ...current,
+            {
+                id: Date.now(),
+                speaker: 'agent',
+                text,
+                time: new Date().toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                }),
+            },
+        ]);
+
+        setMessageInput('');
+        setAiStatus('Processing');
+    };
+
+    return (
+        <AgentLayout
+            title="Voice Support"
+            subtitle="Manage live support conversations and assist users with AI-powered voice support."
+        >
+            <div className="voice-workspace">
+                <section className="voice-panel voice-session-panel">
+                    <div className="voice-panel-heading">
+                        <div>
+                            <span className="voice-section-label">SESSION</span>
+                            <h2>Call controls</h2>
+                        </div>
+                        <span className={`voice-connection ${sessionActive ? 'connected' : ''}`}>
+                            <span />
+                            {sessionActive ? 'Connected' : 'Disconnected'}
+                        </span>
+                    </div>
+
+                    <div className="voice-caller-card">
+                        <div className="voice-caller-avatar">JD</div>
+                        <h3>{sessionActive ? 'Jordan Davis' : 'No active caller'}</h3>
+                        <p>{sessionActive ? 'Employee · IT Support' : 'Start a session to connect'}</p>
+                        {sessionActive && <span className="voice-call-duration">00:01:24</span>}
+                    </div>
+
+                    <div className="voice-control-buttons">
+                        {!sessionActive ? (
+                            <button
+                                type="button"
+                                className="voice-start-button"
+                                onClick={startSession}
+                            >
+                                <span>▶</span> Start Session
+                            </button>
+                        ) : (
+                            <>
+                                <button
+                                    type="button"
+                                    className={`voice-mute-button ${muted ? 'muted' : ''}`}
+                                    onClick={() => setMuted(!muted)}
+                                >
+                                    {muted ? 'Unmute' : 'Mute'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="voice-end-button"
+                                    onClick={endSession}
+                                >
+                                    End Session
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="voice-session-info">
+                        <div><span>Session type</span><strong>AI-assisted support</strong></div>
+                        <div><span>Assigned agent</span><strong>Alex Morgan</strong></div>
+                        <div><span>Channel</span><strong>Voice</strong></div>
+                    </div>
+                </section>
+
+                <section className="voice-panel voice-conversation-panel">
+                    <div className="voice-panel-heading">
+                        <div>
+                            <span className="voice-section-label">LIVE CONVERSATION</span>
+                            <h2>Conversation</h2>
+                        </div>
+                        <span className={`voice-ai-status ${sessionActive ? 'active' : ''}`}>
+                            <span />
+                            {aiStatus}
+                        </span>
+                    </div>
+
+                    <div className={`voice-waveform ${sessionActive ? 'playing' : ''}`}>
+                        {Array.from({ length: 36 }, (_, index) => (
+                            <span
+                                key={index}
+                                style={{
+                                    height: `${12 + ((index * 17) % 35)}px`,
+                                }}
+                            />
+                        ))}
+                    </div>
+                    <p className="voice-waveform-caption">
+                        {sessionActive
+                            ? 'Voice activity detected · Live transcription enabled'
+                            : 'Voice activity visualization'}
+                    </p>
+
+                    <div className="voice-transcript">
+                        {messages.length === 0 ? (
+                            <div className="voice-empty-state">
+                                <span>⌁</span>
+                                <strong>No conversation yet</strong>
+                                <p>Start a session to see the live conversation.</p>
+                            </div>
+                        ) : (
+                            messages.map((message) => (
+                                <div className={`voice-message ${message.speaker}`} key={message.id}>
+                                    <div className="voice-message-meta">
+                                        <strong>
+                                            {message.speaker === 'caller'
+                                                ? 'Jordan Davis'
+                                                : message.speaker === 'ai'
+                                                    ? 'Voxera AI'
+                                                    : 'Alex Morgan'}
+                                        </strong>
+                                        <span>{message.time}</span>
+                                    </div>
+                                    <p>{message.text}</p>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    <div className="voice-message-composer">
+                        <input
+                            type="text"
+                            value={messageInput}
+                            onChange={(event) => setMessageInput(event.target.value)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter') sendMessage();
+                            }}
+                            placeholder={
+                                sessionActive
+                                    ? 'Add an agent note or response...'
+                                    : 'Start a session to participate...'
+                            }
+                            disabled={!sessionActive}
+                        />
+                        <button
+                            type="button"
+                            onClick={sendMessage}
+                            disabled={!sessionActive || !messageInput.trim()}
+                        >
+                            Send
+                        </button>
+                    </div>
+                </section>
+
+                <section className="voice-panel voice-context-panel">
+                    <div className="voice-panel-heading">
+                        <div>
+                            <span className="voice-section-label">TICKET CONTEXT</span>
+                            <h2>Related ticket</h2>
+                        </div>
+                        <span className="voice-ticket-priority">HIGH</span>
+                    </div>
+
+                    <div className="voice-ticket-card">
+                        <span className="voice-ticket-number">VX-2026-0142</span>
+                        <h3>Unable to connect to office VPN</h3>
+                        <div className="voice-ticket-tags">
+                            <span>In Progress</span>
+                            <span>Network</span>
+                        </div>
+                        <div className="voice-ticket-details">
+                            <div><span>Requester</span><strong>Jordan Davis</strong></div>
+                            <div><span>Assigned to</span><strong>Alex Morgan</strong></div>
+                            <div><span>Created</span><strong>Today, 9:18 AM</strong></div>
+                        </div>
+                        <Link to="/agent/tickets/1" className="voice-ticket-link">
+                            View ticket details <span>→</span>
+                        </Link>
+                    </div>
+
+                    <div className="voice-ai-insights">
+                        <span className="voice-section-label">AI ISSUE SUMMARY</span>
+                        <p>
+                            Employee can access email but receives an authentication
+                            error when connecting to the corporate VPN.
+                        </p>
+                        <div className="voice-suggestion">
+                            <strong>Suggested next steps</strong>
+                            <ul>
+                                <li>Verify VPN credentials and account status</li>
+                                <li>Check MFA authentication</li>
+                                <li>Review VPN client configuration</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {sessionEnded && (
+                        <div className="voice-ended-note">
+                            Session ended. A demo session summary is ready.
+                        </div>
+                    )}
+                </section>
+            </div>
+
+            <div className="voice-demo-notice">
+                <span>ⓘ</span>
+                Demo workspace — session controls and conversation are simulated.
+                No microphone, telephony provider, or live AI agent is connected.
             </div>
         </AgentLayout>
     );
