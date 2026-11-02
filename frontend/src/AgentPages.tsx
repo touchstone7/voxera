@@ -2301,3 +2301,273 @@ export function VoiceSupportPage() {
         </AgentLayout>
     );
 }
+
+
+export function VoiceSessionSummaryPage() {
+    const { sessionId } = useParams<{ sessionId: string }>();
+    const [reviewed, setReviewed] = useState(false);
+    const [followUpCreated, setFollowUpCreated] = useState(false);
+
+    const transcript = [
+        {
+            time: '10:42 AM',
+            speaker: 'Jordan Davis',
+            role: 'caller',
+            text: 'Hi, I am unable to connect to the office VPN. It keeps showing an authentication error.',
+        },
+        {
+            time: '10:42 AM',
+            speaker: 'Voxera AI',
+            role: 'ai',
+            text: 'I can help you with that. Are you able to sign in to other company applications?',
+        },
+        {
+            time: '10:43 AM',
+            speaker: 'Jordan Davis',
+            role: 'caller',
+            text: 'Yes, email works fine. Only the VPN is giving me trouble.',
+        },
+        {
+            time: '10:44 AM',
+            speaker: 'Voxera AI',
+            role: 'ai',
+            text: 'Understood. This may be related to your VPN credentials or multi-factor authentication. Let me check a few things.',
+        },
+        {
+            time: '10:45 AM',
+            speaker: 'Alex Morgan',
+            role: 'agent',
+            text: 'I have verified your account status. Your account is active. Let us refresh your VPN authentication and try again.',
+        },
+        {
+            time: '10:48 AM',
+            speaker: 'Jordan Davis',
+            role: 'caller',
+            text: 'That worked! I can connect to the VPN now. Thank you.',
+        },
+        {
+            time: '10:49 AM',
+            speaker: 'Voxera AI',
+            role: 'ai',
+            text: 'Great! Your VPN connection has been restored. Is there anything else I can help you with?',
+        },
+    ];
+
+    return (
+        <AgentLayout
+            title="Session Summary"
+            subtitle="Review the conversation, resolution, and follow-up details for this support session."
+        >
+            <div className="vss-page">
+                <div className="vss-back-row">
+                    <Link to="/agent/voice">← Back to Voice Support</Link>
+                    <span className="vss-demo-tag">DEMO SESSION</span>
+                </div>
+
+                <section className="vss-overview">
+                    <div className="vss-overview-main">
+                        <div className="vss-outcome-icon">✓</div>
+                        <div>
+                            <span className="vss-section-label">SESSION OUTCOME</span>
+                            <h2>Issue resolved successfully</h2>
+                            <p>The caller confirmed that VPN access is working again.</p>
+                        </div>
+                    </div>
+                    <span className="vss-resolved-badge">Resolved</span>
+                </section>
+
+                <div className="vss-stats">
+                    <div className="vss-stat-card">
+                        <span>SESSION ID</span>
+                        <strong>{sessionId || 'VS-2026-0081'}</strong>
+                    </div>
+                    <div className="vss-stat-card">
+                        <span>DURATION</span>
+                        <strong>08 min 42 sec</strong>
+                    </div>
+                    <div className="vss-stat-card">
+                        <span>STARTED AT</span>
+                        <strong>Today, 10:42 AM</strong>
+                    </div>
+                    <div className="vss-stat-card">
+                        <span>ENDED AT</span>
+                        <strong>Today, 10:51 AM</strong>
+                    </div>
+                </div>
+
+                <div className="vss-main-grid">
+                    <div className="vss-primary-column">
+                        <section className="vss-card">
+                            <div className="vss-card-heading">
+                                <div>
+                                    <span className="vss-section-label">AI GENERATED</span>
+                                    <h2>Conversation summary</h2>
+                                </div>
+                                <span className="vss-ai-tag">✦ Voxera AI</span>
+                            </div>
+
+                            <p className="vss-summary-text">
+                                Jordan Davis contacted IT support because the corporate
+                                VPN client was returning an authentication error. Other
+                                company applications, including email, were working
+                                normally.
+                            </p>
+
+                            <div className="vss-summary-divider" />
+
+                            <div className="vss-summary-columns">
+                                <div>
+                                    <h3>Issue identified</h3>
+                                    <p>
+                                        VPN authentication failure despite an active
+                                        employee account.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3>Resolution provided</h3>
+                                    <p>
+                                        Account status was verified and VPN
+                                        authentication was refreshed successfully.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="vss-card">
+                            <div className="vss-card-heading">
+                                <div>
+                                    <span className="vss-section-label">CALL RECORD</span>
+                                    <h2>Conversation transcript</h2>
+                                </div>
+                                <span className="vss-message-count">
+                                    {transcript.length} messages
+                                </span>
+                            </div>
+
+                            <div className="vss-transcript">
+                                {transcript.map((message, index) => (
+                                    <div
+                                        className={`vss-transcript-message ${message.role}`}
+                                        key={index}
+                                    >
+                                        <div className="vss-transcript-marker">
+                                            {message.role === 'caller'
+                                                ? 'JD'
+                                                : message.role === 'ai'
+                                                    ? '✦'
+                                                    : 'AM'}
+                                        </div>
+                                        <div className="vss-transcript-content">
+                                            <div className="vss-transcript-meta">
+                                                <strong>{message.speaker}</strong>
+                                                <span>{message.time}</span>
+                                            </div>
+                                            <p>{message.text}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+
+                    <div className="vss-secondary-column">
+                        <section className="vss-card">
+                            <div className="vss-card-heading">
+                                <div>
+                                    <span className="vss-section-label">PARTICIPANTS</span>
+                                    <h2>Session details</h2>
+                                </div>
+                            </div>
+
+                            <div className="vss-participant">
+                                <div className="vss-person-avatar">JD</div>
+                                <div>
+                                    <strong>Jordan Davis</strong>
+                                    <span>Caller · Employee</span>
+                                </div>
+                            </div>
+
+                            <div className="vss-participant">
+                                <div className="vss-person-avatar agent">AM</div>
+                                <div>
+                                    <strong>Alex Morgan</strong>
+                                    <span>Assigned agent</span>
+                                </div>
+                            </div>
+
+                            <div className="vss-detail-list">
+                                <div><span>Session channel</span><strong>Voice</strong></div>
+                                <div><span>AI assistance</span><strong>Enabled</strong></div>
+                                <div><span>Messages exchanged</span><strong>7</strong></div>
+                                <div><span>Session status</span><strong className="vss-text-success">Completed</strong></div>
+                            </div>
+                        </section>
+
+                        <section className="vss-card">
+                            <div className="vss-card-heading">
+                                <div>
+                                    <span className="vss-section-label">LINKED RECORD</span>
+                                    <h2>Related ticket</h2>
+                                </div>
+                                <span className="vss-ticket-priority">HIGH</span>
+                            </div>
+
+                            <span className="vss-ticket-id">VX-2026-0142</span>
+                            <h3 className="vss-ticket-title">
+                                Unable to connect to office VPN
+                            </h3>
+
+                            <div className="vss-ticket-tags">
+                                <span>Resolved</span>
+                                <span>Network</span>
+                            </div>
+
+                            <div className="vss-detail-list">
+                                <div><span>Requester</span><strong>Jordan Davis</strong></div>
+                                <div><span>Assigned to</span><strong>Alex Morgan</strong></div>
+                                <div><span>Priority</span><strong>High</strong></div>
+                            </div>
+
+                            <Link to="/agent/tickets/1" className="vss-ticket-link">
+                                Open ticket details <span>→</span>
+                            </Link>
+                        </section>
+
+                        <section className="vss-card vss-actions-card">
+                            <span className="vss-section-label">SESSION ACTIONS</span>
+                            <h2>Review and follow-up</h2>
+
+                            <button
+                                type="button"
+                                className={`vss-review-button ${reviewed ? 'completed' : ''}`}
+                                onClick={() => setReviewed(!reviewed)}
+                            >
+                                {reviewed ? '✓ Marked as Reviewed' : 'Mark as Reviewed'}
+                            </button>
+
+                            <button
+                                type="button"
+                                className="vss-followup-button"
+                                onClick={() => setFollowUpCreated(true)}
+                                disabled={followUpCreated}
+                            >
+                                {followUpCreated ? '✓ Follow-up Created' : '+ Create Follow-up'}
+                            </button>
+
+                            {followUpCreated && (
+                                <p className="vss-action-feedback">
+                                    Demo follow-up action completed successfully.
+                                </p>
+                            )}
+
+                            <Link to="/agent/voice" className="vss-return-link">
+                                Return to Voice Support
+                            </Link>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </AgentLayout>
+    );
+}
+
