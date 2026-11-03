@@ -314,6 +314,22 @@ function NotFoundPage() {
   );
 }
 
+function AccessDeniedPage() {
+  return (
+    <AuthLayout>
+      <div className="eyebrow">403 · ACCESS DENIED</div>
+      <h2>You don't have permission to view this page.</h2>
+      <p className="subtitle">
+        Your current account doesn't have the required access. If you believe
+        this is a mistake, contact your administrator.
+      </p>
+      <Link className="primary-button button-link" to="/login">
+        Return to sign in <span>→</span>
+      </Link>
+    </AuthLayout>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -351,6 +367,7 @@ export default function App() {
 
         {/* Keep the fallback route last */}
         <Route path="*" element={<NotFoundPage />} />
+        <Route path="/access-denied" element={<AccessDeniedPage />} />
       </Routes>
     </BrowserRouter>
   );
