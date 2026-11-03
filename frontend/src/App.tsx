@@ -330,6 +330,22 @@ function AccessDeniedPage() {
   );
 }
 
+function SessionExpiredPage() {
+  return (
+    <AuthLayout>
+      <div className="eyebrow">SESSION · EXPIRED</div>
+      <h2>Your session has expired.</h2>
+      <p className="subtitle">
+        For your security, your session is no longer active.
+        Please sign in again to continue using Voxera.
+      </p>
+      <Link className="primary-button button-link" to="/login">
+        Sign in again <span>→</span>
+      </Link>
+    </AuthLayout>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -368,6 +384,7 @@ export default function App() {
         {/* Keep the fallback route last */}
         <Route path="*" element={<NotFoundPage />} />
         <Route path="/access-denied" element={<AccessDeniedPage />} />
+        <Route path="/session-expired" element={<SessionExpiredPage />} />
       </Routes>
     </BrowserRouter>
   );
