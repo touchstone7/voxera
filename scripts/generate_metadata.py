@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 import subprocess
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 META = ROOT / "docs" / "metadata"
@@ -352,6 +353,83 @@ def create_manual_docs():
 - Refresh metadata and record the resulting checkpoint.
 """)
 
+def build_snapshot():
+    """Combine all six metadata documents into a timestamped snapshot."""
+
+    documents = [
+        ("Project Structure", "PROJECT_STRUCTURE.md"),
+        ("API Contracts", "API_CONTRACTS.md"),
+        ("Domain Model", "DOMAIN_MODEL.md"),
+        ("Security and Business Rules", "SECURITY_AND_RULES.md"),
+        ("Test Map", "TEST_MAP.md"),
+        ("Project Status", "PROJECT_STATUS.md"),
+    ]
+
+    # Validate all documents before creating a snapshot.
+    missing = [
+        filename
+        for _, filename in documents
+        if not (META / filename).is_file()
+    ]
+
+    if missing:
+        raise FileNotFoundError(
+            f"Cannot generate snapshot. Missing metadata: {missing}"
+        )
+
+    now = datetime.now(ZoneInfo("Asia/Kolkata"))
+
+    lines = [
+        "# Voxera — Consolidated Project Snapshot",
+        "",
+        f"> Generated: {now.strftime('%Y-%m-%d %H:%M:%S IST')}",
+        f"> Git commit: `{git_info('rev-parse', '--short', 'HEAD')}`",
+        f"> Git branch: `{git_info('branch', '--show-current')}`",
+        f"> Git working tree: `{git_info('status', '--short') or 'clean'}`",
+        "> Source: Six individual documents in `docs/metadata/`",
+        "",
+        "---",
+        "",
+        "## Table of Contents",
+        "",
+    ]
+
+    for index, (title, _) in enumerate(documents, start=1):
+        lines.append(f"{index}. [{title}](#{title.lower().replace(' ', '-')})")
+
+    lines.extend(["", "---", ""])
+
+    for title, filename in documents:
+        content = read(META / filename)
+
+        lines.extend([
+            f"# {title}",
+            "",
+            content.strip(),
+            "",
+            "---",
+            "",
+        ])
+
+    snapshot_dir = ROOT
+    timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+
+    snapshot_path = snapshot_dir / (
+        f"VOXERA_SNAPSHOT_{timestamp}_IST.md"
+    )
+
+    # Never overwrite an existing snapshot.
+    counter = 1
+    while snapshot_path.exists():
+        snapshot_path = snapshot_dir / (
+            f"VOXERA_SNAPSHOT_{timestamp}_{counter:02d}_IST.md"
+        )
+        counter += 1
+
+    write(snapshot_path, "\n".join(lines))
+
+    return snapshot_path
+
 
 def main():
     META.mkdir(parents=True, exist_ok=True)
@@ -406,11 +484,14 @@ correctness, or exact API semantics. Verify ambiguous entries against source.
 """
     write(ROOT / "VOXERA_METADATA.md", index)
 
-    print("Voxera metadata refreshed.")
+    snapshot_path = build_snapshot()
+
+    print("Voxera metadata refreshed successfully.")
     print(f"Repository: {ROOT}")
     print(f"Main Java files: {len(main_files)}")
     print(f"Test Java files: {len(test_files)}")
     print(f"Metadata directory: {META}")
+    print(f"Consolidated snapshot: {snapshot_path}")
     print("Manual documents were preserved if they already existed.")
 
 
