@@ -96,4 +96,111 @@ class TicketRetrievalIntegrationTest
                 .andExpect(jsonPath("$[0].createdBy")
                         .value(SEEDED_USER_ID.toString()));
     }
+
+    @Test
+    void getTicketsWithoutFilter_employeeShouldReturnOwnTickets()
+                    throws Exception {
+
+            createTicket("Employee A ticket");
+
+            User secondUser = createTestUser(UserRole.EMPLOYEE);
+
+            createTestUserCredentials(
+                            secondUser.getUserId(),
+                            "TestPassword123!");
+
+            String tokenB = loginAndGetAccessToken(
+                            secondUser.getEmail(),
+                            "TestPassword123!");
+
+            createTicket("Employee B ticket", tokenB);
+
+            mockMvc.perform(
+                            authenticated(get("/api/v1/tickets")))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$", hasSize(1)))
+                            .andExpect(jsonPath("$[0].title")
+                                            .value("Employee A ticket"));
+    }
+
+    @Test
+    void getTicketsWithoutFilter_agentShouldReturnAllTickets()
+                    throws Exception {
+
+            createTicket("Employee A ticket");
+
+            User secondUser = createTestUser(UserRole.EMPLOYEE);
+
+            createTestUserCredentials(
+                            secondUser.getUserId(),
+                            "TestPassword123!");
+
+            String tokenB = loginAndGetAccessToken(
+                            secondUser.getEmail(),
+                            "TestPassword123!");
+
+            createTicket("Employee B ticket", tokenB);
+
+            String agentToken = createAgentToken();
+
+            mockMvc.perform(
+                            authenticated(
+                                            get("/api/v1/tickets"),
+                                            agentToken))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$", hasSize(2)));
+    }
+
+    @Test
+    void getTicketsWithoutFilter_adminShouldReturnAllTickets()
+                    throws Exception {
+
+            createTicket("Employee A ticket");
+
+            User secondUser = createTestUser(UserRole.EMPLOYEE);
+
+            createTestUserCredentials(
+                            secondUser.getUserId(),
+                            "TestPassword123!");
+
+            String tokenB = loginAndGetAccessToken(
+                            secondUser.getEmail(),
+                            "TestPassword123!");
+
+            createTicket("Employee B ticket", tokenB);
+
+            User admin = createTestUser(UserRole.ADMIN);
+
+            String password = "AdminPassword123!";
+
+            createTestUserCredentials(
+                            admin.getUserId(),
+                            password);
+
+            String adminToken = loginAndGetAccessToken(
+                            admin.getEmail(),
+                            password);
+
+            mockMvc.perform(
+                            authenticated(
+                                            get("/api/v1/tickets"),
+                                            adminToken))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$", hasSize(2)));
+    }
+
+    @Test
+    void getTickets_employeeShouldNotAccessAnotherUsersTickets()
+                    throws Exception {
+
+            User secondUser = createTestUser(UserRole.EMPLOYEE);
+
+            mockMvc.perform(
+                            authenticated(
+                                            get("/api/v1/tickets")
+                                                            .param(
+                                                                            "createdBy",
+                                                                            secondUser.getUserId().toString())))
+                            .andExpect(status().isForbidden());
+    }
 }

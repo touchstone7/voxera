@@ -47,9 +47,9 @@ public class TicketController {
 
     @GetMapping
     public List<TicketResponse> getTickets(
-            @RequestParam UUID createdBy) {
+            @RequestParam(required = false) UUID createdBy) {
 
-        return ticketService.getTicketsForUser(createdBy)
+        return ticketService.getTickets(createdBy)
                 .stream()
                 .map(TicketResponse::from)
                 .toList();

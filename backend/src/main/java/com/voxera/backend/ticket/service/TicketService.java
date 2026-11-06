@@ -7,6 +7,7 @@ import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.repository.TicketRepository;
 import com.voxera.backend.user.entity.User;
+import com.voxera.backend.user.enums.UserRole;
 import com.voxera.backend.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,10 +74,26 @@ public class TicketService {
     }
 
     @Transactional(readOnly = true)
-    public List<Ticket> getTicketsForUser(UUID userId) {
+    public List<Ticket> getTickets(UUID createdBy) {
+
         User actor = currentUserService.getCurrentUser();
-        ticketAuthorizationService.requireTicketListAccess(actor, userId);
-        return ticketRepository.findByCreatedBy_UserId(userId);
+
+        if (createdBy != null) {
+            ticketAuthorizationService.requireTicketListAccess(
+                    actor,
+                    createdBy
+            );
+
+            return ticketRepository.findByCreatedBy_UserId(createdBy);
+        }
+
+        if (actor.getRole() == UserRole.EMPLOYEE) {
+            return ticketRepository.findByCreatedBy_UserId(
+                    actor.getUserId()
+            );
+        }
+
+        return ticketRepository.findAll();
     }
 
     @Transactional
