@@ -26,6 +26,13 @@ import {
   VoiceSupportPage,
   VoiceSessionSummaryPage,
 } from './AgentPages';
+import { AuthProvider } from './auth/AuthProvider'
+
+import { apiRequest } from './api/apiClient'
+import { ApiError } from './api/apiError'
+import type { LoginResponse } from './auth/authTypes'
+import { useAuth } from './auth/useAuth'
+
 type Provider = 'Google' | 'Apple';
 
 function BrandPanel() {
@@ -122,13 +129,53 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
 }
 
 function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState('');
-  const [remember, setRemember] = useState(true);
+  const [showPassword, setShowPassword] = useState(false)
+  const [message, setMessage] = useState('')
+  const [remember, setRemember] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage('Demo mode: your details were not sent anywhere. Backend authentication is not connected.');
+  const navigate = useNavigate()
+  const { login } = useAuth()
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setMessage('')
+
+    const formData = new FormData(event.currentTarget)
+    const email = String(formData.get('email') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
+
+    setIsLoading(true)
+
+    try {
+      const response = await apiRequest<LoginResponse>(
+        '/api/v1/auth/login',
+        {
+          method: 'POST',
+          body: { email, password },
+        },
+      )
+
+      login(response, remember)
+
+      const destination = {
+        EMPLOYEE: '/employee/dashboard',
+        AGENT: '/agent/tickets',
+        ADMIN: '/admin/users',
+      }[response.role]
+
+      navigate(destination, { replace: true })
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        setMessage('Invalid email or password. Please try again.')
+      } else if (error instanceof ApiError) {
+        setMessage(error.message)
+      } else {
+        setMessage('Something went wrong. Please try again.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -141,31 +188,74 @@ function LoginPage() {
         <label htmlFor="login-email">Work email</label>
         <div className="input-wrap">
           <span className="input-icon">✉</span>
-          <input id="login-email" name="email" type="email" placeholder="you@company.com" autoComplete="email" required />
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            placeholder="you@company.com"
+            autoComplete="email"
+            required
+          />
         </div>
 
         <div className="label-row">
           <label htmlFor="login-password">Password</label>
           <Link to="/forgot-password">Forgot password?</Link>
         </div>
+
         <div className="input-wrap">
           <span className="input-icon">▣</span>
-          <input id="login-password" name="password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" autoComplete="current-password" required minLength={1} />
-          <button className="show-password" type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? 'Hide' : 'Show'}</button>
+          <input
+            id="login-password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            required
+          />
+          <button
+            className="show-password"
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
         </div>
 
         <label className="checkbox-label">
-          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(event) => setRemember(event.target.checked)}
+          />
           Keep me signed in
         </label>
-        <button className="primary-button" type="submit">Sign in <span>→</span></button>
-        {message && <p className="notice" role="status">{message}</p>}
+
+        <button
+          className="primary-button"
+          type="submit"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Signing in...' : 'Sign in'}
+          {!isLoading && <span>→</span>}
+        </button>
+
+        {message && (
+          <p className="notice" role="alert">
+            {message}
+          </p>
+        )}
       </form>
 
       <SocialButtons />
-      <p className="switch-auth">New to Voxera? <Link to="/signup">Create an account <span>→</span></Link></p>
+      <p className="switch-auth">
+        New to Voxera?{' '}
+        <Link to="/signup">
+          Create an account <span>→</span>
+        </Link>
+      </p>
     </AuthLayout>
-  );
+  )
 }
 
 function SignupPage() {
@@ -349,43 +439,45 @@ function SessionExpiredPage() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Authentication */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/auth/callback" element={<CallbackPage />} />
+          {/* Authentication */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/callback" element={<CallbackPage />} />
 
-        {/* Employee workspace */}
-        <Route path="/employee" element={<Navigate to="/employee/dashboard" replace />} />
-        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-        <Route path="/employee/tickets" element={<MyTicketsPage />} />
-        <Route path="/employee/tickets/new" element={<CreateTicketPage />} />
-        <Route path="/employee/tickets/:ticketId" element={<TicketDetailsPage />} />
-        <Route path="/employee/notifications" element={<NotificationsPage />} />
-        <Route path="/employee/profile" element={<ProfilePage />} />
+          {/* Employee workspace */}
+          <Route path="/employee" element={<Navigate to="/employee/dashboard" replace />} />
+          <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+          <Route path="/employee/tickets" element={<MyTicketsPage />} />
+          <Route path="/employee/tickets/new" element={<CreateTicketPage />} />
+          <Route path="/employee/tickets/:ticketId" element={<TicketDetailsPage />} />
+          <Route path="/employee/notifications" element={<NotificationsPage />} />
+          <Route path="/employee/profile" element={<ProfilePage />} />
 
-        {/* Agent workspace */}
-        <Route path="/agent" element={<Navigate to="/agent/tickets" replace />} />
-        <Route path="/agent/tickets" element={<AllTicketsPage />} />
-        <Route path="/agent/queue" element={<TeamQueuePage />} />
-        <Route path="/agent/tickets/:ticketId/assign" element={<TicketAssignmentPage />} />
-        <Route path="/admin/users" element={<UserManagementPage />} />
-        <Route path="/admin/settings" element={<AdministrationPage />} />
-        <Route
-          path="/agent/voice/:sessionId"
-          element={<VoiceSessionSummaryPage />}
-        />
-        <Route path="/agent/voice" element={<VoiceSupportPage />} />
+          {/* Agent workspace */}
+          <Route path="/agent" element={<Navigate to="/agent/tickets" replace />} />
+          <Route path="/agent/tickets" element={<AllTicketsPage />} />
+          <Route path="/agent/queue" element={<TeamQueuePage />} />
+          <Route path="/agent/tickets/:ticketId/assign" element={<TicketAssignmentPage />} />
+          <Route path="/admin/users" element={<UserManagementPage />} />
+          <Route path="/admin/settings" element={<AdministrationPage />} />
+          <Route
+            path="/agent/voice/:sessionId"
+            element={<VoiceSessionSummaryPage />}
+          />
+          <Route path="/agent/voice" element={<VoiceSupportPage />} />
 
-        {/* Keep the fallback route last */}
-        <Route path="*" element={<NotFoundPage />} />
-        <Route path="/access-denied" element={<AccessDeniedPage />} />
-        <Route path="/session-expired" element={<SessionExpiredPage />} />
-      </Routes>
+          {/* Keep the fallback route last */}
+          <Route path="*" element={<NotFoundPage />} />
+          <Route path="/access-denied" element={<AccessDeniedPage />} />
+          <Route path="/session-expired" element={<SessionExpiredPage />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
