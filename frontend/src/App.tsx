@@ -33,6 +33,8 @@ import { ApiError } from './api/apiError'
 import type { LoginResponse } from './auth/authTypes'
 import { useAuth } from './auth/useAuth'
 
+import { ProtectedRoute } from './auth/ProtectedRoute'
+
 type Provider = 'Google' | 'Apple';
 
 function BrandPanel() {
@@ -135,6 +137,7 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -158,11 +161,21 @@ function LoginPage() {
 
       login(response, remember)
 
-      const destination = {
+      const defaultDestination = {
         EMPLOYEE: '/employee/dashboard',
         AGENT: '/agent/tickets',
         ADMIN: '/admin/users',
       }[response.role]
+
+      const requestedDestination = location.state?.from as
+        | { pathname?: string; search?: string; hash?: string }
+        | undefined
+
+      const requestedPath = requestedDestination?.pathname
+
+      const destination =
+        requestedPath?.startsWith('/') && !requestedPath.startsWith('//')
+          ? `${requestedPath}${requestedDestination?.search ?? ''}${requestedDestination?.hash ?? ''}`          : defaultDestination
 
       navigate(destination, { replace: true })
     } catch (error) {
@@ -443,7 +456,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* Authentication */}
+          {/* Public authentication pages */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -451,32 +464,58 @@ export default function App() {
           <Route path="/auth/callback" element={<CallbackPage />} />
 
           {/* Employee workspace */}
-          <Route path="/employee" element={<Navigate to="/employee/dashboard" replace />} />
-          <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-          <Route path="/employee/tickets" element={<MyTicketsPage />} />
-          <Route path="/employee/tickets/new" element={<CreateTicketPage />} />
-          <Route path="/employee/tickets/:ticketId" element={<TicketDetailsPage />} />
-          <Route path="/employee/notifications" element={<NotificationsPage />} />
-          <Route path="/employee/profile" element={<ProfilePage />} />
+          <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE']} />}>
+            <Route
+              path="/employee"
+              element={<Navigate to="/employee/dashboard" replace />}
+            />
+            <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+            <Route path="/employee/tickets" element={<MyTicketsPage />} />
+            <Route path="/employee/tickets/new" element={<CreateTicketPage />} />
+            <Route
+              path="/employee/tickets/:ticketId"
+              element={<TicketDetailsPage />}
+            />
+            <Route
+              path="/employee/notifications"
+              element={<NotificationsPage />}
+            />
+            <Route path="/employee/profile" element={<ProfilePage />} />
+          </Route>
 
           {/* Agent workspace */}
-          <Route path="/agent" element={<Navigate to="/agent/tickets" replace />} />
-          <Route path="/agent/tickets" element={<AllTicketsPage />} />
-          <Route path="/agent/queue" element={<TeamQueuePage />} />
-          <Route path="/agent/tickets/:ticketId/assign" element={<TicketAssignmentPage />} />
-          <Route path="/admin/users" element={<UserManagementPage />} />
-          <Route path="/admin/settings" element={<AdministrationPage />} />
-          <Route
-            path="/agent/voice/:sessionId"
-            element={<VoiceSessionSummaryPage />}
-          />
-          <Route path="/agent/voice" element={<VoiceSupportPage />} />
+          <Route element={<ProtectedRoute allowedRoles={['AGENT']} />}>
+            <Route
+              path="/agent"
+              element={<Navigate to="/agent/tickets" replace />}
+            />
+            <Route path="/agent/tickets" element={<AllTicketsPage />} />
+            <Route path="/agent/queue" element={<TeamQueuePage />} />
+            <Route
+              path="/agent/tickets/:ticketId/assign"
+              element={<TicketAssignmentPage />}
+            />
+            <Route path="/agent/voice" element={<VoiceSupportPage />} />
+            <Route
+              path="/agent/voice/:sessionId"
+              element={<VoiceSessionSummaryPage />}
+            />
+          </Route>
 
-          {/* Keep the fallback route last */}
-          <Route path="*" element={<NotFoundPage />} />
+          {/* Admin workspace */}
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+            <Route path="/admin/users" element={<UserManagementPage />} />
+            <Route path="/admin/settings" element={<AdministrationPage />} />
+          </Route>
+
+          {/* Public system pages */}
           <Route path="/access-denied" element={<AccessDeniedPage />} />
           <Route path="/session-expired" element={<SessionExpiredPage />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
+
       </AuthProvider>
     </BrowserRouter>
   );
