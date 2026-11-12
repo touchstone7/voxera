@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Link, NavLink, useParams } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from './auth/useAuth';
 import './agent.css';
 
 
@@ -157,6 +158,21 @@ function AgentLayout({
   title: string;
   subtitle: string;
 }) {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const initials = user?.name
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase() ?? '';
+
+    function handleLogout() {
+        logout();
+        navigate('/login', { replace: true });
+    }
   return (
     <div className="agent-app">
       <aside className="agent-sidebar">
@@ -220,14 +236,21 @@ function AgentLayout({
             <span className="agent-status-menu">···</span>
           </div>
 
-          <div className="agent-user">
-            <div className="agent-avatar">AM</div>
-            <div className="agent-user-info">
-              <strong>Alex Morgan</strong>
-              <span>Support Agent</span>
-            </div>
-            <span className="agent-user-menu">···</span>
-          </div>
+                  <div className="agent-user">
+                      <div className="agent-avatar">{initials}</div>
+                      <div className="agent-user-info">
+                          <strong>{user?.name}</strong>
+                          <span>{user?.role}</span>
+                      </div>
+                      <button
+                          className="agent-user-menu"
+                          type="button"
+                          onClick={handleLogout}
+                          aria-label="Sign out"
+                      >
+                          Sign out
+                      </button>
+                  </div>
         </div>
       </aside>
 
@@ -241,7 +264,7 @@ function AgentLayout({
           <div className="agent-top-actions">
             <span className="agent-demo-label"><span /> DEMO MODE</span>
             <button className="agent-top-icon" type="button" aria-label="Notifications">♧</button>
-            <div className="agent-avatar small">AM</div>
+            <div className="agent-avatar small">{initials}</div>
           </div>
         </header>
 

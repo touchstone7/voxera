@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from './auth/useAuth';
 import './employee.css';
+
+
 
 type TicketStatus = 'Open' | 'In Progress' | 'Pending' | 'Resolved';
 type TicketPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
@@ -71,6 +74,21 @@ function EmployeeLayout({
   title: string;
   subtitle: string;
 }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const initials = user?.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase() ?? '';
+
+  function handleLogout() {
+    logout();
+    navigate('/login', { replace: true });
+  }
   return (
     <div className="employee-app">
       <aside className="employee-sidebar">
@@ -107,12 +125,18 @@ function EmployeeLayout({
             <Link to="/employee/tickets/new">Raise a ticket →</Link>
           </div>
           <div className="employee-user">
-            <div className="employee-avatar">JD</div>
+            <div className="employee-avatar">{initials}</div>
             <div className="employee-user-info">
-              <strong>Jordan Davis</strong>
-              <span>Employee account</span>
+              <strong>{user?.name}</strong>
+              <span>{user?.role} ACCOUNT</span>
             </div>
-            <Link to="/employee/profile" aria-label="Open profile">···</Link>
+            <button
+              className="employee-logout"
+              type="button"
+              onClick={handleLogout}
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </aside>
@@ -131,7 +155,7 @@ function EmployeeLayout({
             >
               ♧<span />
             </Link>
-            <div className="employee-avatar small">JD</div>
+            <div className="employee-avatar small">{initials}</div>
           </div>
         </header>
 
