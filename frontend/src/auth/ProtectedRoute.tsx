@@ -8,8 +8,12 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-    const { isAuthenticated, user } = useAuth()
+    const { isAuthenticated, user, sessionExpired } = useAuth()
     const location = useLocation()
+
+    if (sessionExpired) {
+        return <Navigate to="/session-expired" replace />
+    }
 
     if (!isAuthenticated || !user) {
         return (

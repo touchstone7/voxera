@@ -1,0 +1,1 @@
+export const API_UNAUTHORIZED_EVENT = 'voxera:unauthorized'

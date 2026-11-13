@@ -1,6 +1,7 @@
 
 import { API_BASE_URL } from './config'
 import { ApiError, type ApiErrorResponse } from './apiError'
+import { API_UNAUTHORIZED_EVENT } from './apiEvents'
 
 export interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
     accessToken?: string
@@ -81,6 +82,12 @@ export async function apiRequest<T>(
         const errorResponse = isApiErrorResponse(responseBody)
             ? responseBody
             : undefined
+        if (
+            response.status === 401 &&
+            path.split('?')[0] !== '/api/v1/auth/login'
+        ) {
+            window.dispatchEvent(new Event(API_UNAUTHORIZED_EVENT))
+        }
 
         throw new ApiError(
             typeof errorResponse?.message === 'string'

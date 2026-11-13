@@ -1,9 +1,15 @@
-import { useMemo, useState, type ReactNode } from 'react'
+
+import {
+    useEffect,
+    useMemo,
+    useState,
+    type ReactNode,
+} from 'react'
 import type { AuthSession, LoginResponse } from './authTypes'
 import { AuthContext, type AuthContextValue } from './authContext'
+import { API_UNAUTHORIZED_EVENT } from '../api/apiEvents'
 
 const SESSION_STORAGE_KEY = 'voxera_auth_session'
-
 
 function readStoredSession(): AuthSession | null {
     try {
@@ -41,6 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         readStoredSession,
     )
 
+    const [sessionExpired, setSessionExpired] = useState(false)
+
     function login(response: LoginResponse, remember: boolean) {
         const newSession: AuthSession = {
             user: {
@@ -63,24 +71,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         otherStorage.removeItem(SESSION_STORAGE_KEY)
 
+        setSessionExpired(false)
         setSession(newSession)
     }
 
     function logout() {
         localStorage.removeItem(SESSION_STORAGE_KEY)
         sessionStorage.removeItem(SESSION_STORAGE_KEY)
+
+        setSessionExpired(false)
         setSession(null)
     }
+
+    useEffect(() => {
+        function handleUnauthorized() {
+            if (!session) {
+                return
+            }
+
+            localStorage.removeItem(SESSION_STORAGE_KEY)
+            sessionStorage.removeItem(SESSION_STORAGE_KEY)
+
+            setSession(null)
+            setSessionExpired(true)
+        }
+
+        window.addEventListener(
+            API_UNAUTHORIZED_EVENT,
+            handleUnauthorized,
+        )
+
+        return () => {
+            window.removeEventListener(
+                API_UNAUTHORIZED_EVENT,
+                handleUnauthorized,
+            )
+        }
+    }, [session])
 
     const value = useMemo<AuthContextValue>(
         () => ({
             user: session?.user ?? null,
             accessToken: session?.accessToken ?? null,
             isAuthenticated: Boolean(session?.accessToken),
+            sessionExpired,
             login,
             logout,
         }),
-        [session],
+        [session, sessionExpired],
     )
 
     return (
