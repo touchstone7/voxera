@@ -1,7 +1,7 @@
 # Project Structure and Java Inventory
 
-> Generated: 2026-11-05T08:34:21.170376+00:00
-> Git commit: `c0b9545`
+> Generated: 2026-11-14T10:24:30.961932+00:00
+> Git commit: `9ad1ae4`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -135,6 +135,7 @@
 - Package: `com.voxera.backend.security.config`
 - `SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter)`
 - `SecurityFilterChain securityFilterChain(HttpSecurity http)`
+- `CorsConfigurationSource corsConfigurationSource()`
 
 ### `JwtAuthenticationFilter`
 - File: `backend/src/main/java/com/voxera/backend/security/jwt/JwtAuthenticationFilter.java`
@@ -188,7 +189,7 @@
 - `TicketController(TicketService ticketService)`
 - `TicketResponse createTicket(@Valid @RequestBody CreateTicketRequest request)`
 - `TicketResponse getTicket(@PathVariable UUID ticketId)`
-- `List<TicketResponse> getTickets(@RequestParam UUID createdBy)`
+- `List<TicketResponse> getTickets(@RequestParam(required = false) UUID createdBy)`
 - `TicketResponse startProgress(@PathVariable UUID ticketId)`
 - `TicketResponse markPending(@PathVariable UUID ticketId)`
 - `TicketResponse resolveTicket(@PathVariable UUID ticketId)`
@@ -334,7 +335,9 @@
 - `TicketService(TicketRepository ticketRepository, UserRepository userRepository, CurrentUserService currentUserService, TicketAuthorizationService ticketAuthorizationService)`
 - `Ticket createTicket(String title, String description, TicketPriority priority, TicketCategory category)`
 - `Ticket getTicket(UUID ticketId)`
-- `List<Ticket> getTicketsForUser(UUID userId)`
+- `List<Ticket> getTickets(UUID createdBy)`
+- ` if(createdBy != null)`
+- ` if(actor.getRole() == UserRole.EMPLOYEE)`
 - `Ticket startProgress(UUID ticketId)`
 - `Ticket markPending(UUID ticketId)`
 - `Ticket resolveTicket(UUID ticketId)`
@@ -512,6 +515,10 @@
 - `void getTicket_shouldReturnExistingTicket()`
 - `void getTicket_shouldReturn404ForUnknownTicket()`
 - `void getTicketsForUser_shouldReturnTicketsForRequestedUser()`
+- `void getTicketsWithoutFilter_employeeShouldReturnOwnTickets()`
+- `void getTicketsWithoutFilter_agentShouldReturnAllTickets()`
+- `void getTicketsWithoutFilter_adminShouldReturnAllTickets()`
+- `void getTickets_employeeShouldNotAccessAnotherUsersTickets()`
 
 ### `TicketTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`

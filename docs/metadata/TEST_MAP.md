@@ -1,7 +1,7 @@
 # Test Map
 
-> Generated: 2026-11-05T08:34:21.300981+00:00
-> Git commit: `c0b9545`
+> Generated: 2026-11-14T10:24:31.155286+00:00
+> Git commit: `9ad1ae4`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -103,10 +103,14 @@
 
 ## `TicketRetrievalIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketRetrievalIntegrationTest.java`
-- Test methods detected: 3
+- Test methods detected: 7
   - `getTicket_shouldReturnExistingTicket()`
   - `getTicket_shouldReturn404ForUnknownTicket()`
   - `getTicketsForUser_shouldReturnTicketsForRequestedUser()`
+  - `getTicketsWithoutFilter_employeeShouldReturnOwnTickets()`
+  - `getTicketsWithoutFilter_agentShouldReturnAllTickets()`
+  - `getTicketsWithoutFilter_adminShouldReturnAllTickets()`
+  - `getTickets_employeeShouldNotAccessAnotherUsersTickets()`
 
 ## `TicketTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`

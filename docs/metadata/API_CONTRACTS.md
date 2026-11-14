@@ -1,7 +1,7 @@
 # API Contracts
 
-> Generated: 2026-11-05T08:34:21.280355+00:00
-> Git commit: `c0b9545`
+> Generated: 2026-11-14T10:24:31.123715+00:00
+> Git commit: `9ad1ae4`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -29,7 +29,7 @@
 - Class-level path: `/api/v1/tickets`
 - **GET `/api/v1/tickets/{ticketId}`** — `getTicket(@PathVariable UUID ticketId)`
   - Mapping: `@GetMapping("/{ticketId}")`
-- **GET `/api/v1/tickets`** — `getTickets(@RequestParam UUID createdBy)`
+- **GET `/api/v1/tickets`** — `getTickets(@RequestParam(required = false)`
   - Mapping: `@GetMapping`
 - **POST `/api/v1/tickets/{ticketId}/start`** — `startProgress(@PathVariable UUID ticketId)`
   - Mapping: `@PostMapping("/{ticketId}/start")`

@@ -1,7 +1,7 @@
 # Domain Model, DTOs, and Enums
 
-> Generated: 2026-11-05T08:34:21.289335+00:00
-> Git commit: `c0b9545`
+> Generated: 2026-11-14T10:24:31.136877+00:00
+> Git commit: `9ad1ae4`
 > Generator: `scripts/generate_metadata.py`
 
 
