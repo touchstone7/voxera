@@ -303,80 +303,248 @@ function TicketTable({ tickets }: { tickets: Ticket[] }) {
   );
 }
 
+
 export function EmployeeDashboard() {
-  const [tickets] = useState(initialTickets);
-  const active = tickets.filter((ticket) => ticket.status !== 'Resolved').length;
-  const inProgress = tickets.filter((ticket) => ticket.status === 'In Progress').length;
-  const resolved = tickets.filter((ticket) => ticket.status === 'Resolved').length;
+  const { accessToken, user } = useAuth();
+
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadTickets() {
+      if (!accessToken) {
+        setError('Your session is unavailable. Please sign in again.');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await getTickets(accessToken);
+
+        if (isActive) {
+          const sortedTickets = [...response].sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() -
+              new Date(a.createdAt).getTime(),
+          );
+
+          setTickets(sortedTickets.map(mapTicketResponse));
+        }
+      } catch (err) {
+        if (isActive) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'Unable to load your tickets. Please try again.',
+          );
+        }
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadTickets();
+
+    return () => {
+      isActive = false;
+    };
+  }, [accessToken, reloadKey]);
+
+  const active = tickets.filter(
+    (ticket) =>
+      ticket.status === 'Open' ||
+      ticket.status === 'In Progress' ||
+      ticket.status === 'Pending',
+  ).length;
+
+  const inProgress = tickets.filter(
+    (ticket) => ticket.status === 'In Progress',
+  ).length;
+
+  const resolved = tickets.filter(
+    (ticket) => ticket.status === 'Resolved',
+  ).length;
+
+  const firstName = user?.name.trim().split(/\s+/)[0] ?? 'there';
+
+  const today = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+    .format(new Date())
+    .toUpperCase();
 
   return (
-    <EmployeeLayout title="Overview" subtitle="Here's what's happening with your IT support today.">
+    <EmployeeLayout
+      title="Overview"
+      subtitle="Here's what's happening with your IT support today."
+      demoMode={false}
+    >
       <div className="employee-welcome">
         <div>
-          <div className="employee-welcome-label">THURSDAY, OCTOBER 29, 2026</div>
-          <h2>Good to see you, Jordan <span>✳</span></h2>
+          <div className="employee-welcome-label">{today}</div>
+          <h2>Good to see you, {firstName} <span>✳</span></h2>
           <p>Need something fixed? Your support workspace is ready.</p>
-          <Link to="/employee/tickets/new" className="employee-welcome-button">Get support <span>→</span></Link>
+          <Link
+            to="/employee/tickets/new"
+            className="employee-welcome-button"
+          >
+            Get support <span>→</span>
+          </Link>
         </div>
         <div className="employee-welcome-art" aria-hidden="true">
           <div className="welcome-orbit orbit-one" />
           <div className="welcome-orbit orbit-two" />
           <div className="welcome-orb">v<span>.</span></div>
-          <div className="welcome-wave">{Array.from({ length: 21 }, (_, i) => <i key={i} style={{ height: `${12 + Math.abs(Math.sin(i * 0.8)) * 37}px` }} />)}</div>
+          <div className="welcome-wave">
+            {Array.from({ length: 21 }, (_, i) => (
+              <i
+                key={i}
+                style={{
+                  height: `${12 + Math.abs(Math.sin(i * 0.8)) * 37}px`,
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="employee-section-heading">
-        <div><h2>Your support at a glance</h2><p>A quick overview of your requests.</p></div>
+        <div>
+          <h2>Your support at a glance</h2>
+          <p>A quick overview of your requests.</p>
+        </div>
         <Link to="/employee/tickets">View all tickets →</Link>
       </div>
 
       <div className="employee-stats-grid">
         <div className="employee-stat-card">
-          <div className="employee-stat-top"><span className="stat-icon purple">▤</span><span className="stat-trend">All time</span></div>
-          <span className="employee-stat-number">{tickets.length}</span>
+          <div className="employee-stat-top">
+            <span className="stat-icon purple">▤</span>
+            <span className="stat-trend">All time</span>
+          </div>
+          <span className="employee-stat-number">
+            {loading ? '—' : tickets.length}
+          </span>
           <span className="employee-stat-label">Total tickets</span>
         </div>
+
         <div className="employee-stat-card">
-          <div className="employee-stat-top"><span className="stat-icon blue">◷</span><span className="stat-caption">Needs attention</span></div>
-          <span className="employee-stat-number">{active}</span>
+          <div className="employee-stat-top">
+            <span className="stat-icon blue">◷</span>
+            <span className="stat-caption">Needs attention</span>
+          </div>
+          <span className="employee-stat-number">
+            {loading ? '—' : active}
+          </span>
           <span className="employee-stat-label">Active tickets</span>
         </div>
+
         <div className="employee-stat-card">
-          <div className="employee-stat-top"><span className="stat-icon amber">↻</span><span className="stat-caption">Being handled</span></div>
-          <span className="employee-stat-number">{inProgress}</span>
+          <div className="employee-stat-top">
+            <span className="stat-icon amber">↻</span>
+            <span className="stat-caption">Being handled</span>
+          </div>
+          <span className="employee-stat-number">
+            {loading ? '—' : inProgress}
+          </span>
           <span className="employee-stat-label">In progress</span>
         </div>
+
         <div className="employee-stat-card">
-          <div className="employee-stat-top"><span className="stat-icon green">✓</span><span className="stat-caption">Completed</span></div>
-          <span className="employee-stat-number">{resolved}</span>
+          <div className="employee-stat-top">
+            <span className="stat-icon green">✓</span>
+            <span className="stat-caption">Completed</span>
+          </div>
+          <span className="employee-stat-number">
+            {loading ? '—' : resolved}
+          </span>
           <span className="employee-stat-label">Resolved tickets</span>
         </div>
       </div>
 
       <div className="employee-section-heading recent-heading">
-        <div><h2>Recent tickets</h2><p>Track your latest support requests.</p></div>
+        <div>
+          <h2>Recent tickets</h2>
+          <p>Track your latest support requests.</p>
+        </div>
         <Link to="/employee/tickets">See all →</Link>
       </div>
-      <TicketTable tickets={tickets.slice(0, 3)} />
+
+      {loading ? (
+        <p role="status">Loading your recent tickets...</p>
+      ) : error ? (
+        <div role="alert">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((key) => key + 1)}
+          >
+            Try again
+          </button>
+        </div>
+      ) : tickets.length === 0 ? (
+        <p>You haven't raised any tickets yet. Create a ticket when you need IT support.</p>
+      ) : (
+        <TicketTable tickets={tickets.slice(0, 3)} />
+      )}
 
       <div className="employee-bottom-grid">
         <div className="employee-panel">
-          <div className="employee-panel-heading"><h3>Quick actions</h3><span>✳</span></div>
-          <Link to="/employee/tickets/new" className="employee-quick-action"><span className="quick-icon">＋</span><span><strong>Raise a ticket</strong><small>Tell us what's not working</small></span><b>→</b></Link>
-          <Link to="/employee/notifications" className="employee-quick-action"><span className="quick-icon">♧</span><span><strong>View notifications</strong><small>See updates on your requests</small></span><b>→</b></Link>
+          <div className="employee-panel-heading">
+            <h3>Quick actions</h3>
+            <span>✳</span>
+          </div>
+          <Link
+            to="/employee/tickets/new"
+            className="employee-quick-action"
+          >
+            <span className="quick-icon">＋</span>
+            <span>
+              <strong>Raise a ticket</strong>
+              <small>Tell us what's not working</small>
+            </span>
+            <b>→</b>
+          </Link>
+          <Link
+            to="/employee/notifications"
+            className="employee-quick-action"
+          >
+            <span className="quick-icon">♧</span>
+            <span>
+              <strong>View notifications</strong>
+              <small>See updates on your requests</small>
+            </span>
+            <b>→</b>
+          </Link>
         </div>
+
         <div className="employee-panel employee-assist-panel">
           <div className="employee-assist-symbol">✳</div>
           <div className="employee-assist-eyebrow">VOXERA ASSIST</div>
           <h3>Support starts with a conversation.</h3>
-          <p>Voice support will help you describe an issue naturally. This experience is planned for a future milestone.</p>
+          <p>
+            Voice support will help you describe an issue naturally.
+            This experience is planned for a future milestone.
+          </p>
           <span className="employee-coming-soon">COMING SOON</span>
         </div>
       </div>
     </EmployeeLayout>
   );
 }
+
 
 export function MyTicketsPage() {
   const { accessToken } = useAuth();
