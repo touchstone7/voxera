@@ -124,7 +124,9 @@ function AgentLayout({
             <strong>{title}</strong>
           </div>
           <div className="agent-top-actions">
-            <span className="agent-demo-label"><span /> DEMO MODE</span>
+                      <span className="agent-demo-label">
+                          <span /> BACKEND CONNECTED
+                      </span>
             <button className="agent-top-icon" type="button" aria-label="Notifications">♧</button>
             <div className="agent-avatar small">{initials}</div>
           </div>
