@@ -264,3 +264,55 @@
   .employee-notification { padding: 14px; gap: 9px; }
   .employee-mark-read { font-size: 8px; }
 }
+
+.employee-comment-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 12px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid var(--emp-border);
+  border-radius: 8px;
+  background: var(--emp-bg, #171a25);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+}
+
+.employee-comment-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.employee-comment-footer small {
+  color: #a9aec4;
+  font-size: 10px;
+}
+
+.employee-cancel-button {
+  padding: 10px 14px;
+  border: 1px solid #a94747;
+  border-radius: 7px;
+  background: transparent;
+  color: #e58b8b;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+}
+
+.employee-cancel-button:hover {
+  background: rgba(169, 71, 71, 0.12);
+}
+
+.employee-cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.employee-comment-footer button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -1,7 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { createTicket, getTicket, getTickets } from './api/ticketApi';
+import {
+  addTicketComment,
+  cancelTicket,
+  createTicket,
+  getTicket,
+  getTicketComments,
+  getTickets,
+} from './api/ticketApi';
 import type {
   TicketCategory,
+  TicketCommentResponse,
   TicketPriority as ApiTicketPriority,
   TicketResponse,
 } from './api/ticketTypes';
@@ -71,49 +79,6 @@ function mapTicketResponse(ticket: TicketResponse): Ticket {
     description: ticket.description,
   };
 }
-
-const initialTickets: Ticket[] = [
-  {
-    id: 'VXR-1048',
-    number: 'VXR-1048',
-    title: 'Unable to connect to office VPN',
-    category: 'Network',
-    status: 'In Progress',
-    priority: 'High',
-    created: 'Oct 28, 2026',
-    description: 'The office VPN disconnects shortly after connecting. I have restarted my laptop and retried the connection.',
-  },
-  {
-    id: 'VXR-1042',
-    number : 'VXR-1042',
-    title: 'Access required for project repository',
-    category: 'Access',
-    status: 'Open',
-    priority: 'Medium',
-    created: 'Oct 27, 2026',
-    description: 'I need read access to the project repository to continue my assigned work.',
-  },
-  {
-    id: 'VXR-1031',
-    number : 'VXR-1031',
-    title: 'Laptop performance issue',
-    category: 'Hardware',
-    status: 'Pending',
-    priority: 'Low',
-    created: 'Oct 24, 2026',
-    description: 'My laptop has become slow when multiple applications are running.',
-  },
-  {
-    id: 'VXR-1019',
-    number : 'VXR-1019',
-    title: 'Email configuration fixed',
-    category: 'Software',
-    status: 'Resolved',
-    priority: 'Low',
-    created: 'Oct 20, 2026',
-    description: 'The email client configuration issue has been resolved.',
-  },
-];
 
 const navigation = [
   { to: '/employee/dashboard', label: 'Overview', icon: '◫', end: true },
@@ -855,14 +820,24 @@ export function CreateTicketPage() {
 
 
 
+
 export function TicketDetailsPage() {
   const { ticketId } = useParams();
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
 
   const [ticket, setTicket] = useState<TicketResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+
+  const [comments, setComments] = useState<TicketCommentResponse[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsError, setCommentsError] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+
+  const [cancelSubmitting, setCancelSubmitting] = useState(false);
+  const [cancelError, setCancelError] = useState('');
 
   useEffect(() => {
     let isActive = true;
@@ -912,8 +887,121 @@ export function TicketDetailsPage() {
     };
   }, [ticketId, accessToken, reloadKey]);
 
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadComments() {
+      if (!accessToken || !ticketId) {
+        setCommentsLoading(false);
+        return;
+      }
+
+      setCommentsLoading(true);
+      setCommentsError('');
+      setComments([]);
+
+      try {
+        const response = await getTicketComments(ticketId, accessToken);
+
+        if (isActive) {
+          setComments(response);
+        }
+      } catch (err) {
+        if (isActive) {
+          setCommentsError(
+            err instanceof Error
+              ? err.message
+              : 'Unable to load comments.',
+          );
+        }
+      } finally {
+        if (isActive) {
+          setCommentsLoading(false);
+        }
+      }
+    }
+
+    void loadComments();
+
+    return () => {
+      isActive = false;
+    };
+  }, [ticketId, accessToken]);
+
   const displayDate = (value: string) =>
     new Date(value).toLocaleString();
+
+  async function handleAddComment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const content = commentText.trim();
+
+    if (!content || !accessToken || !ticketId || commentSubmitting) {
+      return;
+    }
+
+    if (content.length > 5000) {
+      setCommentsError('Comments cannot exceed 5,000 characters.');
+      return;
+    }
+
+    setCommentSubmitting(true);
+    setCommentsError('');
+
+    try {
+      const createdComment = await addTicketComment(
+        ticketId,
+        { content },
+        accessToken,
+      );
+
+      setComments((current) => [...current, createdComment]);
+      setCommentText('');
+    } catch (err) {
+      setCommentsError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to submit your comment. Please try again.',
+      );
+    } finally {
+      setCommentSubmitting(false);
+    }
+  }
+
+  async function handleCancelTicket() {
+    if (!accessToken || !ticketId || cancelSubmitting) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Are you sure you want to cancel this ticket? This action will change its status to CANCELLED.',
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setCancelSubmitting(true);
+    setCancelError('');
+
+    try {
+      const updatedTicket = await cancelTicket(ticketId, accessToken);
+      setTicket(updatedTicket);
+    } catch (err) {
+      setCancelError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to cancel this ticket. Please try again.',
+      );
+    } finally {
+      setCancelSubmitting(false);
+    }
+  }
+
+  const canCancelTicket =
+    ticket !== null &&
+    user?.userId === ticket.createdBy &&
+    ['OPEN', 'IN_PROGRESS', 'PENDING', 'RESOLVED'].includes(ticket.status);
 
   return (
     <EmployeeLayout
@@ -1010,6 +1098,71 @@ export function TicketDetailsPage() {
                 </div>
               )}
             </div>
+
+            <div className="employee-detail-section">
+              <h3>Comments ({comments.length})</h3>
+
+              {commentsLoading ? (
+                <p role="status">Loading comments...</p>
+              ) : commentsError && comments.length === 0 ? (
+                <div role="alert">
+                  <p>{commentsError}</p>
+                  <button
+                    type="button"
+                    className="employee-secondary-button"
+                    onClick={() => setReloadKey((current) => current + 1)}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : comments.length === 0 ? (
+                <p>No comments yet. Add a comment to communicate with the support team.</p>
+              ) : (
+                <div className="employee-comments-list">
+                  {comments.map((comment) => (
+                    <div
+                      className="employee-activity-item"
+                      key={comment.commentId}
+                    >
+                      <span className="activity-dot violet" />
+                      <div>
+                        <strong>{comment.authorName}</strong>
+                        <p>{comment.content}</p>
+                        <small>{displayDate(comment.createdAt)}</small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {commentsError && comments.length > 0 && (
+                <p role="alert">{commentsError}</p>
+              )}
+
+              <form onSubmit={handleAddComment}>
+                <textarea
+                  className="employee-comment-textarea"
+                  value={commentText}
+                  onChange={(event) => setCommentText(event.target.value)}
+                  placeholder="Write a comment..."
+                  rows={3}
+                  maxLength={5000}
+                  disabled={commentSubmitting}
+                  required
+                />
+
+                <div className="employee-comment-footer">
+                  <small>{commentText.length}/5000</small>
+                  <button
+                    type="submit"
+                    className="employee-primary-button"
+                    disabled={!commentText.trim() || commentSubmitting}
+                  >
+                    {commentSubmitting ? 'Submitting...' : 'Add Comment'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </section>
 
           <aside className="employee-panel employee-ticket-aside">
@@ -1038,12 +1191,36 @@ export function TicketDetailsPage() {
             <p className="employee-demo-note">
               Assignment information reflects the current backend ticket record.
             </p>
+
+            {canCancelTicket && (
+              <div className="employee-detail-section">
+                <h3>Cancel request</h3>
+                <p>
+                  You can cancel this request while it is still eligible for
+                  cancellation.
+                </p>
+
+                {cancelError && (
+                  <p role="alert">{cancelError}</p>
+                )}
+
+                <button
+                  type="button"
+                  className="employee-cancel-button"
+                  onClick={handleCancelTicket}
+                  disabled={cancelSubmitting}
+                >
+                  {cancelSubmitting ? 'Cancelling...' : 'Cancel Ticket'}
+                </button>
+              </div>
+            )}
           </aside>
         </div>
       )}
     </EmployeeLayout>
   );
 }
+
 
 
 export function NotificationsPage() {
