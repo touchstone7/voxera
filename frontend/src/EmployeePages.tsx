@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { createTicket, getTickets } from './api/ticketApi';
+import { createTicket, getTicket, getTickets } from './api/ticketApi';
 import type {
   TicketCategory,
   TicketPriority as ApiTicketPriority,
@@ -854,29 +854,197 @@ export function CreateTicketPage() {
 }
 
 
+
 export function TicketDetailsPage() {
   const { ticketId } = useParams();
-  const ticket = initialTickets.find((item) => item.id.toLowerCase() === ticketId?.toLowerCase());
+  const { accessToken } = useAuth();
+
+  const [ticket, setTicket] = useState<TicketResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadTicket() {
+      if (!accessToken) {
+        setError('Your session is unavailable. Please sign in again.');
+        setLoading(false);
+        return;
+      }
+
+      if (!ticketId) {
+        setError('A ticket ID was not provided.');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError('');
+      setTicket(null);
+
+      try {
+        const response = await getTicket(ticketId, accessToken);
+
+        if (isActive) {
+          setTicket(response);
+        }
+      } catch (err) {
+        if (isActive) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'Unable to load this ticket. Please try again.',
+          );
+        }
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadTicket();
+
+    return () => {
+      isActive = false;
+    };
+  }, [ticketId, accessToken, reloadKey]);
+
+  const displayDate = (value: string) =>
+    new Date(value).toLocaleString();
 
   return (
-    <EmployeeLayout title="Ticket Details" subtitle="Review the details and current status of your request.">
-      <Link className="employee-back-link" to="/employee/tickets">← Back to My Tickets</Link>
-      {ticket ? (
-        <div className="employee-detail-layout">
-          <section className="employee-panel employee-ticket-detail">
-            <div className="employee-detail-title-row"><div><span className="employee-detail-id">{ticket.id}</span><h2>{ticket.title}</h2></div><StatusBadge status={ticket.status} /></div>
-            <div className="employee-detail-meta"><span>Category <strong>{ticket.category}</strong></span><span>Priority <PriorityBadge priority={ticket.priority} /></span><span>Created <strong>{ticket.created}</strong></span></div>
-            <div className="employee-detail-section"><h3>Description</h3><p>{ticket.description}</p></div>
-            <div className="employee-detail-section"><h3>Activity</h3><div className="employee-activity-item"><span className="activity-dot" /><div><strong>Ticket submitted</strong><p>Your request was recorded in this demo.</p><small>{ticket.created}</small></div></div>{ticket.status !== 'Open' && <div className="employee-activity-item"><span className="activity-dot violet" /><div><strong>Status: {ticket.status}</strong><p>This activity is illustrative sample data.</p><small>Latest update · Demo</small></div></div>}</div>
-          </section>
-          <aside className="employee-panel employee-ticket-aside"><h3>Request information</h3><div className="employee-info-line"><span>Ticket ID</span><strong>{ticket.id}</strong></div><div className="employee-info-line"><span>Requester</span><strong>Jordan Davis</strong></div><div className="employee-info-line"><span>Assigned team</span><strong>IT Support</strong></div><div className="employee-info-line"><span>Assigned agent</span><strong>Not assigned</strong></div><p className="employee-demo-note">Assignment details are placeholders in this demo.</p></aside>
+    <EmployeeLayout
+      title="Ticket Details"
+      subtitle="Review the details and current status of your request."
+      demoMode={false}
+    >
+      <Link className="employee-back-link" to="/employee/tickets">
+        ← Back to My Tickets
+      </Link>
+
+      {loading ? (
+        <div className="employee-empty-state" role="status">
+          <h3>Loading ticket...</h3>
+          <p>Please wait while we retrieve your ticket details.</p>
+        </div>
+      ) : error ? (
+        <div className="employee-empty-state" role="alert">
+          <h3>Unable to load ticket</h3>
+          <p>{error}</p>
+          <button
+            type="button"
+            className="employee-primary-button"
+            onClick={() => setReloadKey((current) => current + 1)}
+          >
+            Try again
+          </button>
+        </div>
+      ) : !ticket ? (
+        <div className="employee-empty-state">
+          <span>⌕</span>
+          <h3>Ticket not found</h3>
+          <p>We couldn't find the requested ticket.</p>
+          <Link
+            className="employee-primary-button"
+            to="/employee/tickets"
+          >
+            Browse tickets
+          </Link>
         </div>
       ) : (
-        <div className="employee-empty-state"><span>⌕</span><h3>Ticket not found</h3><p>This demo contains only a few sample tickets.</p><Link className="employee-primary-button" to="/employee/tickets">Browse tickets</Link></div>
+        <div className="employee-detail-layout">
+          <section className="employee-panel employee-ticket-detail">
+            <div className="employee-detail-title-row">
+              <div>
+                <span className="employee-detail-id">
+                  {ticket.ticketNumber}
+                </span>
+                <h2>{ticket.title}</h2>
+              </div>
+              <StatusBadge status={STATUS_LABELS[ticket.status]} />
+            </div>
+
+            <div className="employee-detail-meta">
+              <span>
+                Category <strong>{ticket.category}</strong>
+              </span>
+              <span>
+                Priority
+                <PriorityBadge
+                  priority={PRIORITY_LABELS[ticket.priority]}
+                />
+              </span>
+              <span>
+                Created <strong>{displayDate(ticket.createdAt)}</strong>
+              </span>
+            </div>
+
+            <div className="employee-detail-section">
+              <h3>Description</h3>
+              <p>{ticket.description}</p>
+            </div>
+
+            <div className="employee-detail-section">
+              <h3>Activity</h3>
+
+              <div className="employee-activity-item">
+                <span className="activity-dot" />
+                <div>
+                  <strong>Ticket submitted</strong>
+                  <p>Your support request was successfully recorded.</p>
+                  <small>{displayDate(ticket.createdAt)}</small>
+                </div>
+              </div>
+
+              {ticket.updatedAt !== ticket.createdAt && (
+                <div className="employee-activity-item">
+                  <span className="activity-dot violet" />
+                  <div>
+                    <strong>Ticket last updated</strong>
+                    <p>The ticket information was updated.</p>
+                    <small>{displayDate(ticket.updatedAt)}</small>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <aside className="employee-panel employee-ticket-aside">
+            <h3>Request information</h3>
+
+            <div className="employee-info-line">
+              <span>Ticket ID</span>
+              <strong>{ticket.ticketNumber}</strong>
+            </div>
+
+            <div className="employee-info-line">
+              <span>Requester ID</span>
+              <strong>{ticket.createdBy}</strong>
+            </div>
+
+            <div className="employee-info-line">
+              <span>Assigned team</span>
+              <strong>{ticket.assignedTeam ?? 'Not assigned'}</strong>
+            </div>
+
+            <div className="employee-info-line">
+              <span>Assigned agent</span>
+              <strong>{ticket.assignedTo ?? 'Not assigned'}</strong>
+            </div>
+
+            <p className="employee-demo-note">
+              Assignment information reflects the current backend ticket record.
+            </p>
+          </aside>
+        </div>
       )}
     </EmployeeLayout>
   );
 }
+
 
 export function NotificationsPage() {
   const [read, setRead] = useState<string[]>([]);
