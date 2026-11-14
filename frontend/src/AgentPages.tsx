@@ -224,6 +224,63 @@ export function AllTicketsPage() {
     const [priorityFilter, setPriorityFilter] = useState('All priorities');
     const [categoryFilter, setCategoryFilter] = useState('All categories');
     const [selectedTicket, setSelectedTicket] = useState<TicketResponse | null>(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState('');
+    const [detailReloadKey, setDetailReloadKey] = useState(0);
+    const selectedTicketId = selectedTicket?.ticketId;
+
+    useEffect(() => {
+        if (!selectedTicketId) {
+            return;
+        }
+        const ticketId = selectedTicketId;
+
+        let active = true;
+
+        async function loadTicketDetails() {
+            if (!accessToken) {
+                setDetailError('Your session is unavailable. Please sign in again.');
+                return;
+            }
+
+            setDetailLoading(true);
+            setDetailError('');
+
+            try {
+                const response = await getTicket(ticketId, accessToken);
+
+                if (active) {
+                    setSelectedTicket(response);
+
+                    setTickets((currentTickets) =>
+                        currentTickets.map((ticket) =>
+                            ticket.ticketId === response.ticketId
+                                ? response
+                                : ticket,
+                        ),
+                    );
+                }
+            } catch (err) {
+                if (active) {
+                    setDetailError(
+                        err instanceof Error
+                            ? err.message
+                            : 'Unable to load the latest ticket details.',
+                    );
+                }
+            } finally {
+                if (active) {
+                    setDetailLoading(false);
+                }
+            }
+        }
+
+        loadTicketDetails();
+
+        return () => {
+            active = false;
+        };
+    }, [selectedTicketId, accessToken, detailReloadKey]);
 
     useEffect(() => {
         let active = true;
@@ -597,6 +654,23 @@ export function AllTicketsPage() {
                             <StatusBadge status={selectedTicket.status} />
                             <PriorityBadge priority={selectedTicket.priority} />
                         </div>
+                        {detailLoading && (
+                            <p role="status">
+                                Refreshing ticket details from the backend...
+                            </p>
+                        )}
+
+                        {detailError && (
+                            <div role="alert">
+                                <p>{detailError}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => setDetailReloadKey((key) => key + 1)}
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        )}
 
                         <div className="agent-detail-section">
                             <h3>Description</h3>
