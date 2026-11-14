@@ -1,15 +1,25 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { getTickets } from './api/ticketApi';
+import type { TicketResponse } from './api/ticketTypes';
 import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './auth/useAuth';
 import './employee.css';
 
 
 
-type TicketStatus = 'Open' | 'In Progress' | 'Pending' | 'Resolved';
-type TicketPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+type TicketStatus =
+  | 'Open'
+  | 'In Progress'
+  | 'Pending'
+  | 'Resolved'
+  | 'Closed'
+  | 'Cancelled';
+
+type TicketPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 type Ticket = {
   id: string;
+  number: string;
   title: string;
   category: string;
   status: TicketStatus;
@@ -18,9 +28,50 @@ type Ticket = {
   description: string;
 };
 
+const STATUS_LABELS: Record<TicketResponse['status'], TicketStatus> = {
+  OPEN: 'Open',
+  IN_PROGRESS: 'In Progress',
+  PENDING: 'Pending',
+  RESOLVED: 'Resolved',
+  CLOSED: 'Closed',
+  CANCELLED: 'Cancelled',
+};
+
+const PRIORITY_LABELS: Record<TicketResponse['priority'], TicketPriority> = {
+  LOW: 'Low',
+  MEDIUM: 'Medium',
+  HIGH: 'High',
+  CRITICAL: 'Critical',
+};
+
+function formatEnumLabel(value: string): string {
+  return value
+    .split('_')
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function mapTicketResponse(ticket: TicketResponse): Ticket {
+  return {
+    id: ticket.ticketId,
+    number: ticket.ticketNumber,
+    title: ticket.title,
+    category: formatEnumLabel(ticket.category),
+    status: STATUS_LABELS[ticket.status],
+    priority: PRIORITY_LABELS[ticket.priority],
+    created: new Date(ticket.createdAt).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }),
+    description: ticket.description,
+  };
+}
+
 const initialTickets: Ticket[] = [
   {
     id: 'VXR-1048',
+    number: 'VXR-1048',
     title: 'Unable to connect to office VPN',
     category: 'Network',
     status: 'In Progress',
@@ -30,6 +81,7 @@ const initialTickets: Ticket[] = [
   },
   {
     id: 'VXR-1042',
+    number : 'VXR-1042',
     title: 'Access required for project repository',
     category: 'Access',
     status: 'Open',
@@ -39,6 +91,7 @@ const initialTickets: Ticket[] = [
   },
   {
     id: 'VXR-1031',
+    number : 'VXR-1031',
     title: 'Laptop performance issue',
     category: 'Hardware',
     status: 'Pending',
@@ -48,6 +101,7 @@ const initialTickets: Ticket[] = [
   },
   {
     id: 'VXR-1019',
+    number : 'VXR-1019',
     title: 'Email configuration fixed',
     category: 'Software',
     status: 'Resolved',
@@ -69,10 +123,12 @@ function EmployeeLayout({
   children,
   title,
   subtitle,
+  demoMode = true,
 }: {
   children: React.ReactNode;
   title: string;
   subtitle: string;
+  demoMode?: boolean;
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -147,7 +203,9 @@ function EmployeeLayout({
             <span>Workspace</span><span>/</span><strong>{title}</strong>
           </div>
           <div className="employee-top-actions">
-            <span className="employee-demo-label"><span /> DEMO MODE</span>
+            {demoMode && (
+              <span className="employee-demo-label"><span /> DEMO MODE</span>
+            )}
             <Link
               to="/employee/notifications"
               className="employee-bell"
@@ -173,7 +231,11 @@ function EmployeeLayout({
           {children}
           <footer className="employee-footer">
             <span>© 2026 Voxera</span>
-            <span>Demo workspace · No backend connected</span>
+            <span>
+              {demoMode
+                ? 'Demo workspace · No backend connected'
+                : 'Live ticket data · Connected to support system'}
+            </span>
           </footer>
         </section>
       </main>
@@ -213,15 +275,26 @@ function TicketTable({ tickets }: { tickets: Ticket[] }) {
           {tickets.map((ticket) => (
             <tr key={ticket.id}>
               <td>
-                <Link className="ticket-title-link" to={`/employee/tickets/${ticket.id}`}>
+                <Link
+                  className="ticket-title-link"
+                  to={`/employee/tickets/${ticket.id}`}
+                >
                   <strong>{ticket.title}</strong>
-                  <span>{ticket.id} · {ticket.category}</span>
+                  <span>{ticket.number} · {ticket.category}</span>
                 </Link>
               </td>
               <td><StatusBadge status={ticket.status} /></td>
               <td><PriorityBadge priority={ticket.priority} /></td>
               <td className="ticket-date">{ticket.created}</td>
-              <td><Link className="ticket-open-link" to={`/employee/tickets/${ticket.id}`} aria-label={`Open ${ticket.id}`}>↗</Link></td>
+              <td>
+                <Link
+                  className="ticket-open-link"
+                  to={`/employee/tickets/${ticket.id}`}
+                  aria-label={`Open ${ticket.number}`}
+                >
+                  ↗
+                </Link>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -306,24 +379,113 @@ export function EmployeeDashboard() {
 }
 
 export function MyTicketsPage() {
-  const [tickets] = useState(initialTickets);
+  const { accessToken } = useAuth();
+
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [status, setStatus] = useState('All');
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadTickets() {
+      if (!accessToken) {
+        setTickets([]);
+        setError('Your session is unavailable. Please sign in again.');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError('');
+
+      try {
+        const response = await getTickets(accessToken);
+
+        if (isActive) {
+          setTickets(response.map(mapTicketResponse));
+        }
+      } catch (err) {
+        if (isActive) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'Unable to load your tickets. Please try again.',
+          );
+        }
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadTickets();
+
+    return () => {
+      isActive = false;
+    };
+  }, [accessToken, reloadKey]);
+
   const filtered = tickets.filter((ticket) =>
     (status === 'All' || ticket.status === status) &&
-    `${ticket.id} ${ticket.title} ${ticket.category}`.toLowerCase().includes(search.toLowerCase())
+    `${ticket.number} ${ticket.title} ${ticket.category}`
+      .toLowerCase()
+      .includes(search.toLowerCase()),
   );
 
   return (
-    <EmployeeLayout title="My Tickets" subtitle="View and track all your IT support requests.">
+    <EmployeeLayout
+      title="My Tickets"
+      subtitle="View and track all your IT support requests."
+      demoMode={false}
+    >
       <div className="employee-filter-bar">
-        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search tickets..." aria-label="Search tickets" />
-        <select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filter by status">
-          <option>All</option><option>Open</option><option>In Progress</option><option>Pending</option><option>Resolved</option>
+        <input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search tickets..."
+          aria-label="Search tickets"
+        />
+
+        <select
+          value={status}
+          onChange={(event) => setStatus(event.target.value)}
+          aria-label="Filter by status"
+        >
+          <option>All</option>
+          <option>Open</option>
+          <option>In Progress</option>
+          <option>Pending</option>
+          <option>Resolved</option>
+          <option>Closed</option>
+          <option>Cancelled</option>
         </select>
       </div>
-      <TicketTable tickets={filtered} />
-      <p className="employee-demo-note">Showing sample tickets for demonstration. Ticket data is not loaded from the backend.</p>
+
+      {loading ? (
+        <div className="employee-empty-state" role="status">
+          <h3>Loading your tickets...</h3>
+          <p>Please wait while we retrieve your support requests.</p>
+        </div>
+      ) : error ? (
+        <div className="employee-empty-state" role="alert">
+          <h3>Unable to load tickets</h3>
+          <p>{error}</p>
+          <button
+            className="employee-primary-button"
+            type="button"
+            onClick={() => setReloadKey((current) => current + 1)}
+          >
+            Try again
+          </button>
+        </div>
+      ) : (
+        <TicketTable tickets={filtered} />
+      )}
     </EmployeeLayout>
   );
 }
