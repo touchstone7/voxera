@@ -72,3 +72,60 @@ export function addTicketComment(
     },
   );
 }
+
+
+export function startTicket(
+  ticketId: string,
+  accessToken: string,
+): Promise<TicketResponse> {
+  return apiRequest<TicketResponse>(
+    `/api/v1/tickets/${encodeURIComponent(ticketId)}/start`,
+    { method: 'POST', accessToken },
+  );
+}
+
+export function markTicketPending(
+  ticketId: string,
+  accessToken: string,
+): Promise<TicketResponse> {
+  return apiRequest<TicketResponse>(
+    `/api/v1/tickets/${encodeURIComponent(ticketId)}/pending`,
+    { method: 'POST', accessToken },
+  );
+}
+
+export function resolveTicket(
+  ticketId: string,
+  accessToken: string,
+): Promise<TicketResponse> {
+  return apiRequest<TicketResponse>(
+    `/api/v1/tickets/${encodeURIComponent(ticketId)}/resolve`,
+    { method: 'POST', accessToken },
+  );
+}
+
+export function closeTicket(
+  ticketId: string,
+  accessToken: string,
+): Promise<TicketResponse> {
+  return apiRequest<TicketResponse>(
+    `/api/v1/tickets/${encodeURIComponent(ticketId)}/close`,
+    { method: 'POST', accessToken },
+  );
+}
+
+export function assignTicket(
+  ticketId: string,
+  assignedTo: string,
+  accessToken: string,
+): Promise<TicketResponse> {
+  return apiRequest<TicketResponse>(
+    `/api/v1/tickets/${encodeURIComponent(ticketId)}/assign`,
+    {
+      method: 'POST',
+      body: { assignedTo },
+      accessToken,
+    },
+  );
+}
+
