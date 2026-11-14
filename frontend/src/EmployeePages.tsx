@@ -1,6 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { getTickets } from './api/ticketApi';
-import type { TicketResponse } from './api/ticketTypes';
+import { createTicket, getTickets } from './api/ticketApi';
+import type {
+  TicketCategory,
+  TicketPriority as ApiTicketPriority,
+  TicketResponse,
+} from './api/ticketTypes';
 import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './auth/useAuth';
 import './employee.css';
@@ -658,48 +662,197 @@ export function MyTicketsPage() {
   );
 }
 
+
 export function CreateTicketPage() {
   const navigate = useNavigate();
-  const [message, setMessage] = useState('');
+  const { accessToken } = useAuth();
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage('Demo ticket created locally. It has not been sent to the support system.');
+
+    if (!accessToken) {
+      setMessage('Your session is unavailable. Please sign in again.');
+      return;
+    }
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    const title = String(formData.get('title') ?? '').trim();
+    const category = String(formData.get('category') ?? '');
+    const priority = String(formData.get('priority') ?? '');
+    const description = String(formData.get('description') ?? '').trim();
+
+    if (!title || !description || !category || !priority) {
+      setMessage('Please complete all required fields.');
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage('');
+
+    try {
+      const createdTicket = await createTicket(
+        {
+          title,
+          description,
+          category: category as TicketCategory,
+          priority: priority as ApiTicketPriority,
+        },
+        accessToken,
+      );
+
+      navigate(`/employee/tickets/${createdTicket.ticketId}`);
+    } catch (err) {
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : 'Unable to create your ticket. Please try again.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <EmployeeLayout title="Create a Ticket" subtitle="Describe your issue and we'll help you find the right support.">
+    <EmployeeLayout
+      title="Create a Ticket"
+      subtitle="Describe your issue and we'll help you find the right support."
+      demoMode={false}
+    >
       <div className="employee-form-layout">
-        <form className="employee-panel employee-ticket-form" onSubmit={submit}>
-          <div className="employee-form-section-title"><span>01</span><div><h2>Tell us about the issue</h2><p>Fields marked with * are required.</p></div></div>
-          <label htmlFor="ticket-title">Issue title *</label>
-          <input id="ticket-title" name="title" placeholder="e.g. Unable to connect to VPN" required maxLength={120} />
-          <label htmlFor="ticket-category">Category *</label>
-          <select id="ticket-category" name="category" required defaultValue="">
-            <option value="" disabled>Select a category</option><option>Hardware</option><option>Software</option><option>Network</option><option>Access</option><option>Email</option><option>Other</option>
-          </select>
-          <label htmlFor="ticket-priority">Priority *</label>
-          <select id="ticket-priority" name="priority" defaultValue="Medium" required>
-            <option>Low</option><option>Medium</option><option>High</option><option>Urgent</option>
-          </select>
-          <label htmlFor="ticket-description">Description *</label>
-          <textarea id="ticket-description" name="description" rows={6} placeholder="Describe what happened, what you expected, and any steps you've already tried..." required maxLength={3000} />
-          <div className="employee-form-hint">Tip: Include any error messages and what you were doing when the issue occurred.</div>
-          <div className="employee-form-actions">
-            <button type="button" className="employee-secondary-button" onClick={() => navigate('/employee/tickets')}>Cancel</button>
-            <button type="submit" className="employee-primary-button">Submit ticket <span>→</span></button>
+        <form
+          className="employee-panel employee-ticket-form"
+          onSubmit={submit}
+        >
+          <div className="employee-form-section-title">
+            <span>01</span>
+            <div>
+              <h2>Tell us about the issue</h2>
+              <p>Fields marked with * are required.</p>
+            </div>
           </div>
-          {message && <p className="employee-form-message" role="status">{message}</p>}
+
+          <label htmlFor="ticket-title">Issue title *</label>
+          <input
+            id="ticket-title"
+            name="title"
+            placeholder="e.g. Unable to connect to VPN"
+            required
+            maxLength={120}
+          />
+
+          <label htmlFor="ticket-category">Category *</label>
+          <select
+            id="ticket-category"
+            name="category"
+            required
+            defaultValue=""
+          >
+            <option value="" disabled>Select a category</option>
+            <option value="HARDWARE">Hardware</option>
+            <option value="SOFTWARE">Software</option>
+            <option value="NETWORK">Network</option>
+            <option value="ACCESS">Access</option>
+            <option value="ACCOUNT">Account</option>
+            <option value="SECURITY">Security</option>
+            <option value="OTHER">Other</option>
+          </select>
+
+          <label htmlFor="ticket-priority">Priority *</label>
+          <select
+            id="ticket-priority"
+            name="priority"
+            defaultValue="MEDIUM"
+            required
+          >
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="CRITICAL">Critical</option>
+          </select>
+
+          <label htmlFor="ticket-description">Description *</label>
+          <textarea
+            id="ticket-description"
+            name="description"
+            rows={6}
+            placeholder="Describe what happened, what you expected, and any steps you've already tried..."
+            required
+            maxLength={3000}
+          />
+
+          <div className="employee-form-hint">
+            Tip: Include any error messages and what you were doing when the issue occurred.
+          </div>
+
+          <div className="employee-form-actions">
+            <button
+              type="button"
+              className="employee-secondary-button"
+              onClick={() => navigate('/employee/tickets')}
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className="employee-primary-button"
+              disabled={submitting}
+            >
+              {submitting ? 'Submitting...' : 'Submit ticket'}
+              {!submitting && <span> →</span>}
+            </button>
+          </div>
+
+          {message && (
+            <p className="employee-form-message" role="alert">
+              {message}
+            </p>
+          )}
         </form>
+
         <aside className="employee-panel employee-ticket-aside">
-          <span className="employee-aside-icon">✳</span><h3>What happens next?</h3>
-          <ol><li><span>1</span><div><strong>We receive your request</strong><p>Your issue is recorded with the details you provide.</p></div></li><li><span>2</span><div><strong>Support reviews it</strong><p>The support team assesses priority and next steps.</p></div></li><li><span>3</span><div><strong>Track progress</strong><p>Follow updates from your My Tickets page.</p></div></li></ol>
-          <p className="employee-demo-note">This is a preview of the intended workflow, not a live submission.</p>
+          <span className="employee-aside-icon">✳</span>
+          <h3>What happens next?</h3>
+
+          <ol>
+            <li>
+              <span>1</span>
+              <div>
+                <strong>We receive your request</strong>
+                <p>Your issue is recorded with the details you provide.</p>
+              </div>
+            </li>
+            <li>
+              <span>2</span>
+              <div>
+                <strong>Support reviews it</strong>
+                <p>The support team assesses priority and next steps.</p>
+              </div>
+            </li>
+            <li>
+              <span>3</span>
+              <div>
+                <strong>Track progress</strong>
+                <p>Follow updates from your My Tickets page.</p>
+              </div>
+            </li>
+          </ol>
+
+          <p className="employee-demo-note">
+            Your request will be submitted directly to the Voxera support system.
+          </p>
         </aside>
       </div>
     </EmployeeLayout>
   );
 }
+
 
 export function TicketDetailsPage() {
   const { ticketId } = useParams();
