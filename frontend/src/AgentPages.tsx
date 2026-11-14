@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getTickets } from './api/ticketApi';
+import { getTickets, assignTicket } from './api/ticketApi';
 import type { TicketResponse, TicketStatus as ApiTicketStatus } from './api/ticketTypes';
 import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './auth/useAuth';
@@ -795,263 +795,395 @@ export function AllTicketsPage() {
     );
 }
 
+
 export function TeamQueuePage() {
-  const [tickets, setTickets] = useState(initialTickets);
-  const [priorityFilter, setPriorityFilter] = useState('All priorities');
-  const [categoryFilter, setCategoryFilter] = useState('All categories');
-  const [confirmation, setConfirmation] = useState('');
+    const { user, accessToken } = useAuth();
 
-  const queueTickets = tickets.filter(
-    (ticket) => !ticket.assignedTo && ticket.status !== 'Resolved'
-  );
+    const [tickets, setTickets] = useState<TicketResponse[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
+    const [actionError, setActionError] = useState('');
+    const [confirmation, setConfirmation] = useState('');
+    const [actionTicketId, setActionTicketId] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
 
-  const categories = Array.from(
-    new Set(queueTickets.map((ticket) => ticket.category))
-  );
+    const [priorityFilter, setPriorityFilter] = useState('All priorities');
+    const [categoryFilter, setCategoryFilter] = useState('All categories');
 
-  const filteredTickets = useMemo(
-    () =>
-      queueTickets.filter((ticket) => {
-        const matchesPriority =
-          priorityFilter === 'All priorities' ||
-          ticket.priority === priorityFilter;
+    useEffect(() => {
+        let active = true;
 
-        const matchesCategory =
-          categoryFilter === 'All categories' ||
-          ticket.category === categoryFilter;
+        async function loadTickets() {
+            if (!accessToken) {
+                setLoadError('Your session is unavailable. Please sign in again.');
+                setLoading(false);
+                return;
+            }
 
-        return matchesPriority && matchesCategory;
-      }),
-    [queueTickets, priorityFilter, categoryFilter]
-  );
+            setLoading(true);
+            setLoadError('');
 
-  const urgentCount = queueTickets.filter(
-    (ticket) => ticket.priority === 'Urgent'
-  ).length;
+            try {
+                const response = await getTickets(accessToken);
 
-  const highPriorityCount = queueTickets.filter(
-    (ticket) => ticket.priority === 'High'
-  ).length;
+                if (active) {
+                    setTickets(response);
+                }
+            } catch (err) {
+                if (active) {
+                    setLoadError(
+                        err instanceof Error
+                            ? err.message
+                            : 'Unable to load the team queue.',
+                    );
+                }
+            } finally {
+                if (active) {
+                    setLoading(false);
+                }
+            }
+        }
 
-  function takeOwnership(ticket: AgentTicket) {
-    setTickets((currentTickets) =>
-      currentTickets.map((currentTicket) =>
-        currentTicket.id === ticket.id
-          ? { ...currentTicket, assignedTo: 'Alex Morgan' }
-          : currentTicket
-      )
+        loadTickets();
+
+        return () => {
+            active = false;
+        };
+    }, [accessToken, reloadKey]);
+
+    const queueTickets = useMemo(
+        () =>
+            tickets.filter(
+                (ticket) =>
+                    !ticket.assignedTo &&
+                    isActiveTicket(ticket.status),
+            ),
+        [tickets],
     );
 
-    setConfirmation(`${ticket.id} has been assigned to you.`);
-  }
+    const categories = useMemo(
+        () => Array.from(new Set(queueTickets.map((ticket) => ticket.category))),
+        [queueTickets],
+    );
 
-  function clearFilters() {
-    setPriorityFilter('All priorities');
-    setCategoryFilter('All categories');
-  }
+    const filteredTickets = useMemo(
+        () =>
+            queueTickets.filter((ticket) => {
+                const matchesPriority =
+                    priorityFilter === 'All priorities' ||
+                    ticket.priority === priorityFilter;
 
-  return (
-    <AgentLayout
-      title="Team Queue"
-      subtitle="Review unassigned requests and take ownership of tickets that need attention."
-    >
-      <div className="agent-stats-grid">
-        <div className="agent-stat-card">
-          <div className="agent-stat-top">
-            <span className="agent-stat-icon purple">◫</span>
-            <span className="agent-stat-caption">Awaiting an owner</span>
-          </div>
-          <span className="agent-stat-number">{queueTickets.length}</span>
-          <span className="agent-stat-label">Unassigned tickets</span>
-        </div>
+                const matchesCategory =
+                    categoryFilter === 'All categories' ||
+                    ticket.category === categoryFilter;
 
-        <div className="agent-stat-card">
-          <div className="agent-stat-top">
-            <span className="agent-stat-icon red">!</span>
-            <span className="agent-stat-caption">Immediate attention</span>
-          </div>
-          <span className="agent-stat-number">{urgentCount}</span>
-          <span className="agent-stat-label">Urgent tickets</span>
-        </div>
+                return matchesPriority && matchesCategory;
+            }),
+        [queueTickets, priorityFilter, categoryFilter],
+    );
 
-        <div className="agent-stat-card">
-          <div className="agent-stat-top">
-            <span className="agent-stat-icon amber">↑</span>
-            <span className="agent-stat-caption">High priority</span>
-          </div>
-          <span className="agent-stat-number">{highPriorityCount}</span>
-          <span className="agent-stat-label">High priority tickets</span>
-        </div>
+    const urgentCount = queueTickets.filter(
+        (ticket) => ticket.priority === 'CRITICAL',
+    ).length;
 
-        <div className="agent-stat-card">
-          <div className="agent-stat-top">
-            <span className="agent-stat-icon blue">✓</span>
-            <span className="agent-stat-caption">Your ownership</span>
-          </div>
-          <span className="agent-stat-number">
-            {tickets.filter((ticket) => ticket.assignedTo === 'Alex Morgan').length}
-          </span>
-          <span className="agent-stat-label">Assigned to you</span>
-        </div>
-      </div>
+    const highPriorityCount = queueTickets.filter(
+        (ticket) => ticket.priority === 'HIGH',
+    ).length;
 
-      {confirmation && (
-        <div className="agent-queue-confirmation">
-          <span>✓</span>
-          {confirmation}
-          <button
-            type="button"
-            onClick={() => setConfirmation('')}
-            aria-label="Dismiss confirmation"
-          >
-            ×
-          </button>
-        </div>
-      )}
+    const assignedToMeCount = tickets.filter(
+        (ticket) => ticket.assignedTo === user?.userId,
+    ).length;
 
-      <div className="agent-section-heading">
-        <div>
-          <h2>Unassigned tickets</h2>
-          <p>
-            Requests that are waiting for an agent to take ownership.
-          </p>
-        </div>
-        <span className="agent-record-count">
-          {filteredTickets.length} of {queueTickets.length} tickets
-        </span>
-      </div>
+    async function takeOwnership(ticket: TicketResponse) {
+        if (!accessToken || !user) {
+            setActionError('Your session is unavailable. Please sign in again.');
+            return;
+        }
 
-      <div className="agent-ticket-panel">
-        <div className="agent-queue-toolbar">
-          <div className="agent-queue-toolbar-label">
-            <span>⌕</span>
-            Filter queue
-          </div>
+        setActionTicketId(ticket.ticketId);
+        setActionError('');
+        setConfirmation('');
 
-          <div className="agent-queue-filters">
-            <select
-              value={priorityFilter}
-              onChange={(event) => setPriorityFilter(event.target.value)}
-              aria-label="Filter by priority"
-            >
-              <option>All priorities</option>
-              <option>Urgent</option>
-              <option>High</option>
-              <option>Medium</option>
-              <option>Low</option>
-            </select>
+        try {
+            const updatedTicket = await assignTicket(
+                ticket.ticketId,
+                user.userId,
+                accessToken,
+            );
 
-            <select
-              value={categoryFilter}
-              onChange={(event) => setCategoryFilter(event.target.value)}
-              aria-label="Filter by category"
-            >
-              <option>All categories</option>
-              {categories.map((category) => (
-                <option key={category}>{category}</option>
-              ))}
-            </select>
+            setTickets((currentTickets) =>
+                currentTickets.map((currentTicket) =>
+                    currentTicket.ticketId === updatedTicket.ticketId
+                        ? updatedTicket
+                        : currentTicket,
+                ),
+            );
 
-            {(priorityFilter !== 'All priorities' ||
-              categoryFilter !== 'All categories') && (
-              <button
-                type="button"
-                className="agent-queue-clear"
-                onClick={clearFilters}
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
-        </div>
+            setConfirmation(
+                `${ticket.ticketNumber} has been assigned to you.`,
+            );
+        } catch (err) {
+            setActionError(
+                err instanceof Error
+                    ? err.message
+                    : 'Unable to take ownership of this ticket.',
+            );
+        } finally {
+            setActionTicketId(null);
+        }
+    }
 
-        {filteredTickets.length > 0 ? (
-          <div className="agent-table-wrap">
-            <table className="agent-table agent-queue-table">
-              <thead>
-                <tr>
-                  <th>Ticket</th>
-                  <th>Requester</th>
-                  <th>Priority</th>
-                  <th>Category</th>
-                  <th>Created</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+    function clearFilters() {
+        setPriorityFilter('All priorities');
+        setCategoryFilter('All categories');
+    }
 
-              <tbody>
-                {filteredTickets.map((ticket) => (
-                  <tr key={ticket.id}>
-                    <td>
-                      <div className="agent-queue-ticket">
-                        <strong>{ticket.title}</strong>
-                        <span>{ticket.id}</span>
-                      </div>
-                    </td>
+    return (
+        <AgentLayout
+            title="Team Queue"
+            subtitle="Review unassigned requests and take ownership of tickets that need attention."
+        >
+            <div className="agent-stats-grid">
+                <div className="agent-stat-card">
+                    <div className="agent-stat-top">
+                        <span className="agent-stat-icon purple">◫</span>
+                        <span className="agent-stat-caption">Awaiting an owner</span>
+                    </div>
+                    <span className="agent-stat-number">{queueTickets.length}</span>
+                    <span className="agent-stat-label">Unassigned tickets</span>
+                </div>
 
-                    <td>
-                      <div className="agent-requester">
-                        <span className="agent-requester-avatar">
-                          {ticket.initials}
-                        </span>
-                        {ticket.requester}
-                      </div>
-                    </td>
+                <div className="agent-stat-card">
+                    <div className="agent-stat-top">
+                        <span className="agent-stat-icon red">!</span>
+                        <span className="agent-stat-caption">Immediate attention</span>
+                    </div>
+                    <span className="agent-stat-number">{urgentCount}</span>
+                    <span className="agent-stat-label">Urgent tickets</span>
+                </div>
 
-                    <td>
-                      <PriorityBadge priority={ticket.priority} />
-                    </td>
+                <div className="agent-stat-card">
+                    <div className="agent-stat-top">
+                        <span className="agent-stat-icon amber">↑</span>
+                        <span className="agent-stat-caption">High priority</span>
+                    </div>
+                    <span className="agent-stat-number">{highPriorityCount}</span>
+                    <span className="agent-stat-label">High priority tickets</span>
+                </div>
 
-                    <td>{ticket.category}</td>
+                <div className="agent-stat-card">
+                    <div className="agent-stat-top">
+                        <span className="agent-stat-icon blue">✓</span>
+                        <span className="agent-stat-caption">Your ownership</span>
+                    </div>
+                    <span className="agent-stat-number">{assignedToMeCount}</span>
+                    <span className="agent-stat-label">Assigned to you</span>
+                </div>
+            </div>
 
-                    <td className="agent-date">{ticket.created}</td>
-
-                    <td>
-                      <button
+            {confirmation && (
+                <div className="agent-queue-confirmation">
+                    <span>✓</span>
+                    {confirmation}
+                    <button
                         type="button"
-                        className="agent-queue-take-button"
-                        onClick={() => takeOwnership(ticket)}
-                      >
-                        Take ticket <span>→</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="agent-empty-state">
-            <span>✓</span>
-            <h3>
-              {queueTickets.length === 0
-                ? 'The queue is clear'
-                : 'No matching tickets'}
-            </h3>
-            <p>
-              {queueTickets.length === 0
-                ? 'There are currently no unassigned tickets waiting for an agent.'
-                : 'Try changing your filters to see more tickets.'}
-            </p>
-            {(priorityFilter !== 'All priorities' ||
-              categoryFilter !== 'All categories') && (
-              <button type="button" onClick={clearFilters}>
-                Clear filters
-              </button>
+                        onClick={() => setConfirmation('')}
+                        aria-label="Dismiss confirmation"
+                    >
+                        ×
+                    </button>
+                </div>
             )}
-          </div>
-        )}
 
-        <div className="agent-table-footer">
-          <span>
-            Showing <strong>{filteredTickets.length}</strong> unassigned tickets
-          </span>
-          <span>Assignment is manual</span>
-        </div>
-      </div>
-    </AgentLayout>
-  );
+            {actionError && (
+                <div className="agent-queue-confirmation">
+                    <span>!</span>
+                    {actionError}
+                    <button
+                        type="button"
+                        onClick={() => setActionError('')}
+                        aria-label="Dismiss error"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
+            <div className="agent-section-heading">
+                <div>
+                    <h2>Unassigned tickets</h2>
+                    <p>
+                        Requests that are waiting for an agent to take ownership.
+                    </p>
+                </div>
+                <span className="agent-record-count">
+                    {filteredTickets.length} of {queueTickets.length} tickets
+                </span>
+            </div>
+
+            <div className="agent-ticket-panel">
+                <div className="agent-queue-toolbar">
+                    <div className="agent-queue-toolbar-label">
+                        <span>⌕</span>
+                        Filter queue
+                    </div>
+
+                    <div className="agent-queue-filters">
+                        <select
+                            value={priorityFilter}
+                            onChange={(event) => setPriorityFilter(event.target.value)}
+                            aria-label="Filter by priority"
+                        >
+                            <option>All priorities</option>
+                            <option value="CRITICAL">Urgent</option>
+                            <option value="HIGH">High</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="LOW">Low</option>
+                        </select>
+
+                        <select
+                            value={categoryFilter}
+                            onChange={(event) => setCategoryFilter(event.target.value)}
+                            aria-label="Filter by category"
+                        >
+                            <option>All categories</option>
+                            {categories.map((category) => (
+                                <option key={category} value={category}>
+                                    {category.charAt(0) + category.slice(1).toLowerCase()}
+                                </option>
+                            ))}
+                        </select>
+
+                        {(priorityFilter !== 'All priorities' ||
+                            categoryFilter !== 'All categories') && (
+                                <button
+                                    type="button"
+                                    className="agent-queue-clear"
+                                    onClick={clearFilters}
+                                >
+                                    Clear filters
+                                </button>
+                            )}
+                    </div>
+                </div>
+
+                {loading ? (
+                    <div className="agent-empty-state">
+                        <h3>Loading team queue...</h3>
+                        <p>Retrieving unassigned tickets from Voxera.</p>
+                    </div>
+                ) : loadError ? (
+                    <div className="agent-empty-state">
+                        <h3>Unable to load team queue</h3>
+                        <p>{loadError}</p>
+                        <button
+                            type="button"
+                            onClick={() => setReloadKey((current) => current + 1)}
+                        >
+                            Try again
+                        </button>
+                    </div>
+                ) : filteredTickets.length > 0 ? (
+                    <div className="agent-table-wrap">
+                        <table className="agent-table agent-queue-table">
+                            <thead>
+                                <tr>
+                                    <th>Ticket</th>
+                                    <th>Requester</th>
+                                    <th>Priority</th>
+                                    <th>Category</th>
+                                    <th>Created</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {filteredTickets.map((ticket) => (
+                                    <tr key={ticket.ticketId}>
+                                        <td>
+                                            <div className="agent-queue-ticket">
+                                                <strong>{ticket.title}</strong>
+                                                <span>{ticket.ticketNumber}</span>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <div className="agent-requester">
+                                                <span className="agent-requester-avatar">ID</span>
+                                                <span>{formatUserId(ticket.createdBy)}</span>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <PriorityBadge priority={ticket.priority} />
+                                        </td>
+
+                                        <td>
+                                            {ticket.category.charAt(0) +
+                                                ticket.category.slice(1).toLowerCase()}
+                                        </td>
+
+                                        <td className="agent-date">
+                                            {formatTicketDate(ticket.createdAt)}
+                                        </td>
+
+                                        <td>
+                                            <button
+                                                type="button"
+                                                className="agent-queue-take-button"
+                                                disabled={actionTicketId !== null}
+                                                onClick={() => takeOwnership(ticket)}
+                                            >
+                                                {actionTicketId === ticket.ticketId
+                                                    ? 'Taking ownership...'
+                                                    : 'Take ticket'}
+                                                <span>→</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="agent-empty-state">
+                        <span>✓</span>
+                        <h3>
+                            {queueTickets.length === 0
+                                ? 'The queue is clear'
+                                : 'No matching tickets'}
+                        </h3>
+                        <p>
+                            {queueTickets.length === 0
+                                ? 'There are currently no unassigned tickets waiting for an agent.'
+                                : 'Try changing your filters to see more tickets.'}
+                        </p>
+                        {(priorityFilter !== 'All priorities' ||
+                            categoryFilter !== 'All categories') && (
+                                <button type="button" onClick={clearFilters}>
+                                    Clear filters
+                                </button>
+                            )}
+                    </div>
+                )}
+
+                <div className="agent-table-footer">
+                    <span>
+                        Showing <strong>{filteredTickets.length}</strong> unassigned tickets
+                    </span>
+                    <span>
+                        {loading
+                            ? 'Loading...'
+                            : loadError
+                                ? 'Unable to refresh'
+                                : 'Live backend data · Manual assignment'}
+                    </span>
+                </div>
+            </div>
+        </AgentLayout>
+    );
 }
+
 
 const availableAgents = [
   {
