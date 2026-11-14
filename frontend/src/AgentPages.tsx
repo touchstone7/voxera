@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { getTickets } from './api/ticketApi';
+import type { TicketResponse, TicketStatus as ApiTicketStatus } from './api/ticketTypes';
 import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './auth/useAuth';
 import './agent.css';
@@ -289,320 +291,508 @@ function AgentLayout({
   );
 }
 
-function StatusBadge({ status }: { status: TicketStatus }) {
-  return (
-    <span className={`agent-ticket-status status-${status.toLowerCase().replace(' ', '-')}`}>
-      <span />
-      {status}
-    </span>
-  );
+function StatusBadge({ status }: { status: string }) {
+    const label = status
+        .toLowerCase()
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+
+    return (
+        <span className={`agent-ticket-status status-${status.toLowerCase().replace(/_/g, '-')}`}>
+            <span />
+            {label}
+        </span>
+    );
 }
 
-function PriorityBadge({ priority }: { priority: TicketPriority }) {
-  return (
-    <span className={`agent-ticket-priority priority-${priority.toLowerCase()}`}>
-      <span />
-      {priority}
-    </span>
-  );
+function PriorityBadge({ priority }: { priority: string }) {
+    const label = priority === 'CRITICAL'
+        ? 'Urgent'
+        : priority.charAt(0) + priority.slice(1).toLowerCase();
+
+    const cssPriority = priority === 'CRITICAL'
+        ? 'urgent'
+        : priority.toLowerCase();
+
+    return (
+        <span className={`agent-ticket-priority priority-${cssPriority}`}>
+            <span />
+            {label}
+        </span>
+    );
+}
+
+function formatTicketDate(value: string): string {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleDateString('en', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+}
+
+function formatUserId(userId: string | null): string {
+    if (!userId) {
+        return 'Unassigned';
+    }
+
+    return `User ${userId.slice(0, 8)}`;
+}
+
+function isActiveTicket(status: ApiTicketStatus): boolean {
+    return !['RESOLVED', 'CLOSED', 'CANCELLED'].includes(status);
 }
 
 export function AllTicketsPage() {
-  const [tickets] = useState(initialTickets);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All statuses');
-  const [priorityFilter, setPriorityFilter] = useState('All priorities');
-  const [categoryFilter, setCategoryFilter] = useState('All categories');
-  const [selectedTicket, setSelectedTicket] = useState<AgentTicket | null>(null);
+    const { accessToken } = useAuth();
 
-  const filteredTickets = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const [tickets, setTickets] = useState<TicketResponse[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [reloadKey, setReloadKey] = useState(0);
 
-    return tickets.filter((ticket) => {
-      const matchesSearch =
-        !query ||
-        ticket.id.toLowerCase().includes(query) ||
-        ticket.title.toLowerCase().includes(query) ||
-        ticket.requester.toLowerCase().includes(query) ||
-        (ticket.assignedTo ?? '').toLowerCase().includes(query);
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All statuses');
+    const [priorityFilter, setPriorityFilter] = useState('All priorities');
+    const [categoryFilter, setCategoryFilter] = useState('All categories');
+    const [selectedTicket, setSelectedTicket] = useState<TicketResponse | null>(null);
 
-      const matchesStatus =
-        statusFilter === 'All statuses' || ticket.status === statusFilter;
-      const matchesPriority =
-        priorityFilter === 'All priorities' || ticket.priority === priorityFilter;
-      const matchesCategory =
-        categoryFilter === 'All categories' || ticket.category === categoryFilter;
+    useEffect(() => {
+        let active = true;
 
-      return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
-    });
-  }, [tickets, search, statusFilter, priorityFilter, categoryFilter]);
+        async function loadTickets() {
+            if (!accessToken) {
+                setError('Your session is unavailable. Please sign in again.');
+                setLoading(false);
+                return;
+            }
 
-  const unassigned = tickets.filter((ticket) => !ticket.assignedTo && ticket.status !== 'Resolved').length;
-  const inProgress = tickets.filter((ticket) => ticket.status === 'In Progress').length;
-  const urgent = tickets.filter((ticket) => ticket.priority === 'Urgent' && ticket.status !== 'Resolved').length;
+            setLoading(true);
+            setError('');
 
-  function clearFilters() {
-    setSearch('');
-    setStatusFilter('All statuses');
-    setPriorityFilter('All priorities');
-    setCategoryFilter('All categories');
-  }
+            try {
+                const response = await getTickets(accessToken);
 
-  return (
-    <AgentLayout
-      title="All Tickets"
-      subtitle="Monitor, prioritize and manage support requests across your organization."
-    >
-      <div className="agent-stats-grid">
-        <div className="agent-stat-card">
-          <div className="agent-stat-top">
-            <span className="agent-stat-icon purple">▤</span>
-            <span className="agent-stat-caption">Across all statuses</span>
-          </div>
-          <span className="agent-stat-number">{tickets.length}</span>
-          <span className="agent-stat-label">Total tickets</span>
-        </div>
+                if (active) {
+                    setTickets(response);
+                }
+            } catch (err) {
+                if (active) {
+                    setError(
+                        err instanceof Error
+                            ? err.message
+                            : 'Unable to load tickets. Please try again.',
+                    );
+                }
+            } finally {
+                if (active) {
+                    setLoading(false);
+                }
+            }
+        }
 
-        <div className="agent-stat-card">
-          <div className="agent-stat-top">
-            <span className="agent-stat-icon amber">◷</span>
-            <span className="agent-stat-caption">Needs an owner</span>
-          </div>
-          <span className="agent-stat-number">{unassigned}</span>
-          <span className="agent-stat-label">Unassigned tickets</span>
-        </div>
+        loadTickets();
 
-        <div className="agent-stat-card">
-          <div className="agent-stat-top">
-            <span className="agent-stat-icon blue">↻</span>
-            <span className="agent-stat-caption">Currently being handled</span>
-          </div>
-          <span className="agent-stat-number">{inProgress}</span>
-          <span className="agent-stat-label">In progress</span>
-        </div>
+        return () => {
+            active = false;
+        };
+    }, [accessToken, reloadKey]);
 
-        <div className="agent-stat-card">
-          <div className="agent-stat-top">
-            <span className="agent-stat-icon red">!</span>
-            <span className="agent-stat-caption">Requires attention</span>
-          </div>
-          <span className="agent-stat-number">{urgent}</span>
-          <span className="agent-stat-label">Urgent tickets</span>
-        </div>
-      </div>
+    const filteredTickets = useMemo(() => {
+        const query = search.trim().toLowerCase();
 
-      <div className="agent-section-heading">
-        <div>
-          <h2>Ticket overview</h2>
-          <p>Review and manage requests submitted by employees.</p>
-        </div>
-        <span className="agent-record-count">{filteredTickets.length} records</span>
-      </div>
+        return tickets.filter((ticket) => {
+            const matchesSearch =
+                !query ||
+                ticket.ticketNumber.toLowerCase().includes(query) ||
+                ticket.title.toLowerCase().includes(query) ||
+                ticket.ticketId.toLowerCase().includes(query) ||
+                ticket.createdBy.toLowerCase().includes(query) ||
+                (ticket.assignedTo ?? '').toLowerCase().includes(query);
 
-      <div className="agent-ticket-panel">
-        <div className="agent-filter-toolbar">
-          <div className="agent-search">
-            <span>⌕</span>
-            <input
-              type="search"
-              placeholder="Search tickets, requesters, agents..."
-              aria-label="Search tickets"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <kbd>⌘ K</kbd>
-          </div>
+            const matchesStatus =
+                statusFilter === 'All statuses' || ticket.status === statusFilter;
 
-          <div className="agent-filter-group">
-            <select
-              aria-label="Filter by status"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option>All statuses</option>
-              <option>Open</option>
-              <option>In Progress</option>
-              <option>Pending</option>
-              <option>Resolved</option>
-            </select>
+            const matchesPriority =
+                priorityFilter === 'All priorities' ||
+                ticket.priority === priorityFilter;
 
-            <select
-              aria-label="Filter by priority"
-              value={priorityFilter}
-              onChange={(event) => setPriorityFilter(event.target.value)}
-            >
-              <option>All priorities</option>
-              <option>Urgent</option>
-              <option>High</option>
-              <option>Medium</option>
-              <option>Low</option>
-            </select>
+            const matchesCategory =
+                categoryFilter === 'All categories' ||
+                ticket.category === categoryFilter;
 
-            <select
-              aria-label="Filter by category"
-              value={categoryFilter}
-              onChange={(event) => setCategoryFilter(event.target.value)}
-            >
-              <option>All categories</option>
-              <option>Network</option>
-              <option>Hardware</option>
-              <option>Software</option>
-              <option>Access</option>
-              <option>Database</option>
-            </select>
-          </div>
-        </div>
+            return (
+                matchesSearch &&
+                matchesStatus &&
+                matchesPriority &&
+                matchesCategory
+            );
+        });
+    }, [tickets, search, statusFilter, priorityFilter, categoryFilter]);
 
-        <div className="agent-table-wrap">
-          <table className="agent-table">
-            <thead>
-              <tr>
-                <th>Ticket</th>
-                <th>Requester</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Assigned to</th>
-                <th>Created</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTickets.map((ticket) => (
-                <tr
-                  key={ticket.id}
-                  className={selectedTicket?.id === ticket.id ? 'selected' : ''}
-                >
-                  <td>
-                    <button
-                      className="agent-ticket-title"
-                      type="button"
-                      onClick={() => setSelectedTicket(ticket)}
-                    >
-                      <strong>{ticket.title}</strong>
-                      <span>{ticket.id} · {ticket.category}</span>
-                    </button>
-                  </td>
-                  <td>
-                    <div className="agent-requester">
-                      <span className="agent-requester-avatar">{ticket.initials}</span>
-                      <span>{ticket.requester}</span>
+    const unassigned = tickets.filter(
+        (ticket) => !ticket.assignedTo && isActiveTicket(ticket.status),
+    ).length;
+
+    const inProgress = tickets.filter(
+        (ticket) => ticket.status === 'IN_PROGRESS',
+    ).length;
+
+    const urgent = tickets.filter(
+        (ticket) =>
+            ticket.priority === 'CRITICAL' && isActiveTicket(ticket.status),
+    ).length;
+
+    function clearFilters() {
+        setSearch('');
+        setStatusFilter('All statuses');
+        setPriorityFilter('All priorities');
+        setCategoryFilter('All categories');
+    }
+
+    return (
+        <AgentLayout
+            title="All Tickets"
+            subtitle="Monitor, prioritize and manage support requests across your organization."
+        >
+            <div className="agent-stats-grid">
+                <div className="agent-stat-card">
+                    <div className="agent-stat-top">
+                        <span className="agent-stat-icon purple">▤</span>
+                        <span className="agent-stat-caption">Across all statuses</span>
                     </div>
-                  </td>
-                  <td><PriorityBadge priority={ticket.priority} /></td>
-                  <td><StatusBadge status={ticket.status} /></td>
-                  <td>
-                    {ticket.assignedTo ? (
-                      <span className="agent-assignee">{ticket.assignedTo}</span>
-                    ) : (
-                      <span className="agent-unassigned">Unassigned</span>
+                    <span className="agent-stat-number">{tickets.length}</span>
+                    <span className="agent-stat-label">Total tickets</span>
+                </div>
+
+                <div className="agent-stat-card">
+                    <div className="agent-stat-top">
+                        <span className="agent-stat-icon amber">◷</span>
+                        <span className="agent-stat-caption">Needs an owner</span>
+                    </div>
+                    <span className="agent-stat-number">{unassigned}</span>
+                    <span className="agent-stat-label">Unassigned tickets</span>
+                </div>
+
+                <div className="agent-stat-card">
+                    <div className="agent-stat-top">
+                        <span className="agent-stat-icon blue">↻</span>
+                        <span className="agent-stat-caption">Currently being handled</span>
+                    </div>
+                    <span className="agent-stat-number">{inProgress}</span>
+                    <span className="agent-stat-label">In progress</span>
+                </div>
+
+                <div className="agent-stat-card">
+                    <div className="agent-stat-top">
+                        <span className="agent-stat-icon red">!</span>
+                        <span className="agent-stat-caption">Requires attention</span>
+                    </div>
+                    <span className="agent-stat-number">{urgent}</span>
+                    <span className="agent-stat-label">Critical tickets</span>
+                </div>
+            </div>
+
+            <div className="agent-section-heading">
+                <div>
+                    <h2>Ticket overview</h2>
+                    <p>Review and manage requests submitted by employees.</p>
+                </div>
+                <span className="agent-record-count">
+                    {filteredTickets.length} records
+                </span>
+            </div>
+
+            <div className="agent-ticket-panel">
+                <div className="agent-filter-toolbar">
+                    <div className="agent-search">
+                        <span>⌕</span>
+                        <input
+                            type="search"
+                            placeholder="Search tickets, requesters, agents..."
+                            aria-label="Search tickets"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                        />
+                        <kbd>⌘ K</kbd>
+                    </div>
+
+                    <div className="agent-filter-group">
+                        <select
+                            aria-label="Filter by status"
+                            value={statusFilter}
+                            onChange={(event) => setStatusFilter(event.target.value)}
+                        >
+                            <option>All statuses</option>
+                            <option value="OPEN">Open</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="RESOLVED">Resolved</option>
+                            <option value="CLOSED">Closed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+
+                        <select
+                            aria-label="Filter by priority"
+                            value={priorityFilter}
+                            onChange={(event) => setPriorityFilter(event.target.value)}
+                        >
+                            <option>All priorities</option>
+                            <option value="CRITICAL">Urgent</option>
+                            <option value="HIGH">High</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="LOW">Low</option>
+                        </select>
+
+                        <select
+                            aria-label="Filter by category"
+                            value={categoryFilter}
+                            onChange={(event) => setCategoryFilter(event.target.value)}
+                        >
+                            <option>All categories</option>
+                            <option value="HARDWARE">Hardware</option>
+                            <option value="SOFTWARE">Software</option>
+                            <option value="NETWORK">Network</option>
+                            <option value="ACCESS">Access</option>
+                            <option value="SECURITY">Security</option>
+                            <option value="ACCOUNT">Account</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="agent-table-wrap">
+                    <table className="agent-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Requester</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Assigned to</th>
+                                <th>Created</th>
+                                <th />
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {filteredTickets.map((ticket) => (
+                                <tr
+                                    key={ticket.ticketId}
+                                    className={
+                                        selectedTicket?.ticketId === ticket.ticketId
+                                            ? 'selected'
+                                            : ''
+                                    }
+                                >
+                                    <td>
+                                        <button
+                                            className="agent-ticket-title"
+                                            type="button"
+                                            onClick={() => setSelectedTicket(ticket)}
+                                        >
+                                            <strong>{ticket.title}</strong>
+                                            <span>
+                                                {ticket.ticketNumber} · {ticket.category}
+                                            </span>
+                                        </button>
+                                    </td>
+
+                                    <td>
+                                        <div className="agent-requester">
+                                            <span className="agent-requester-avatar">ID</span>
+                                            <span>{formatUserId(ticket.createdBy)}</span>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <PriorityBadge priority={ticket.priority} />
+                                    </td>
+
+                                    <td>
+                                        <StatusBadge status={ticket.status} />
+                                    </td>
+
+                                    <td>
+                                        {ticket.assignedTo ? (
+                                            <span className="agent-assignee">
+                                                {formatUserId(ticket.assignedTo)}
+                                            </span>
+                                        ) : (
+                                            <span className="agent-unassigned">Unassigned</span>
+                                        )}
+                                    </td>
+
+                                    <td className="agent-date">
+                                        {formatTicketDate(ticket.createdAt)}
+                                    </td>
+
+                                    <td>
+                                        <button
+                                            className="agent-row-action"
+                                            type="button"
+                                            aria-label={`View ${ticket.ticketNumber}`}
+                                            onClick={() => setSelectedTicket(ticket)}
+                                        >
+                                            ↗
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    {loading && (
+                        <div className="agent-empty-state">
+                            <h3>Loading tickets...</h3>
+                            <p>Retrieving tickets from Voxera.</p>
+                        </div>
                     )}
-                  </td>
-                  <td className="agent-date">{ticket.created}</td>
-                  <td>
-                    <button
-                      className="agent-row-action"
-                      type="button"
-                      aria-label={`View ${ticket.id}`}
-                      onClick={() => setSelectedTicket(ticket)}
+
+                    {!loading && error && (
+                        <div className="agent-empty-state">
+                            <h3>Unable to load tickets</h3>
+                            <p>{error}</p>
+                            <button
+                                type="button"
+                                onClick={() => setReloadKey((current) => current + 1)}
+                            >
+                                Try again
+                            </button>
+                        </div>
+                    )}
+
+                    {!loading && !error && filteredTickets.length === 0 && (
+                        <div className="agent-empty-state">
+                            <span>⌕</span>
+                            <h3>
+                                {tickets.length === 0
+                                    ? 'No tickets yet'
+                                    : 'No matching tickets'}
+                            </h3>
+                            <p>
+                                {tickets.length === 0
+                                    ? 'Tickets created in Voxera will appear here.'
+                                    : 'Try adjusting your search or filters.'}
+                            </p>
+                            {tickets.length > 0 && (
+                                <button type="button" onClick={clearFilters}>
+                                    Clear filters
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="agent-table-footer">
+                    <span>
+                        Showing <strong>{filteredTickets.length}</strong> of{' '}
+                        <strong>{tickets.length}</strong> tickets
+                    </span>
+                    <span>
+                        {loading ? 'Loading...' : error ? 'Unable to refresh' : 'Live backend data'}
+                    </span>
+                </div>
+            </div>
+
+            {selectedTicket && (
+                <div
+                    className="agent-detail-backdrop"
+                    onClick={() => setSelectedTicket(null)}
+                >
+                    <section
+                        className="agent-detail-panel"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="agent-detail-title"
+                        onClick={(event) => event.stopPropagation()}
                     >
-                      ↗
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        <div className="agent-detail-header">
+                            <div>
+                                <span className="agent-detail-id">
+                                    {selectedTicket.ticketNumber}
+                                </span>
+                                <h2 id="agent-detail-title">{selectedTicket.title}</h2>
+                            </div>
 
-          {filteredTickets.length === 0 && (
-            <div className="agent-empty-state">
-              <span>⌕</span>
-              <h3>No matching tickets</h3>
-              <p>Try adjusting your search or filters.</p>
-              <button type="button" onClick={clearFilters}>Clear filters</button>
-            </div>
-          )}
-        </div>
+                            <button
+                                type="button"
+                                className="agent-detail-close"
+                                aria-label="Close ticket details"
+                                onClick={() => setSelectedTicket(null)}
+                            >
+                                ×
+                            </button>
+                        </div>
 
-        <div className="agent-table-footer">
-          <span>Showing <strong>{filteredTickets.length}</strong> of <strong>{tickets.length}</strong> tickets</span>
-          <span>Sample data · Updated just now</span>
-        </div>
-      </div>
+                        <div className="agent-detail-badges">
+                            <StatusBadge status={selectedTicket.status} />
+                            <PriorityBadge priority={selectedTicket.priority} />
+                        </div>
 
-      {selectedTicket && (
-        <div className="agent-detail-backdrop" onClick={() => setSelectedTicket(null)}>
-          <section
-            className="agent-detail-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="agent-detail-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="agent-detail-header">
-              <div>
-                <span className="agent-detail-id">{selectedTicket.id}</span>
-                <h2 id="agent-detail-title">{selectedTicket.title}</h2>
-              </div>
-              <button
-                type="button"
-                className="agent-detail-close"
-                aria-label="Close ticket details"
-                onClick={() => setSelectedTicket(null)}
-              >
-                ×
-              </button>
-            </div>
+                        <div className="agent-detail-section">
+                            <h3>Description</h3>
+                            <p>{selectedTicket.description}</p>
+                        </div>
 
-            <div className="agent-detail-badges">
-              <StatusBadge status={selectedTicket.status} />
-              <PriorityBadge priority={selectedTicket.priority} />
-            </div>
+                        <div className="agent-detail-grid">
+                            <div>
+                                <span>Requester</span>
+                                <strong>{formatUserId(selectedTicket.createdBy)}</strong>
+                            </div>
+                            <div>
+                                <span>Category</span>
+                                <strong>{selectedTicket.category}</strong>
+                            </div>
+                            <div>
+                                <span>Assigned to</span>
+                                <strong>{formatUserId(selectedTicket.assignedTo)}</strong>
+                            </div>
+                            <div>
+                                <span>Created</span>
+                                <strong>{formatTicketDate(selectedTicket.createdAt)}</strong>
+                            </div>
+                        </div>
 
-            <div className="agent-detail-section">
-              <h3>Description</h3>
-              <p>{selectedTicket.description}</p>
-            </div>
+                        <div className="agent-detail-note">
+                            <span>✳</span>
+                            <p>
+                                Assign this request to an agent or change its current owner.
+                            </p>
+                        </div>
 
-            <div className="agent-detail-grid">
-              <div><span>Requester</span><strong>{selectedTicket.requester}</strong></div>
-              <div><span>Category</span><strong>{selectedTicket.category}</strong></div>
-              <div><span>Assigned to</span><strong>{selectedTicket.assignedTo ?? 'Unassigned'}</strong></div>
-              <div><span>Created</span><strong>{selectedTicket.created}</strong></div>
-            </div>
+                        <Link
+                            to={`/agent/tickets/${selectedTicket.ticketId}/assign`}
+                            className="agent-detail-done"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                textDecoration: 'none',
+                                marginTop: '12px',
+                            }}
+                        >
+                            Assign / Reassign ticket →
+                        </Link>
 
-            <div className="agent-detail-note">
-                <span>✳</span>
-                <p>
-                    Assign this request to an agent or change its current owner.
-                </p>
-            </div>
-
-            <Link
-                to={`/agent/tickets/${selectedTicket.id}/assign`}
-                className="agent-detail-done"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textDecoration: 'none',
-                    marginTop: '12px',
-                }}
-            >
-                Assign / Reassign ticket →
-            </Link>
-
-            <button
-              className="agent-detail-done"
-              type="button"
-              onClick={() => setSelectedTicket(null)}
-            >
-              Close details
-            </button>
-          </section>
-        </div>
-      )}
-    </AgentLayout>
-  );
+                        <button
+                            className="agent-detail-done"
+                            type="button"
+                            onClick={() => setSelectedTicket(null)}
+                        >
+                            Close details
+                        </button>
+                    </section>
+                </div>
+            )}
+        </AgentLayout>
+    );
 }
 
 export function TeamQueuePage() {
