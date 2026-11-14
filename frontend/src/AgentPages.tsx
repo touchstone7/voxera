@@ -1,6 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getTickets, getTicket, assignTicket } from './api/ticketApi';
-import type { TicketResponse, TicketStatus as ApiTicketStatus } from './api/ticketTypes';
+import {
+    getTickets,
+    getTicket,
+    assignTicket,
+    getTicketComments,
+    addTicketComment,
+} from './api/ticketApi';
+import type {
+    TicketResponse,
+    TicketStatus as ApiTicketStatus,
+    TicketCommentResponse,
+} from './api/ticketTypes';
 import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './auth/useAuth';
 import './agent.css';
@@ -227,6 +237,14 @@ export function AllTicketsPage() {
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState('');
     const [detailReloadKey, setDetailReloadKey] = useState(0);
+    const [comments, setComments] = useState<TicketCommentResponse[]>([]);
+    const [commentsLoading, setCommentsLoading] = useState(false);
+    const [commentsError, setCommentsError] = useState('');
+    const [commentsReloadKey, setCommentsReloadKey] = useState(0);
+
+    const [newComment, setNewComment] = useState('');
+    const [commentSubmitting, setCommentSubmitting] = useState(false);
+    const [commentSubmitError, setCommentSubmitError] = useState('');
     const selectedTicketId = selectedTicket?.ticketId;
 
     useEffect(() => {
@@ -281,6 +299,51 @@ export function AllTicketsPage() {
             active = false;
         };
     }, [selectedTicketId, accessToken, detailReloadKey]);
+
+    useEffect(() => {
+        if (!selectedTicketId) {
+            return;
+        }
+
+        const ticketId = selectedTicketId;
+        let active = true;
+
+        async function loadComments() {
+            if (!accessToken) {
+                setCommentsError('Your session is unavailable. Please sign in again.');
+                return;
+            }
+
+            setCommentsLoading(true);
+            setCommentsError('');
+
+            try {
+                const response = await getTicketComments(ticketId, accessToken);
+
+                if (active) {
+                    setComments(response);
+                }
+            } catch (err) {
+                if (active) {
+                    setCommentsError(
+                        err instanceof Error
+                            ? err.message
+                            : 'Unable to load ticket comments.',
+                    );
+                }
+            } finally {
+                if (active) {
+                    setCommentsLoading(false);
+                }
+            }
+        }
+
+        loadComments();
+
+        return () => {
+            active = false;
+        };
+    }, [selectedTicketId, accessToken, commentsReloadKey]);
 
     useEffect(() => {
         let active = true;
@@ -373,6 +436,48 @@ export function AllTicketsPage() {
         setStatusFilter('All statuses');
         setPriorityFilter('All priorities');
         setCategoryFilter('All categories');
+    }
+
+    async function handleAddComment() {
+        const ticketId = selectedTicketId;
+        const content = newComment.trim();
+
+        if (!ticketId || !content || content.length > 5000 || commentSubmitting) {
+            return;
+        }
+
+        if (!accessToken) {
+            setCommentSubmitError('Your session is unavailable. Please sign in again.');
+            return;
+        }
+
+        setCommentSubmitting(true);
+        setCommentSubmitError('');
+
+        try {
+            const response = await addTicketComment(
+                ticketId,
+                { content },
+                accessToken,
+            );
+
+            // Do not update another ticket's conversation if the user switched
+            // tickets while this request was in progress.
+            if (selectedTicketId === ticketId) {
+                setComments((currentComments) => [...currentComments, response]);
+                setNewComment('');
+            }
+        } catch (err) {
+            if (selectedTicketId === ticketId) {
+                setCommentSubmitError(
+                    err instanceof Error
+                        ? err.message
+                        : 'Unable to submit your comment.',
+                );
+            }
+        } finally {
+            setCommentSubmitting(false);
+        }
     }
 
     return (
@@ -693,6 +798,91 @@ export function AllTicketsPage() {
                             <div>
                                 <span>Created</span>
                                 <strong>{formatTicketDate(selectedTicket.createdAt)}</strong>
+                            </div>
+                        </div>
+
+                        <div className="agent-ticket-conversation">
+                            <div className="agent-ticket-conversation-header">
+                                <h3>Conversation</h3>
+                                <span>{comments.length} comments</span>
+                            </div>
+
+                            {commentsLoading && (
+                                <p className="agent-comments-status" role="status">
+                                    Loading conversation...
+                                </p>
+                            )}
+
+                            {commentsError && (
+                                <div className="agent-comments-error" role="alert">
+                                    <p>{commentsError}</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCommentsReloadKey((key) => key + 1)}
+                                    >
+                                        Retry
+                                    </button>
+                                </div>
+                            )}
+
+                            {!commentsLoading && !commentsError && comments.length === 0 && (
+                                <div className="agent-comments-empty">
+                                    No comments yet. Start the conversation below.
+                                </div>
+                            )}
+
+                            {!commentsLoading && !commentsError && comments.length > 0 && (
+                                <div className="agent-comments-list">
+                                    {comments.map((comment) => (
+                                        <article
+                                            className="agent-comment"
+                                            key={comment.commentId}
+                                        >
+                                            <div className="agent-comment-meta">
+                                                <strong>{comment.authorName}</strong>
+                                                <span>{formatTicketDate(comment.createdAt)}</span>
+                                            </div>
+                                            <p>{comment.content}</p>
+                                        </article>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="agent-comment-composer">
+                                <textarea
+                                    value={newComment}
+                                    onChange={(event) => {
+                                        setNewComment(event.target.value);
+                                        setCommentSubmitError('');
+                                    }}
+                                    placeholder="Write a comment..."
+                                    maxLength={5000}
+                                    rows={3}
+                                    disabled={commentSubmitting}
+                                    aria-label="Write a ticket comment"
+                                />
+
+                                <div className="agent-comment-composer-footer">
+                                    <span>{newComment.length}/5000</span>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleAddComment}
+                                        disabled={
+                                            commentSubmitting ||
+                                            !newComment.trim() ||
+                                            newComment.trim().length > 5000
+                                        }
+                                    >
+                                        {commentSubmitting ? 'Sending...' : 'Send comment'}
+                                    </button>
+                                </div>
+
+                                {commentSubmitError && (
+                                    <p className="agent-comment-submit-error" role="alert">
+                                        {commentSubmitError}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
