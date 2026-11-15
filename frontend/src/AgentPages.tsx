@@ -221,6 +221,42 @@ function formatUserId(userId: string | null): string {
     return `User ${userId.slice(0, 8)}`;
 }
 
+
+function TicketUserId({ userId }: { userId: string | null }) {
+    const [copied, setCopied] = useState(false);
+
+    if (!userId) {
+        return <span className="agent-unassigned">Unassigned</span>;
+    }
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(userId);
+            setCopied(true);
+        } catch {
+            setCopied(false);
+        }
+    };
+
+    return (
+        <span className="agent-user-id-display">
+            <span title={userId}>
+                User {userId.slice(0, 8)}...{userId.slice(-8)}
+            </span>
+            <button
+                type="button"
+                className="agent-user-id-copy"
+                onClick={handleCopy}
+                title="Copy full UUID"
+                aria-label="Copy full user UUID"
+            >
+                {copied ? 'Copied' : 'Copy'}
+            </button>
+        </span>
+    );
+}
+
+
 function isActiveTicket(status: ApiTicketStatus): boolean {
     return !['RESOLVED', 'CLOSED', 'CANCELLED'].includes(status);
 }
@@ -694,7 +730,7 @@ export function AllTicketsPage() {
                                     <td>
                                         <div className="agent-requester">
                                             <span className="agent-requester-avatar">ID</span>
-                                            <span>{formatUserId(ticket.createdBy)}</span>
+                                            <TicketUserId userId={ticket.createdBy} />
                                         </div>
                                     </td>
 
@@ -709,7 +745,7 @@ export function AllTicketsPage() {
                                     <td>
                                         {ticket.assignedTo ? (
                                             <span className="agent-assignee">
-                                                {formatUserId(ticket.assignedTo)}
+                                                <TicketUserId userId={ticket.assignedTo} />
                                             </span>
                                         ) : (
                                             <span className="agent-unassigned">Unassigned</span>
@@ -848,7 +884,9 @@ export function AllTicketsPage() {
                         <div className="agent-detail-grid">
                             <div>
                                 <span>Requester</span>
-                                <strong>{formatUserId(selectedTicket.createdBy)}</strong>
+                                <strong>
+                                    <TicketUserId userId={selectedTicket.createdBy} />
+                                </strong>
                             </div>
                             <div>
                                 <span>Category</span>
@@ -856,7 +894,9 @@ export function AllTicketsPage() {
                             </div>
                             <div>
                                 <span>Assigned to</span>
-                                <strong>{formatUserId(selectedTicket.assignedTo)}</strong>
+                                <strong>
+                                    <TicketUserId userId={selectedTicket.assignedTo} />
+                                </strong>
                             </div>
                             <div>
                                 <span>Created</span>

@@ -4026,3 +4026,37 @@
 .agent-lifecycle-error button:hover {
   color: #ffffff;
 }
+
+/* Ticket user UUID display */
+
+.agent-user-id-display {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: #c5bfdf;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.agent-user-id-copy {
+  padding: 3px 7px;
+  border: 1px solid #51477f;
+  border-radius: 5px;
+  color: #b7a7ff;
+  background: #211e32;
+  font-size: 9px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.agent-user-id-copy:hover {
+  border-color: #8c7be0;
+  background: #30294e;
+}
+
+.agent-user-id-copy:focus-visible {
+  outline: 2px solid #a99aff;
+  outline-offset: 2px;
+}
