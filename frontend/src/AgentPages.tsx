@@ -5,6 +5,10 @@ import {
     assignTicket,
     getTicketComments,
     addTicketComment,
+    startTicket,
+    markTicketPending,
+    resolveTicket,
+    closeTicket,
 } from './api/ticketApi';
 import type {
     TicketResponse,
@@ -245,6 +249,8 @@ export function AllTicketsPage() {
     const [newComment, setNewComment] = useState('');
     const [commentSubmitting, setCommentSubmitting] = useState(false);
     const [commentSubmitError, setCommentSubmitError] = useState('');
+    const [lifecycleAction, setLifecycleAction] = useState<string | null>(null);
+    const [lifecycleError, setLifecycleError] = useState('');
     const selectedTicketId = selectedTicket?.ticketId;
 
     useEffect(() => {
@@ -437,6 +443,63 @@ export function AllTicketsPage() {
         setPriorityFilter('All priorities');
         setCategoryFilter('All categories');
     }
+
+    type LifecycleAction = 'start' | 'pending' | 'resolve' | 'close';
+
+    const handleLifecycleAction = async (action: LifecycleAction) => {
+        if (!selectedTicket || !accessToken || lifecycleAction) {
+            return;
+        }
+
+        const ticketId = selectedTicket.ticketId;
+
+        setLifecycleAction(action);
+        setLifecycleError('');
+
+        try {
+            let updatedTicket: TicketResponse;
+
+            switch (action) {
+                case 'start':
+                    updatedTicket = await startTicket(ticketId, accessToken);
+                    break;
+
+                case 'pending':
+                    updatedTicket = await markTicketPending(ticketId, accessToken);
+                    break;
+
+                case 'resolve':
+                    updatedTicket = await resolveTicket(ticketId, accessToken);
+                    break;
+
+                case 'close':
+                    updatedTicket = await closeTicket(ticketId, accessToken);
+                    break;
+            }
+
+            setTickets((currentTickets) =>
+                currentTickets.map((ticket) =>
+                    ticket.ticketId === updatedTicket.ticketId
+                        ? updatedTicket
+                        : ticket
+                )
+            );
+
+            setSelectedTicket((currentTicket) =>
+                currentTicket?.ticketId === updatedTicket.ticketId
+                    ? updatedTicket
+                    : currentTicket
+            );
+        } catch (err) {
+            setLifecycleError(
+                err instanceof Error
+                    ? err.message
+                    : 'Unable to update the ticket status. Please try again.'
+            );
+        } finally {
+            setLifecycleAction(null);
+        }
+    };
 
     async function handleAddComment() {
         const ticketId = selectedTicketId;
@@ -906,6 +969,78 @@ export function AllTicketsPage() {
                         >
                             Assign / Reassign ticket →
                         </Link>
+
+
+                        <div className="agent-lifecycle-actions">
+                            {selectedTicket.status === 'OPEN' && (
+                                <button
+                                    type="button"
+                                    className="agent-lifecycle-action agent-lifecycle-start"
+                                    disabled={lifecycleAction !== null}
+                                    onClick={() => handleLifecycleAction('start')}
+                                >
+                                    {lifecycleAction === 'start' ? 'Starting...' : 'Start progress'}
+                                </button>
+                            )}
+
+                            {selectedTicket.status === 'IN_PROGRESS' && (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="agent-lifecycle-action agent-lifecycle-pending"
+                                        disabled={lifecycleAction !== null}
+                                        onClick={() => handleLifecycleAction('pending')}
+                                    >
+                                        {lifecycleAction === 'pending' ? 'Updating...' : 'Mark pending'}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className="agent-lifecycle-action agent-lifecycle-resolve"
+                                        disabled={lifecycleAction !== null}
+                                        onClick={() => handleLifecycleAction('resolve')}
+                                    >
+                                        {lifecycleAction === 'resolve' ? 'Resolving...' : 'Resolve ticket'}
+                                    </button>
+                                </>
+                            )}
+
+                            {selectedTicket.status === 'PENDING' && (
+                                <button
+                                    type="button"
+                                    className="agent-lifecycle-action agent-lifecycle-resolve"
+                                    disabled={lifecycleAction !== null}
+                                    onClick={() => handleLifecycleAction('resolve')}
+                                >
+                                    {lifecycleAction === 'resolve' ? 'Resolving...' : 'Resolve ticket'}
+                                </button>
+                            )}
+
+                            {selectedTicket.status === 'RESOLVED' && (
+                                <button
+                                    type="button"
+                                    className="agent-lifecycle-action agent-lifecycle-close"
+                                    disabled={lifecycleAction !== null}
+                                    onClick={() => handleLifecycleAction('close')}
+                                >
+                                    {lifecycleAction === 'close' ? 'Closing...' : 'Close ticket'}
+                                </button>
+                            )}
+                        </div>
+
+                        {lifecycleError && (
+                            <div className="agent-lifecycle-error" role="alert">
+                                {lifecycleError}
+                                <button
+                                    type="button"
+                                    onClick={() => setLifecycleError('')}
+                                    aria-label="Dismiss error"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )}
+
 
                         <button
                             className="agent-detail-done"

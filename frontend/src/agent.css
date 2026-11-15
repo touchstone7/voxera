@@ -3933,3 +3933,96 @@
         padding: 15px;
     }
 }
+/* Ticket lifecycle actions */
+
+.agent-lifecycle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 22px 0 12px;
+}
+
+.agent-lifecycle-action {
+  min-height: 39px;
+  padding: 9px 15px;
+  border: 1px solid #51477f;
+  border-radius: 8px;
+  color: #eeeaff;
+  background: #242139;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .15px;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease,
+    transform .2s ease, box-shadow .2s ease;
+}
+
+.agent-lifecycle-action:hover:not(:disabled) {
+  border-color: #8c7be0;
+  background: #30294e;
+  box-shadow: 0 4px 16px rgba(97, 83, 187, .2);
+  transform: translateY(-1px);
+}
+
+.agent-lifecycle-action:focus-visible {
+  outline: 2px solid #a99aff;
+  outline-offset: 3px;
+}
+
+/* Semantic lifecycle button colors */
+
+.agent-lifecycle-start,
+.agent-lifecycle-resolve {
+  border-color: #7667c1;
+  background: linear-gradient(110deg, #6153bb, #7967d5);
+  color: #eeeaff;
+}
+
+.agent-lifecycle-pending {
+  border-color: #80633b;
+  background: #302719;
+  color: #f5d7a0;
+}
+
+.agent-lifecycle-close {
+  border-color: #49658f;
+  background: #202a40;
+  color: #c6d8ff;
+}
+
+/* Close */
+.agent-lifecycle-action:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.agent-lifecycle-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid #70404d;
+  border-radius: 9px;
+  color: #f0a6b3;
+  background: #2c1d29;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.agent-lifecycle-error button {
+  flex-shrink: 0;
+  padding: 0 4px;
+  border: 0;
+  color: #f0a6b3;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.agent-lifecycle-error button:hover {
+  color: #ffffff;
+}
