@@ -70,9 +70,14 @@ public class UserService {
 
     @Transactional
     public User changeUserRole(UUID userId, UserRole newRole) {
-        User actor = currentUserService.getCurrentUser();
+        User authenticatedActor = currentUserService.getCurrentUser();
 
         lockActiveAdministrators();
+
+        User actor = userRepository.findByIdForUpdate(
+                authenticatedActor.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Authenticated user not found"));
 
         User target = getUser(userId);
 
@@ -94,9 +99,14 @@ public class UserService {
 
     @Transactional
     public User changeUserStatus(UUID userId, UserStatus newStatus) {
-        User actor = currentUserService.getCurrentUser();
+        User authenticatedActor = currentUserService.getCurrentUser();
 
         lockActiveAdministrators();
+
+        User actor = userRepository.findByIdForUpdate(
+                authenticatedActor.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Authenticated user not found"));
 
         User target = getUser(userId);
 
