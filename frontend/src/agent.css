@@ -4060,3 +4060,12 @@
   outline: 2px solid #a99aff;
   outline-offset: 2px;
 }
+
+.voice-demo-ticket-label,
+.vss-demo-ticket-label {
+  display: block;
+  margin-top: 14px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 12px;
+  line-height: 1.5;
+}

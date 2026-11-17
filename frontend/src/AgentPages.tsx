@@ -2998,9 +2998,9 @@ export function VoiceSupportPage() {
                             <div><span>Assigned to</span><strong>Alex Morgan</strong></div>
                             <div><span>Created</span><strong>Today, 9:18 AM</strong></div>
                         </div>
-                        <Link to="/agent/tickets/1" className="voice-ticket-link">
-                            View ticket details <span>→</span>
-                        </Link>
+                        <span className="voice-demo-ticket-label">
+                            Demo ticket reference — not linked to a live ticket
+                        </span>
                     </div>
 
                     <div className="voice-ai-insights">
@@ -3262,9 +3262,9 @@ export function VoiceSessionSummaryPage() {
                                 <div><span>Priority</span><strong>High</strong></div>
                             </div>
 
-                            <Link to="/agent/tickets/1" className="vss-ticket-link">
-                                Open ticket details <span>→</span>
-                            </Link>
+                            <span className="vss-demo-ticket-label">
+                                Demo ticket reference — not linked to a live ticket
+                            </span>
                         </section>
 
                         <section className="vss-card vss-actions-card">
