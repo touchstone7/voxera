@@ -100,4 +100,14 @@ public class User {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    public void changeRole(UserRole newRole) {
+        this.role = newRole;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void changeStatus(UserStatus newStatus) {
+        this.status = newStatus;
+        this.updatedAt = LocalDateTime.now();
+    }
 }
