@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -27,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -57,6 +59,9 @@ class AdminUserControllerIntegrationTest {
 
     private String unique;
 
+    private User secondAdmin;
+    private String secondAdminToken;
+
     @BeforeEach
     void setUp() throws Exception {
         unique = UUID.randomUUID().toString();
@@ -64,6 +69,13 @@ class AdminUserControllerIntegrationTest {
         admin = createUser(
                 "Admin-" + unique,
                 "admin-" + unique + "@test.local",
+                "Administration-" + unique,
+                UserRole.ADMIN,
+                UserStatus.ACTIVE);
+
+        secondAdmin = createUser(
+                "SecondAdmin-" + unique,
+                "second-admin-" + unique + "@test.local",
                 "Administration-" + unique,
                 UserRole.ADMIN,
                 UserStatus.ACTIVE);
@@ -92,6 +104,7 @@ class AdminUserControllerIntegrationTest {
         adminToken = login(admin);
         agentToken = login(agent);
         employeeToken = login(employee);
+        secondAdminToken = login(secondAdmin);
     }
 
     @Test
@@ -227,6 +240,203 @@ class AdminUserControllerIntegrationTest {
                         .param("status", "INVALID")
                         .header("Authorization", bearer(adminToken)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateUserRole_adminShouldChangeRoleAndApplyItToExistingToken()
+            throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/role", employee.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"role":"AGENT"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("AGENT"));
+
+        mockMvc.perform(
+                get("/api/v1/admin/users")
+                        .header("Authorization", bearer(employeeToken)))
+                .andExpect(status().isForbidden());
+
+        org.junit.jupiter.api.Assertions.assertEquals(
+                UserRole.AGENT,
+                userRepository.findById(employee.getUserId()).orElseThrow().getRole());
+    }
+
+    @Test
+    void updateUserStatus_deactivationShouldRejectExistingToken()
+            throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/status", agent.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"INACTIVE"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("INACTIVE"));
+
+        mockMvc.perform(
+                get("/api/v1/admin/users")
+                        .header("Authorization", bearer(agentToken)))
+                .andExpect(status().isUnauthorized());
+
+        org.junit.jupiter.api.Assertions.assertEquals(
+                UserStatus.INACTIVE,
+                userRepository.findById(agent.getUserId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void updateUserStatus_adminShouldReactivateUser() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/status", inactiveEmployee.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"ACTIVE"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACTIVE"));
+
+        org.junit.jupiter.api.Assertions.assertEquals(
+                UserStatus.ACTIVE,
+                userRepository.findById(inactiveEmployee.getUserId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void updateUserRole_adminCanDemoteAnotherAdmin() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/role", secondAdmin.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"role":"AGENT"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("AGENT"));
+
+        org.junit.jupiter.api.Assertions.assertEquals(
+                UserRole.AGENT,
+                userRepository.findById(secondAdmin.getUserId()).orElseThrow().getRole());
+    }
+
+    @Test
+    void updateUserRole_adminCannotChangeOwnRole() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/role", admin.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"role":"AGENT"}
+                                """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void updateUserStatus_adminCannotDeactivateOwnAccount() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/status", admin.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"INACTIVE"}
+                                """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void updateUserRole_agentShouldReceiveForbidden() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/role", employee.getUserId())
+                        .header("Authorization", bearer(agentToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"role":"AGENT"}
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateUserStatus_employeeShouldReceiveForbidden() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/status", agent.getUserId())
+                        .header("Authorization", bearer(employeeToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"INACTIVE"}
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateUserRole_missingRoleShouldReturnBadRequest() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/role", employee.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateUserRole_invalidRoleShouldReturnBadRequest() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/role", employee.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"role":"SUPERUSER"}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateUserStatus_missingStatusShouldReturnBadRequest() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/status", employee.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateUserStatus_invalidStatusShouldReturnBadRequest() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/status", employee.getUserId())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"SUSPENDED"}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateUserRole_nonexistentUserShouldReturnNotFound() throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/users/{userId}/role", UUID.randomUUID())
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"role":"AGENT"}
+                                """))
+                .andExpect(status().isNotFound());
     }
 
     private void assertSearchResult(String search, User expected)
