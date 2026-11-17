@@ -243,27 +243,28 @@ class AdminUserControllerIntegrationTest {
     }
 
     @Test
-    void updateUserRole_adminShouldChangeRoleAndApplyItToExistingToken()
+    void updateUserRole_shouldApplyNewRoleToExistingToken()
             throws Exception {
 
         mockMvc.perform(
-                patch("/api/v1/admin/users/{userId}/role", employee.getUserId())
+                patch("/api/v1/admin/users/{userId}/role", agent.getUserId())
                         .header("Authorization", bearer(adminToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"role":"AGENT"}
+                                {"role":"ADMIN"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.role").value("AGENT"));
+                .andExpect(jsonPath("$.role").value("ADMIN"));
 
+        // The agent's previously issued token should now carry ADMIN authority.
         mockMvc.perform(
                 get("/api/v1/admin/users")
-                        .header("Authorization", bearer(employeeToken)))
-                .andExpect(status().isForbidden());
+                        .header("Authorization", bearer(agentToken)))
+                .andExpect(status().isOk());
 
         org.junit.jupiter.api.Assertions.assertEquals(
-                UserRole.AGENT,
-                userRepository.findById(employee.getUserId()).orElseThrow().getRole());
+                UserRole.ADMIN,
+                userRepository.findById(agent.getUserId()).orElseThrow().getRole());
     }
 
     @Test
