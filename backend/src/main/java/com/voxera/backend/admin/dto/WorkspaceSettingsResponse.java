@@ -1,6 +1,8 @@
+
 package com.voxera.backend.admin.dto;
 
 import com.voxera.backend.admin.entity.WorkspaceSettings;
+import com.voxera.backend.ticket.enums.TicketPriority;
 
 import java.time.LocalDateTime;
 
@@ -9,6 +11,7 @@ public record WorkspaceSettingsResponse(
         String organization,
         String timezone,
         String ticketPrefix,
+        TicketPriority defaultPriority,
         LocalDateTime updatedAt) {
 
     public static WorkspaceSettingsResponse from(WorkspaceSettings settings) {
@@ -17,6 +20,7 @@ public record WorkspaceSettingsResponse(
                 settings.getOrganization(),
                 settings.getTimezone(),
                 settings.getTicketPrefix(),
+                settings.getDefaultPriority(),
                 settings.getUpdatedAt());
     }
 }

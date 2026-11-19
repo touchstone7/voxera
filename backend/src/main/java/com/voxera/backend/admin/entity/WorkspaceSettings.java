@@ -1,7 +1,11 @@
+
 package com.voxera.backend.admin.entity;
 
+import com.voxera.backend.ticket.enums.TicketPriority;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -27,6 +31,10 @@ public class WorkspaceSettings {
 
     @Column(name = "ticket_prefix", nullable = false, length = 10)
     private String ticketPrefix;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "default_priority", nullable = false, length = 20)
+    private TicketPriority defaultPriority;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
@@ -58,6 +66,10 @@ public class WorkspaceSettings {
         return ticketPrefix;
     }
 
+    public TicketPriority getDefaultPriority() {
+        return defaultPriority;
+    }
+
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
@@ -66,12 +78,14 @@ public class WorkspaceSettings {
             String workspaceName,
             String organization,
             String timezone,
-            String ticketPrefix) {
+            String ticketPrefix,
+            TicketPriority defaultPriority) {
 
         this.workspaceName = workspaceName;
         this.organization = organization;
         this.timezone = timezone;
         this.ticketPrefix = ticketPrefix;
+        this.defaultPriority = defaultPriority;
         this.updatedAt = LocalDateTime.now();
     }
 }

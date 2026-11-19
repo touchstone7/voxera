@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import com.jayway.jsonpath.JsonPath;
 import com.voxera.backend.security.authentication.PasswordService;
 import com.voxera.backend.ticket.repository.TicketRepository;
+import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.repository.TicketCommentRepository;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.entity.UserCredential;
@@ -67,11 +68,11 @@ abstract class AbstractTicketControllerIntegrationTest {
         .orElseThrow();
 
         settings.update(
-                "Voxera Support",
-                "Voxera Technologies",
-                "Asia/Kolkata",
-                "VXR"
-        );
+        "Voxera Support",
+        "Voxera Technologies",
+        "Asia/Kolkata",
+        "VXR",
+        TicketPriority.MEDIUM);
 
         workspaceSettingsRepository.save(settings);
         workspaceSettingsRepository.flush();

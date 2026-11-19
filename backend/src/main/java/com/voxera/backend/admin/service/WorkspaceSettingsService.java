@@ -1,8 +1,10 @@
+
 package com.voxera.backend.admin.service;
 
 import com.voxera.backend.admin.dto.UpdateWorkspaceSettingsRequest;
 import com.voxera.backend.admin.entity.WorkspaceSettings;
 import com.voxera.backend.admin.repository.WorkspaceSettingsRepository;
+import com.voxera.backend.ticket.enums.TicketPriority;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ public class WorkspaceSettingsService {
                     HttpStatus.BAD_REQUEST,
                     "At least one setting must be provided");
         }
+
         WorkspaceSettings settings = getSettings();
 
         String workspaceName = request.workspaceName() != null
@@ -59,13 +62,18 @@ public class WorkspaceSettingsService {
                 ? request.ticketPrefix().trim().toUpperCase(Locale.ROOT)
                 : settings.getTicketPrefix();
 
+        TicketPriority defaultPriority = request.defaultPriority() != null
+                ? request.defaultPriority()
+                : settings.getDefaultPriority();
+
         validateTimezone(timezone);
 
         settings.update(
                 workspaceName,
                 organization,
                 timezone,
-                ticketPrefix);
+                ticketPrefix,
+                defaultPriority);
 
         return settings;
     }
@@ -73,6 +81,11 @@ public class WorkspaceSettingsService {
     @Transactional(readOnly = true)
     public String getTicketPrefix() {
         return getSettings().getTicketPrefix();
+    }
+
+    @Transactional(readOnly = true)
+    public TicketPriority getDefaultPriority() {
+        return getSettings().getDefaultPriority();
     }
 
     private void validateTimezone(String timezone) {

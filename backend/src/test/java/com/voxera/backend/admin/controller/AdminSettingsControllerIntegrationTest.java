@@ -2,6 +2,7 @@ package com.voxera.backend.admin.controller;
 
 import com.jayway.jsonpath.JsonPath;
 import com.voxera.backend.security.authentication.PasswordService;
+import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.entity.UserCredential;
 import com.voxera.backend.user.enums.UserRole;
@@ -62,14 +63,15 @@ class AdminSettingsControllerIntegrationTest {
                 .orElseThrow();
 
         settings.update(
-                "Voxera Support",
-                "Voxera Technologies",
-                "Asia/Kolkata",
-                "VXR");
+        "Voxera Support",
+        "Voxera Technologies",
+        "Asia/Kolkata",
+        "VXR",
+        TicketPriority.MEDIUM);
 
         workspaceSettingsRepository.save(settings);
         workspaceSettingsRepository.flush();
-        
+
         String unique = UUID.randomUUID().toString();
 
         adminToken = login(createUser(
