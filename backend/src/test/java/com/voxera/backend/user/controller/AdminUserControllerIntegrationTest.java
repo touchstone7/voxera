@@ -121,6 +121,7 @@ class AdminUserControllerIntegrationTest {
                         hasItem(employee.getUserId().toString())))
                 .andExpect(jsonPath("$[*].id",
                         hasItem(inactiveEmployee.getUserId().toString())));
+        System.out.println(secondAdminToken);
     }
 
     @Test
