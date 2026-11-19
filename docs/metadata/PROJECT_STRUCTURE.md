@@ -1,13 +1,19 @@
 # Project Structure and Java Inventory
 
-> Generated: 2026-11-14T10:24:30.961932+00:00
-> Git commit: `9ad1ae4`
+> Generated: 2026-11-19T00:15:12.742562+00:00
+> Git commit: `57cd56b`
 > Generator: `scripts/generate_metadata.py`
 
 
 ## Source and test files
 
 - `backend/src/main/java/com/voxera/backend/BackendApplication.java`
+- `backend/src/main/java/com/voxera/backend/admin/controller/AdminSettingsController.java`
+- `backend/src/main/java/com/voxera/backend/admin/dto/UpdateWorkspaceSettingsRequest.java`
+- `backend/src/main/java/com/voxera/backend/admin/dto/WorkspaceSettingsResponse.java`
+- `backend/src/main/java/com/voxera/backend/admin/entity/WorkspaceSettings.java`
+- `backend/src/main/java/com/voxera/backend/admin/repository/WorkspaceSettingsRepository.java`
+- `backend/src/main/java/com/voxera/backend/admin/service/WorkspaceSettingsService.java`
 - `backend/src/main/java/com/voxera/backend/exception/GlobalExceptionHandler.java`
 - `backend/src/main/java/com/voxera/backend/exception/ResourceNotFoundException.java`
 - `backend/src/main/java/com/voxera/backend/security/CurrentUserService.java`
@@ -42,6 +48,10 @@
 - `backend/src/main/java/com/voxera/backend/ticket/service/TicketAuthorizationService.java`
 - `backend/src/main/java/com/voxera/backend/ticket/service/TicketCommentService.java`
 - `backend/src/main/java/com/voxera/backend/ticket/service/TicketService.java`
+- `backend/src/main/java/com/voxera/backend/user/controller/AdminUserController.java`
+- `backend/src/main/java/com/voxera/backend/user/dto/UpdateUserRoleRequest.java`
+- `backend/src/main/java/com/voxera/backend/user/dto/UpdateUserStatusRequest.java`
+- `backend/src/main/java/com/voxera/backend/user/dto/UserManagementResponse.java`
 - `backend/src/main/java/com/voxera/backend/user/entity/User.java`
 - `backend/src/main/java/com/voxera/backend/user/entity/UserCredential.java`
 - `backend/src/main/java/com/voxera/backend/user/enums/UserRole.java`
@@ -50,6 +60,7 @@
 - `backend/src/main/java/com/voxera/backend/user/repository/UserRepository.java`
 - `backend/src/main/java/com/voxera/backend/user/service/UserService.java`
 - `backend/src/test/java/com/voxera/backend/BackendApplicationTests.java`
+- `backend/src/test/java/com/voxera/backend/admin/controller/AdminSettingsControllerIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/security/CurrentUserServiceTest.java`
 - `backend/src/test/java/com/voxera/backend/security/authentication/AuthControllerIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/security/authentication/AuthenticationServiceIntegrationTest.java`
@@ -65,6 +76,7 @@
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketRetrievalIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/service/TicketServiceTest.java`
+- `backend/src/test/java/com/voxera/backend/user/controller/AdminUserControllerIntegrationTest.java`
 
 ## Java classes and method signatures
 
@@ -73,6 +85,51 @@
 - File: `backend/src/main/java/com/voxera/backend/BackendApplication.java`
 - Package: `com.voxera.backend`
 - `void main(String[] args)`
+
+### `AdminSettingsController`
+- File: `backend/src/main/java/com/voxera/backend/admin/controller/AdminSettingsController.java`
+- Package: `com.voxera.backend.admin.controller`
+- `AdminSettingsController(WorkspaceSettingsService settingsService)`
+- `WorkspaceSettingsResponse getSettings()`
+- `WorkspaceSettingsResponse updateSettings(@Valid @RequestBody UpdateWorkspaceSettingsRequest request)`
+
+### `UpdateWorkspaceSettingsRequest`
+- File: `backend/src/main/java/com/voxera/backend/admin/dto/UpdateWorkspaceSettingsRequest.java`
+- Package: `com.voxera.backend.admin.dto`
+- `boolean hasUpdates()`
+
+### `WorkspaceSettingsResponse`
+- File: `backend/src/main/java/com/voxera/backend/admin/dto/WorkspaceSettingsResponse.java`
+- Package: `com.voxera.backend.admin.dto`
+- `WorkspaceSettingsResponse(String workspaceName, String organization, String timezone, String ticketPrefix, LocalDateTime updatedAt)`
+- `WorkspaceSettingsResponse from(WorkspaceSettings settings)`
+
+### `WorkspaceSettings`
+- File: `backend/src/main/java/com/voxera/backend/admin/entity/WorkspaceSettings.java`
+- Package: `com.voxera.backend.admin.entity`
+- `WorkspaceSettings()`
+- `Integer getId()`
+- `String getWorkspaceName()`
+- `String getOrganization()`
+- `String getTimezone()`
+- `String getTicketPrefix()`
+- `LocalDateTime getUpdatedAt()`
+- `void update(String workspaceName, String organization, String timezone, String ticketPrefix)`
+
+### `WorkspaceSettingsRepository`
+- File: `backend/src/main/java/com/voxera/backend/admin/repository/WorkspaceSettingsRepository.java`
+- Package: `com.voxera.backend.admin.repository`
+- No method signatures extracted.
+
+### `WorkspaceSettingsService`
+- File: `backend/src/main/java/com/voxera/backend/admin/service/WorkspaceSettingsService.java`
+- Package: `com.voxera.backend.admin.service`
+- `WorkspaceSettingsService(WorkspaceSettingsRepository settingsRepository)`
+- `WorkspaceSettings getSettings()`
+- `WorkspaceSettings updateSettings(UpdateWorkspaceSettingsRequest request)`
+- ` if(!request.hasUpdates())`
+- `String getTicketPrefix()`
+- `void validateTimezone(String timezone)`
 
 ### `GlobalExceptionHandler`
 - File: `backend/src/main/java/com/voxera/backend/exception/GlobalExceptionHandler.java`
@@ -332,7 +389,7 @@
 ### `TicketService`
 - File: `backend/src/main/java/com/voxera/backend/ticket/service/TicketService.java`
 - Package: `com.voxera.backend.ticket.service`
-- `TicketService(TicketRepository ticketRepository, UserRepository userRepository, CurrentUserService currentUserService, TicketAuthorizationService ticketAuthorizationService)`
+- `TicketService(TicketRepository ticketRepository, UserRepository userRepository, CurrentUserService currentUserService, TicketAuthorizationService ticketAuthorizationService, WorkspaceSettingsService workspaceSettingsService)`
 - `Ticket createTicket(String title, String description, TicketPriority priority, TicketCategory category)`
 - `Ticket getTicket(UUID ticketId)`
 - `List<Ticket> getTickets(UUID createdBy)`
@@ -345,6 +402,33 @@
 - `Ticket cancelTicket(UUID ticketId)`
 - `Ticket assignTicket(UUID ticketId, UUID userId)`
 - `String generateTicketNumber()`
+
+### `AdminUserController`
+- File: `backend/src/main/java/com/voxera/backend/user/controller/AdminUserController.java`
+- Package: `com.voxera.backend.user.controller`
+- `AdminUserController(UserService userService)`
+- `List<UserManagementResponse> getUsers(@RequestParam(required = false) String search, @RequestParam(required = false) UserRole role, @RequestParam(required = false) UserStatus status)`
+- `ResponseEntity<UserManagementResponse> updateUserRole(@PathVariable UUID userId, @Valid @RequestBody UpdateUserRoleRequest request)`
+- `ResponseEntity<UserManagementResponse> updateUserStatus(@PathVariable UUID userId, @Valid @RequestBody UpdateUserStatusRequest request)`
+
+### `UpdateUserRoleRequest`
+- File: `backend/src/main/java/com/voxera/backend/user/dto/UpdateUserRoleRequest.java`
+- Package: `com.voxera.backend.user.dto`
+- `UpdateUserRoleRequest(@NotNull(message = "Role is required") UserRole role)`
+
+### `UpdateUserStatusRequest`
+- File: `backend/src/main/java/com/voxera/backend/user/dto/UpdateUserStatusRequest.java`
+- Package: `com.voxera.backend.user.dto`
+- `UpdateUserStatusRequest(@NotNull(message = "Status is required") UserStatus status)`
+
+### `UserManagementResponse`
+- File: `backend/src/main/java/com/voxera/backend/user/dto/UserManagementResponse.java`
+- Package: `com.voxera.backend.user.dto`
+- `UserManagementResponse(UUID id, String name, String email, String initials, String department, UserRole role, UserStatus status, String joined)`
+- `UserManagementResponse from(User user)`
+- `String getInitials(String name)`
+- ` if(name == null || name.isBlank())`
+- ` if(parts.length == 1)`
 
 ### `User`
 - File: `backend/src/main/java/com/voxera/backend/user/entity/User.java`
@@ -360,6 +444,8 @@
 - `UserStatus getStatus()`
 - `LocalDateTime getCreatedAt()`
 - `LocalDateTime getUpdatedAt()`
+- `void changeRole(UserRole newRole)`
+- `void changeStatus(UserStatus newStatus)`
 
 ### `UserCredential`
 - File: `backend/src/main/java/com/voxera/backend/user/entity/UserCredential.java`
@@ -394,14 +480,48 @@
 ### `UserService`
 - File: `backend/src/main/java/com/voxera/backend/user/service/UserService.java`
 - Package: `com.voxera.backend.user.service`
-- `UserService(UserRepository userRepository)`
+- `UserService(UserRepository userRepository, CurrentUserService currentUserService)`
 - `User getUser(UUID userId)`
 - `User getUserByEmployeeId(String employeeId)`
+- `List<User> getUsers(String search, UserRole role, UserStatus status)`
+- `User changeUserRole(UUID userId, UserRole newRole)`
+- ` if(target.getRole() == UserRole.ADMIN && target.getStatus() == UserStatus.ACTIVE && newRole != UserRole.ADMIN)`
+- ` if(target.getRole() != newRole)`
+- `User changeUserStatus(UUID userId, UserStatus newStatus)`
+- ` if(target.getRole() == UserRole.ADMIN && target.getStatus() == UserStatus.ACTIVE && newStatus == UserStatus.INACTIVE)`
+- ` if(target.getStatus() != newStatus)`
+- `void lockActiveAdministrators()`
+- `void validateAdministrator(User actor)`
+- ` if(actor.getRole() != UserRole.ADMIN || actor.getStatus() != UserStatus.ACTIVE)`
+- `void preventSelfModification(User actor, User target)`
+- ` if(actor.getUserId().equals(target.getUserId()))`
+- `void ensureAnotherActiveAdministratorExists(User target)`
+- ` if(otherActiveAdministrators == 0)`
+- `boolean contains(String value, String search)`
 
 ### `BackendApplicationTests`
 - File: `backend/src/test/java/com/voxera/backend/BackendApplicationTests.java`
 - Package: `com.voxera.backend`
 - `void contextLoads()`
+
+### `AdminSettingsControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/admin/controller/AdminSettingsControllerIntegrationTest.java`
+- Package: `com.voxera.backend.admin.controller`
+- `void setUp()`
+- `void getSettings_adminShouldReturnPersistedDefaults()`
+- `void getSettings_agentShouldReceiveForbidden()`
+- `void getSettings_employeeShouldReceiveForbidden()`
+- `void updateSettings_adminShouldUpdateOnlyProvidedFields()`
+- `void updateSettings_shouldPersistChanges()`
+- `void updateSettings_agentShouldReceiveForbidden()`
+- `void updateSettings_employeeShouldReceiveForbidden()`
+- `void updateSettings_shouldRejectInvalidTimezone()`
+- `void updateSettings_shouldRejectInvalidPrefix()`
+- `void updateSettings_shouldRejectEmptyRequest()`
+- `void updatedTicketPrefixShouldBeUsedWhenCreatingTickets()`
+- `User createUser(String name, String email, UserRole role)`
+- `String login(User user)`
+- `String bearer(String token)`
 
 ### `CurrentUserServiceTest`
 - File: `backend/src/test/java/com/voxera/backend/security/CurrentUserServiceTest.java`
@@ -554,3 +674,39 @@
 - `void assignTicketShouldAssignExistingUser()`
 - `void assignTicketShouldFailWhenAssigneeDoesNotExist()`
 - `void assignTicketShouldFailWhenTicketDoesNotExist()`
+
+### `AdminUserControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/user/controller/AdminUserControllerIntegrationTest.java`
+- Package: `com.voxera.backend.user.controller`
+- `void setUp()`
+- `void getUsers_adminShouldReturnRealDatabaseUsers()`
+- `void getUsers_agentShouldReceiveForbidden()`
+- `void getUsers_employeeShouldReceiveForbidden()`
+- `void getUsers_shouldSearchByName()`
+- `void getUsers_shouldSearchByEmail()`
+- `void getUsers_shouldSearchByEmployeeId()`
+- `void getUsers_shouldSearchByDepartment()`
+- `void getUsers_shouldFilterByRole()`
+- `void getUsers_shouldFilterByStatus()`
+- `void getUsers_shouldApplyCombinedFilters()`
+- `void getUsers_shouldReturnExpectedResponseFields()`
+- `void getUsers_invalidRoleShouldReturnBadRequest()`
+- `void getUsers_invalidStatusShouldReturnBadRequest()`
+- `void updateUserRole_shouldApplyNewRoleToExistingToken()`
+- `void updateUserStatus_deactivationShouldRejectExistingToken()`
+- `void updateUserStatus_adminShouldReactivateUser()`
+- `void updateUserRole_adminCanDemoteAnotherAdmin()`
+- `void updateUserRole_adminCannotChangeOwnRole()`
+- `void updateUserStatus_adminCannotDeactivateOwnAccount()`
+- `void updateUserRole_agentShouldReceiveForbidden()`
+- `void updateUserStatus_employeeShouldReceiveForbidden()`
+- `void updateUserRole_missingRoleShouldReturnBadRequest()`
+- `void updateUserRole_invalidRoleShouldReturnBadRequest()`
+- `void updateUserStatus_missingStatusShouldReturnBadRequest()`
+- `void updateUserStatus_invalidStatusShouldReturnBadRequest()`
+- `void updateUserRole_nonexistentUserShouldReturnNotFound()`
+- `void assertSearchResult(String search, User expected)`
+- `User createUser(String name, String email, String department, UserRole role, UserStatus status)`
+- ` if(status == UserStatus.ACTIVE)`
+- `String login(User user)`
+- `String bearer(String token)`

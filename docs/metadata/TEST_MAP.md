@@ -1,7 +1,7 @@
 # Test Map
 
-> Generated: 2026-11-14T10:24:31.155286+00:00
-> Git commit: `9ad1ae4`
+> Generated: 2026-11-19T00:15:12.973441+00:00
+> Git commit: `57cd56b`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -10,6 +10,21 @@
 - File: `backend/src/test/java/com/voxera/backend/BackendApplicationTests.java`
 - Test methods detected: 1
   - `contextLoads()`
+
+## `AdminSettingsControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/admin/controller/AdminSettingsControllerIntegrationTest.java`
+- Test methods detected: 11
+  - `getSettings_adminShouldReturnPersistedDefaults()`
+  - `getSettings_agentShouldReceiveForbidden()`
+  - `getSettings_employeeShouldReceiveForbidden()`
+  - `updateSettings_adminShouldUpdateOnlyProvidedFields()`
+  - `updateSettings_shouldPersistChanges()`
+  - `updateSettings_agentShouldReceiveForbidden()`
+  - `updateSettings_employeeShouldReceiveForbidden()`
+  - `updateSettings_shouldRejectInvalidTimezone()`
+  - `updateSettings_shouldRejectInvalidPrefix()`
+  - `updateSettings_shouldRejectEmptyRequest()`
+  - `updatedTicketPrefixShouldBeUsedWhenCreatingTickets()`
 
 ## `CurrentUserServiceTest`
 - File: `backend/src/test/java/com/voxera/backend/security/CurrentUserServiceTest.java`
@@ -144,5 +159,35 @@
   - `assignTicketShouldAssignExistingUser()`
   - `assignTicketShouldFailWhenAssigneeDoesNotExist()`
   - `assignTicketShouldFailWhenTicketDoesNotExist()`
+
+## `AdminUserControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/user/controller/AdminUserControllerIntegrationTest.java`
+- Test methods detected: 26
+  - `getUsers_adminShouldReturnRealDatabaseUsers()`
+  - `getUsers_agentShouldReceiveForbidden()`
+  - `getUsers_employeeShouldReceiveForbidden()`
+  - `getUsers_shouldSearchByName()`
+  - `getUsers_shouldSearchByEmail()`
+  - `getUsers_shouldSearchByEmployeeId()`
+  - `getUsers_shouldSearchByDepartment()`
+  - `getUsers_shouldFilterByRole()`
+  - `getUsers_shouldFilterByStatus()`
+  - `getUsers_shouldApplyCombinedFilters()`
+  - `getUsers_shouldReturnExpectedResponseFields()`
+  - `getUsers_invalidRoleShouldReturnBadRequest()`
+  - `getUsers_invalidStatusShouldReturnBadRequest()`
+  - `updateUserRole_shouldApplyNewRoleToExistingToken()`
+  - `updateUserStatus_deactivationShouldRejectExistingToken()`
+  - `updateUserStatus_adminShouldReactivateUser()`
+  - `updateUserRole_adminCanDemoteAnotherAdmin()`
+  - `updateUserRole_adminCannotChangeOwnRole()`
+  - `updateUserStatus_adminCannotDeactivateOwnAccount()`
+  - `updateUserRole_agentShouldReceiveForbidden()`
+  - `updateUserStatus_employeeShouldReceiveForbidden()`
+  - `updateUserRole_missingRoleShouldReturnBadRequest()`
+  - `updateUserRole_invalidRoleShouldReturnBadRequest()`
+  - `updateUserStatus_missingStatusShouldReturnBadRequest()`
+  - `updateUserStatus_invalidStatusShouldReturnBadRequest()`
+  - `updateUserRole_nonexistentUserShouldReturnNotFound()`
 
 > Test names indicate intended coverage, not proof that a behavior is correctly tested. Use test source and test results for verification.

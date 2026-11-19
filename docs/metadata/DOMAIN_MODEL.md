@@ -1,10 +1,58 @@
 # Domain Model, DTOs, and Enums
 
-> Generated: 2026-11-14T10:24:31.136877+00:00
-> Git commit: `9ad1ae4`
+> Generated: 2026-11-19T00:15:12.952476+00:00
+> Git commit: `57cd56b`
 > Generator: `scripts/generate_metadata.py`
 
 
+
+## `UpdateWorkspaceSettingsRequest`
+- File: `backend/src/main/java/com/voxera/backend/admin/dto/UpdateWorkspaceSettingsRequest.java`
+- Kind: DTO / request / response
+- Fields/components:
+  - `workspaceName: message = "Workspace name must not be blank") String`
+  - `organization: message = "Organization must not be blank") String`
+  - `timezone: message = "Timezone must not be blank") String`
+  - `ticketPrefix: message = "Ticket prefix must contain 2–10 alphanumeric characters") String`
+
+## `WorkspaceSettingsResponse`
+- File: `backend/src/main/java/com/voxera/backend/admin/dto/WorkspaceSettingsResponse.java`
+- Kind: DTO / request / response
+- Fields/components:
+  - `workspaceName: String`
+  - `organization: String`
+  - `timezone: String`
+  - `ticketPrefix: String`
+  - `updatedAt: LocalDateTime`
+
+## `WorkspaceSettings`
+- File: `backend/src/main/java/com/voxera/backend/admin/entity/WorkspaceSettings.java`
+- Kind: JPA entity
+- Persistence annotation: `@Table(name = "workspace_settings")`
+- Persistence annotation: `@Id`
+- Persistence annotation: `@Column(name = "settings_id")`
+- Persistence annotation: `@Column(name = "workspace_name", nullable = false, length = 150)`
+- Persistence annotation: `@Column(nullable = false, length = 150)`
+- Persistence annotation: `@Column(nullable = false, length = 100)`
+- Persistence annotation: `@Column(name = "ticket_prefix", nullable = false, length = 10)`
+- Persistence annotation: `@Column(name = "updated_at", nullable = false)`
+- Persistence annotation: `@Version`
+- Persistence annotation: `@Column(nullable = false)`
+- Fields/components:
+  - `id: Integer`
+    - Nearby annotations (verify scope): `@Table(name = "workspace_settings")`, `@Id`, `@Column(name = "settings_id")`
+  - `workspaceName: String`
+    - Nearby annotations (verify scope): `@Id`, `@Column(name = "settings_id")`, `@Column(name = "workspace_name", nullable = false, length = 150)`
+  - `organization: String`
+    - Nearby annotations (verify scope): `@Column(name = "settings_id")`, `@Column(name = "workspace_name", nullable = false, length = 150)`, `@Column(nullable = false, length = 150)`
+  - `timezone: String`
+    - Nearby annotations (verify scope): `@Column(name = "workspace_name", nullable = false, length = 150)`, `@Column(nullable = false, length = 150)`, `@Column(nullable = false, length = 100)`
+  - `ticketPrefix: String`
+    - Nearby annotations (verify scope): `@Column(nullable = false, length = 150)`, `@Column(nullable = false, length = 100)`, `@Column(name = "ticket_prefix", nullable = false, length = 10)`
+  - `updatedAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(nullable = false, length = 100)`, `@Column(name = "ticket_prefix", nullable = false, length = 10)`, `@Column(name = "updated_at", nullable = false)`
+  - `version: Long`
+    - Nearby annotations (verify scope): `@Column(name = "updated_at", nullable = false)`, `@Version`, `@Column(nullable = false)`
 
 ## `LoginRequest`
 - File: `backend/src/main/java/com/voxera/backend/security/authentication/dto/LoginRequest.java`
@@ -225,6 +273,30 @@
 - Kind: enum
 - Values: `OPEN`, `IN_PROGRESS`, `PENDING`, `RESOLVED`, `CLOSED`, `CANCELLED`
 - No fields/components extracted.
+
+## `UpdateUserRoleRequest`
+- File: `backend/src/main/java/com/voxera/backend/user/dto/UpdateUserRoleRequest.java`
+- Kind: DTO / request / response
+- No fields/components extracted.
+
+## `UpdateUserStatusRequest`
+- File: `backend/src/main/java/com/voxera/backend/user/dto/UpdateUserStatusRequest.java`
+- Kind: DTO / request / response
+- No fields/components extracted.
+
+## `UserManagementResponse`
+- File: `backend/src/main/java/com/voxera/backend/user/dto/UserManagementResponse.java`
+- Kind: DTO / request / response
+- Fields/components:
+  - `JOINED_FORMAT: DateTimeFormatter`
+  - `id: UUID`
+  - `name: String`
+  - `email: String`
+  - `initials: String`
+  - `department: String`
+  - `role: UserRole`
+  - `status: UserStatus`
+  - `joined: String`
 
 ## `User`
 - File: `backend/src/main/java/com/voxera/backend/user/entity/User.java`

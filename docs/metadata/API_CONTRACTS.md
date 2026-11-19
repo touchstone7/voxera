@@ -1,12 +1,20 @@
 # API Contracts
 
-> Generated: 2026-11-14T10:24:31.123715+00:00
-> Git commit: `9ad1ae4`
+> Generated: 2026-11-19T00:15:12.941304+00:00
+> Git commit: `57cd56b`
 > Generator: `scripts/generate_metadata.py`
 
 
 > Extracted from Spring mapping annotations. Verify request/response semantics and status codes against controller code and tests.
 
+
+## `AdminSettingsController`
+- File: `backend/src/main/java/com/voxera/backend/admin/controller/AdminSettingsController.java`
+- Class-level path: `/api/v1/admin/settings`
+- **GET `/api/v1/admin/settings`** — `getSettings()`
+  - Mapping: `@GetMapping`
+- **PATCH `/api/v1/admin/settings`** — `updateSettings(@Valid @RequestBody UpdateWorkspaceSettingsRequest request)`
+  - Mapping: `@PatchMapping`
 
 ## `GlobalExceptionHandler`
 - File: `backend/src/main/java/com/voxera/backend/exception/GlobalExceptionHandler.java`
@@ -43,6 +51,16 @@
   - Mapping: `@PostMapping("/{ticketId}/cancel")`
 - **POST `/api/v1/tickets/{ticketId}/assign`** — `assignTicket(@PathVariable UUID ticketId, @Valid @RequestBody AssignTicketRequest request)`
   - Mapping: `@PostMapping("/{ticketId}/assign")`
+
+## `AdminUserController`
+- File: `backend/src/main/java/com/voxera/backend/user/controller/AdminUserController.java`
+- Class-level path: `/api/v1/admin/users`
+- **GET `/api/v1/admin/users`** — `getUsers(@RequestParam(required = false)`
+  - Mapping: `@GetMapping`
+- **PATCH `/api/v1/admin/users/{userId}/role`** — `updateUserRole(@PathVariable UUID userId, @Valid @RequestBody UpdateUserRoleRequest request)`
+  - Mapping: `@PatchMapping("/{userId}/role")`
+- **PATCH `/api/v1/admin/users/{userId}/status`** — `updateUserStatus(@PathVariable UUID userId, @Valid @RequestBody UpdateUserStatusRequest request)`
+  - Mapping: `@PatchMapping("/{userId}/status")`
 
 ## Contract verification checklist
 - Confirm authentication requirements and role/resource permissions.
