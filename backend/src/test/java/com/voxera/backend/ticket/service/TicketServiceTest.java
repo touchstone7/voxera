@@ -351,4 +351,29 @@ class TicketServiceTest {
         verify(userRepository, never()).findById(any(UUID.class));
         verify(ticketRepository, never()).save(any(Ticket.class));
         }
+
+        @Test
+        void createTicketShouldUseWorkspaceDefaultPriorityWhenOmitted() {
+                when(currentUserService.getCurrentUser())
+                                .thenReturn(user);
+
+                when(workspaceSettingsService.getDefaultPriority())
+                                .thenReturn(TicketPriority.MEDIUM);
+
+                when(workspaceSettingsService.getTicketPrefix())
+                                .thenReturn("VXR");
+
+                when(ticketRepository.save(any(Ticket.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+
+                Ticket result = ticketService.createTicket(
+                                "Laptop not connecting",
+                                "Laptop cannot connect to Wi-Fi",
+                                null,
+                                TicketCategory.NETWORK);
+
+                assertEquals(TicketPriority.MEDIUM, result.getPriority());
+
+                verify(workspaceSettingsService).getDefaultPriority();
+        }
 }

@@ -13,7 +13,6 @@ public record CreateTicketRequest(
         @NotBlank
         String description,
 
-        @NotNull
         TicketPriority priority,
 
         @NotNull

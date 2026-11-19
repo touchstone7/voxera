@@ -88,4 +88,59 @@ class TicketCreationIntegrationTest
                                         .content(requestBody)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void createTicket_shouldUseWorkspaceDefaultWhenPriorityIsOmitted()
+                    throws Exception {
+
+            mockMvc.perform(
+                            authenticated(
+                                            post("/api/v1/tickets")
+                                                            .contentType(MediaType.APPLICATION_JSON)
+                                                            .content("""
+                                                                            {
+                                                                                "title": "Default priority test",
+                                                                                "description": "Priority should use workspace default",
+                                                                                "category": "SOFTWARE"
+                                                                            }
+                                                                            """)))
+                            .andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.priority").value("MEDIUM"));
+    }
+
+    @Test
+    void createTicket_shouldUseExplicitPriorityInsteadOfWorkspaceDefault()
+                    throws Exception {
+
+            String requestBody = createTicketRequest(
+                            "Explicit priority test",
+                            "Explicit priority should override workspace default",
+                            "HIGH",
+                            "SOFTWARE");
+
+            mockMvc.perform(
+                            authenticated(
+                                            post("/api/v1/tickets")
+                                                            .contentType(MediaType.APPLICATION_JSON)
+                                                            .content(requestBody)))
+                            .andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.priority").value("HIGH"));
+    }
+
+    @Test
+    void createTicket_shouldRejectMissingCategoryEvenWhenPriorityIsOmitted()
+                    throws Exception {
+
+            mockMvc.perform(
+                            authenticated(
+                                            post("/api/v1/tickets")
+                                                            .contentType(MediaType.APPLICATION_JSON)
+                                                            .content("""
+                                                                            {
+                                                                                "title": "Missing category test",
+                                                                                "description": "Category remains mandatory"
+                                                                            }
+                                                                            """)))
+                            .andExpect(status().isBadRequest());
+    }
 }

@@ -48,6 +48,10 @@ public class TicketService {
 
         User currentUser = currentUserService.getCurrentUser();
 
+        TicketPriority effectivePriority = priority != null
+                ? priority
+                : workspaceSettingsService.getDefaultPriority();
+
         UUID ticketId = UUID.randomUUID();
 
         Ticket ticket = new Ticket(
@@ -55,11 +59,10 @@ public class TicketService {
                 generateTicketNumber(),
                 title,
                 description,
-                priority,
+                effectivePriority,
                 category,
                 currentUser,
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
 
         return ticketRepository.save(ticket);
     }

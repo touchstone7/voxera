@@ -268,6 +268,70 @@ class AdminSettingsControllerIntegrationTest {
                         org.hamcrest.Matchers.startsWith("IT-")));
     }
 
+    @Test
+    void updateSettings_shouldUpdateDefaultPriority() throws Exception {
+        mockMvc.perform(
+                patch("/api/v1/admin/settings")
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "defaultPriority": "HIGH"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultPriority", is("HIGH")));
+
+        mockMvc.perform(
+                get("/api/v1/admin/settings")
+                        .header("Authorization", bearer(adminToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultPriority", is("HIGH")));
+    }
+
+    @Test
+    void updateSettings_shouldRejectInvalidDefaultPriority() throws Exception {
+        mockMvc.perform(
+                patch("/api/v1/admin/settings")
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "defaultPriority": "URGENT"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateSettings_shouldPreserveDefaultPriorityWhenOmitted()
+            throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/settings")
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "defaultPriority": "HIGH"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(
+                patch("/api/v1/admin/settings")
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "ticketPrefix": "IT"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultPriority", is("HIGH")))
+                .andExpect(jsonPath("$.ticketPrefix", is("IT")));
+    }
+
     private User createUser(
             String name,
             String email,
