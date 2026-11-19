@@ -36,7 +36,7 @@ class TicketCreationIntegrationTest
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.ticketId", notNullValue()))
                 .andExpect(jsonPath("$.ticketNumber",
-                        startsWith("INC-")))
+                        startsWith("VXR-")))
                 .andExpect(jsonPath("$.title")
                         .value("Laptop not connecting to Wi-Fi"))
                 .andExpect(jsonPath("$.description")

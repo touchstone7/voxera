@@ -6,6 +6,7 @@ import com.voxera.backend.ticket.entity.Ticket;
 import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.repository.TicketRepository;
+import com.voxera.backend.admin.service.WorkspaceSettingsService;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.enums.UserRole;
 import com.voxera.backend.user.repository.UserRepository;
@@ -23,16 +24,19 @@ public class TicketService {
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
     private final TicketAuthorizationService ticketAuthorizationService;
+    private final WorkspaceSettingsService workspaceSettingsService;
 
     public TicketService(
             TicketRepository ticketRepository,
             UserRepository userRepository,
             CurrentUserService currentUserService,
-            TicketAuthorizationService ticketAuthorizationService) {
+            TicketAuthorizationService ticketAuthorizationService,
+            WorkspaceSettingsService workspaceSettingsService) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.currentUserService = currentUserService;
         this.ticketAuthorizationService = ticketAuthorizationService;
+        this.workspaceSettingsService = workspaceSettingsService;
     }
 
     @Transactional
@@ -156,7 +160,8 @@ public class TicketService {
     }
 
     private String generateTicketNumber() {
-        return "INC-" +
+        return workspaceSettingsService.getTicketPrefix() +
+                "-" +
                 LocalDateTime.now().getYear() +
                 "-" +
                 UUID.randomUUID()

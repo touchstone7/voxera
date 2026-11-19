@@ -8,6 +8,8 @@ import com.voxera.backend.user.enums.UserRole;
 import com.voxera.backend.user.enums.UserStatus;
 import com.voxera.backend.user.repository.UserCredentialRepository;
 import com.voxera.backend.user.repository.UserRepository;
+import com.voxera.backend.admin.repository.WorkspaceSettingsRepository;
+import com.voxera.backend.admin.entity.WorkspaceSettings;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,9 @@ class AdminSettingsControllerIntegrationTest {
     private UserCredentialRepository userCredentialRepository;
 
     @Autowired
+    private WorkspaceSettingsRepository workspaceSettingsRepository;
+
+    @Autowired
     private PasswordService passwordService;
 
     private String adminToken;
@@ -52,6 +57,19 @@ class AdminSettingsControllerIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
+
+        WorkspaceSettings settings = workspaceSettingsRepository.findById(1)
+                .orElseThrow();
+
+        settings.update(
+                "Voxera Support",
+                "Voxera Technologies",
+                "Asia/Kolkata",
+                "VXR");
+
+        workspaceSettingsRepository.save(settings);
+        workspaceSettingsRepository.flush();
+        
         String unique = UUID.randomUUID().toString();
 
         adminToken = login(createUser(
@@ -213,6 +231,39 @@ class AdminSettingsControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updatedTicketPrefixShouldBeUsedWhenCreatingTickets()
+            throws Exception {
+
+        mockMvc.perform(
+                patch("/api/v1/admin/settings")
+                        .header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "ticketPrefix": "IT"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ticketPrefix", is("IT")));
+
+        mockMvc.perform(
+                post("/api/v1/tickets")
+                        .header("Authorization", bearer(employeeToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "Prefix integration test",
+                                    "description": "Verify configured ticket prefix",
+                                    "priority": "HIGH",
+                                    "category": "SOFTWARE"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.ticketNumber",
+                        org.hamcrest.Matchers.startsWith("IT-")));
     }
 
     private User createUser(

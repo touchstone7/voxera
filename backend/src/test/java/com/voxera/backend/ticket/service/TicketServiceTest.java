@@ -32,6 +32,7 @@ import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.enums.UserRole;
 import com.voxera.backend.user.enums.UserStatus;
 import com.voxera.backend.user.repository.UserRepository;
+import com.voxera.backend.admin.service.WorkspaceSettingsService;
 
 @ExtendWith(MockitoExtension.class)
 class TicketServiceTest {
@@ -48,6 +49,9 @@ class TicketServiceTest {
     @Mock 
     private TicketAuthorizationService ticketAuthorizationService;
 
+    @Mock
+    private WorkspaceSettingsService workspaceSettingsService;
+
     private TicketService ticketService;
 
     private UUID userId;
@@ -61,7 +65,8 @@ class TicketServiceTest {
         ticketRepository,
         userRepository,
         currentUserService,
-        ticketAuthorizationService
+        ticketAuthorizationService,
+        workspaceSettingsService
         );
 
         userId = UUID.randomUUID();
@@ -98,6 +103,9 @@ class TicketServiceTest {
         when(currentUserService.getCurrentUser())
                 .thenReturn(user);
 
+        when(workspaceSettingsService.getTicketPrefix())
+                        .thenReturn("VXR");
+
         when(ticketRepository.save(any(Ticket.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -130,6 +138,9 @@ class TicketServiceTest {
         when(currentUserService.getCurrentUser())
                 .thenReturn(user);
 
+        when(workspaceSettingsService.getTicketPrefix())
+                        .thenReturn("VXR");
+
         ArgumentCaptor<Ticket> ticketCaptor =
                 ArgumentCaptor.forClass(Ticket.class);
 
@@ -149,7 +160,7 @@ class TicketServiceTest {
 
         assertNotNull(savedTicket.getTicketId());
         assertNotNull(savedTicket.getTicketNumber());
-        assertTrue(savedTicket.getTicketNumber().startsWith("INC-"));
+        assertTrue(savedTicket.getTicketNumber().startsWith("VXR-"));
     }
 
     @Test

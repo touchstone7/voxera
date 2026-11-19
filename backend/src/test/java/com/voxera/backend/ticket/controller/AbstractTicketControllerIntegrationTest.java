@@ -26,6 +26,8 @@ import com.voxera.backend.user.enums.UserRole;
 import com.voxera.backend.user.enums.UserStatus;
 import com.voxera.backend.user.repository.UserCredentialRepository;
 import com.voxera.backend.user.repository.UserRepository;
+import com.voxera.backend.admin.entity.WorkspaceSettings;
+import com.voxera.backend.admin.repository.WorkspaceSettingsRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -50,6 +52,9 @@ abstract class AbstractTicketControllerIntegrationTest {
     protected UserCredentialRepository userCredentialRepository;
 
     @Autowired
+    protected WorkspaceSettingsRepository workspaceSettingsRepository;
+
+    @Autowired
     protected PasswordService passwordService;
 
     protected String accessToken;
@@ -58,6 +63,18 @@ abstract class AbstractTicketControllerIntegrationTest {
     void setUp() throws Exception {
         ticketCommentRepository.deleteAll();
         ticketRepository.deleteAll();
+        WorkspaceSettings settings = workspaceSettingsRepository.findById(1)
+        .orElseThrow();
+
+        settings.update(
+                "Voxera Support",
+                "Voxera Technologies",
+                "Asia/Kolkata",
+                "VXR"
+        );
+
+        workspaceSettingsRepository.save(settings);
+        workspaceSettingsRepository.flush();
         accessToken = loginAndGetAccessToken(
             "emp001@voxera.local",
             "VoxeraDev123!");

@@ -41,7 +41,6 @@ public class WorkspaceSettingsService {
                     HttpStatus.BAD_REQUEST,
                     "At least one setting must be provided");
         }
-
         WorkspaceSettings settings = getSettings();
 
         String workspaceName = request.workspaceName() != null
@@ -69,6 +68,11 @@ public class WorkspaceSettingsService {
                 ticketPrefix);
 
         return settings;
+    }
+
+    @Transactional(readOnly = true)
+    public String getTicketPrefix() {
+        return getSettings().getTicketPrefix();
     }
 
     private void validateTimezone(String timezone) {
