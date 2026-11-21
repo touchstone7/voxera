@@ -37,6 +37,8 @@ abstract class AbstractTicketControllerIntegrationTest {
     protected static final UUID SEEDED_USER_ID =
             UUID.fromString("11111111-1111-1111-1111-111111111111");
 
+    protected static final UUID NETWORK_CATEGORY_ID = UUID.fromString("a1000000-0000-4000-8000-000000000003");
+
     @Autowired
     protected MockMvc mockMvc;
 
@@ -110,7 +112,7 @@ abstract class AbstractTicketControllerIntegrationTest {
                 title,
                 "Integration test description",
                 "HIGH",
-                "NETWORK"
+                NETWORK_CATEGORY_ID.toString()
         );
 
         mockMvc.perform(
@@ -128,7 +130,7 @@ abstract class AbstractTicketControllerIntegrationTest {
                 title,
                 "Integration test description",
                 "HIGH",
-                "NETWORK"
+                NETWORK_CATEGORY_ID.toString()
         );
 
         mockMvc.perform(

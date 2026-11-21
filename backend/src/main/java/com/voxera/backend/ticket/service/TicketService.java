@@ -29,15 +29,15 @@ public class TicketService {
     private final WorkspaceSettingsService workspaceSettingsService;
 
     public TicketService(
-            TicketCategoryRepository ticketCategoryRepository,
             TicketRepository ticketRepository,
+            TicketCategoryRepository ticketCategoryRepository,
             UserRepository userRepository,
             CurrentUserService currentUserService,
             TicketAuthorizationService ticketAuthorizationService,
             WorkspaceSettingsService workspaceSettingsService) {
 
-        this.ticketCategoryRepository = ticketCategoryRepository;
         this.ticketRepository = ticketRepository;
+        this.ticketCategoryRepository = ticketCategoryRepository;
         this.userRepository = userRepository;
         this.currentUserService = currentUserService;
         this.ticketAuthorizationService = ticketAuthorizationService;

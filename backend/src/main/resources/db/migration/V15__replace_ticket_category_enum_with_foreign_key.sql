@@ -10,6 +10,14 @@ SET category_id = (
     WHERE tc.name_key = LOWER(TRIM(t.category))
 );
 
+-- Ensure every existing ticket was mapped successfully.
+ALTER TABLE tickets
+    ADD CONSTRAINT ck_tickets_category_id_not_null
+    CHECK (category_id IS NOT NULL);
+
+ALTER TABLE tickets
+    DROP CONSTRAINT ck_tickets_category_id_not_null;
+
 -- Enforce mandatory category association after backfilling.
 ALTER TABLE tickets
     ALTER COLUMN category_id SET NOT NULL;

@@ -24,7 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.voxera.backend.exception.ResourceNotFoundException;
 import com.voxera.backend.security.CurrentUserService;
 import com.voxera.backend.ticket.entity.Ticket;
-import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import com.voxera.backend.ticket.repository.TicketRepository;
@@ -32,6 +31,8 @@ import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.enums.UserRole;
 import com.voxera.backend.user.enums.UserStatus;
 import com.voxera.backend.user.repository.UserRepository;
+import com.voxera.backend.ticket.entity.TicketCategory;
+import com.voxera.backend.ticket.repository.TicketCategoryRepository;
 import com.voxera.backend.admin.service.WorkspaceSettingsService;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +43,9 @@ class TicketServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private TicketCategoryRepository ticketCategoryRepository;
 
     @Mock
     private CurrentUserService currentUserService;
@@ -58,21 +62,29 @@ class TicketServiceTest {
     private UUID ticketId;
     private User user;
     private Ticket ticket;
+    private TicketCategory category;
 
     @BeforeEach
     void setUp() {
         ticketService = new TicketService(
-        ticketRepository,
-        userRepository,
-        currentUserService,
-        ticketAuthorizationService,
-        workspaceSettingsService
-        );
+                        ticketRepository,
+                        ticketCategoryRepository,
+                        userRepository,
+                        currentUserService,
+                        ticketAuthorizationService,
+                        workspaceSettingsService);
 
         userId = UUID.randomUUID();
         ticketId = UUID.randomUUID();
 
         LocalDateTime now = LocalDateTime.now();
+
+        category = new TicketCategory(
+                        UUID.randomUUID(),
+                        "Network",
+                        true,
+                        now,
+                        now);
 
         user = new User(
                 userId,
@@ -87,15 +99,14 @@ class TicketServiceTest {
         );
 
         ticket = new Ticket(
-                ticketId,
-                "INC-2026-TEST001",
-                "Test ticket",
-                "Test description",
-                TicketPriority.HIGH,
-                TicketCategory.NETWORK,
-                user,
-                now
-        );
+                        ticketId,
+                        "INC-2026-TEST001",
+                        "Test ticket",
+                        "Test description",
+                        TicketPriority.HIGH,
+                        category,
+                        user,
+                        now);
     }
 
     @Test
@@ -109,11 +120,14 @@ class TicketServiceTest {
         when(ticketRepository.save(any(Ticket.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
+        when(ticketCategoryRepository.findById(category.getCategoryId()))
+                        .thenReturn(Optional.of(category));
+
         Ticket result = ticketService.createTicket(
                 "Laptop not connecting",
                 "Laptop cannot connect to Wi-Fi",
                 TicketPriority.HIGH,
-                TicketCategory.NETWORK
+                category.getCategoryId()
         );
 
         assertNotNull(result);
@@ -124,11 +138,13 @@ class TicketServiceTest {
         );
         assertEquals(TicketStatus.OPEN, result.getStatus());
         assertEquals(TicketPriority.HIGH, result.getPriority());
-        assertEquals(TicketCategory.NETWORK, result.getCategory());
+        assertSame(category, result.getCategory());
+        assertEquals("Network", result.getCategory().getName());
         assertEquals(user, result.getCreatedBy());
 
         verify(currentUserService).getCurrentUser();
         verify(ticketRepository).save(any(Ticket.class));
+        verify(ticketCategoryRepository).findById(category.getCategoryId());
 
     }
 
@@ -140,6 +156,9 @@ class TicketServiceTest {
 
         when(workspaceSettingsService.getTicketPrefix())
                         .thenReturn("VXR");
+        
+        when(ticketCategoryRepository.findById(category.getCategoryId()))
+                        .thenReturn(Optional.of(category));
 
         ArgumentCaptor<Ticket> ticketCaptor =
                 ArgumentCaptor.forClass(Ticket.class);
@@ -151,7 +170,7 @@ class TicketServiceTest {
                 "Laptop not connecting",
                 "Laptop cannot connect to Wi-Fi",
                 TicketPriority.HIGH,
-                TicketCategory.NETWORK
+                category.getCategoryId()
         );
 
         verify(ticketRepository).save(ticketCaptor.capture());
@@ -366,14 +385,61 @@ class TicketServiceTest {
                 when(ticketRepository.save(any(Ticket.class)))
                                 .thenAnswer(invocation -> invocation.getArgument(0));
 
+                when(ticketCategoryRepository.findById(category.getCategoryId()))
+                                .thenReturn(Optional.of(category));
+
                 Ticket result = ticketService.createTicket(
                                 "Laptop not connecting",
                                 "Laptop cannot connect to Wi-Fi",
                                 null,
-                                TicketCategory.NETWORK);
+                                category.getCategoryId());
 
                 assertEquals(TicketPriority.MEDIUM, result.getPriority());
 
                 verify(workspaceSettingsService).getDefaultPriority();
+        }
+
+        @Test
+        void createTicketShouldFailWhenCategoryDoesNotExist() {
+                UUID categoryId = UUID.randomUUID();
+
+                when(currentUserService.getCurrentUser())
+                                .thenReturn(user);
+
+                when(ticketCategoryRepository.findById(categoryId))
+                                .thenReturn(Optional.empty());
+
+                assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> ticketService.createTicket(
+                                                "Laptop not connecting",
+                                                "Laptop cannot connect to Wi-Fi",
+                                                TicketPriority.HIGH,
+                                                categoryId));
+
+                verify(ticketCategoryRepository).findById(categoryId);
+                verify(ticketRepository, never()).save(any(Ticket.class));
+        }
+
+        @Test
+        void createTicketShouldFailWhenCategoryIsInactive() {
+                category.deactivate();
+
+                when(currentUserService.getCurrentUser())
+                                .thenReturn(user);
+
+                when(ticketCategoryRepository.findById(category.getCategoryId()))
+                                .thenReturn(Optional.of(category));
+
+                assertThrows(
+                                IllegalStateException.class,
+                                () -> ticketService.createTicket(
+                                                "Laptop not connecting",
+                                                "Laptop cannot connect to Wi-Fi",
+                                                TicketPriority.HIGH,
+                                                category.getCategoryId()));
+
+                verify(ticketCategoryRepository).findById(category.getCategoryId());
+                verify(ticketRepository, never()).save(any(Ticket.class));
         }
 }
