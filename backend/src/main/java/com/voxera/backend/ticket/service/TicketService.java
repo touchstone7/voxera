@@ -3,8 +3,9 @@ package com.voxera.backend.ticket.service;
 import com.voxera.backend.exception.ResourceNotFoundException;
 import com.voxera.backend.security.CurrentUserService;
 import com.voxera.backend.ticket.entity.Ticket;
-import com.voxera.backend.ticket.enums.TicketCategory;
+import com.voxera.backend.ticket.entity.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
+import com.voxera.backend.ticket.repository.TicketCategoryRepository;
 import com.voxera.backend.ticket.repository.TicketRepository;
 import com.voxera.backend.admin.service.WorkspaceSettingsService;
 import com.voxera.backend.user.entity.User;
@@ -22,16 +23,20 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final TicketCategoryRepository ticketCategoryRepository;
     private final CurrentUserService currentUserService;
     private final TicketAuthorizationService ticketAuthorizationService;
     private final WorkspaceSettingsService workspaceSettingsService;
 
     public TicketService(
+            TicketCategoryRepository ticketCategoryRepository,
             TicketRepository ticketRepository,
             UserRepository userRepository,
             CurrentUserService currentUserService,
             TicketAuthorizationService ticketAuthorizationService,
             WorkspaceSettingsService workspaceSettingsService) {
+
+        this.ticketCategoryRepository = ticketCategoryRepository;
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.currentUserService = currentUserService;
@@ -44,9 +49,18 @@ public class TicketService {
             String title,
             String description,
             TicketPriority priority,
-            TicketCategory category) {
+            UUID categoryId) {
 
         User currentUser = currentUserService.getCurrentUser();
+
+        TicketCategory category = ticketCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Ticket category not found: " + categoryId));
+
+        if (!category.isActive()) {
+            throw new IllegalStateException(
+                    "Inactive ticket categories cannot be used for new tickets");
+        }
 
         TicketPriority effectivePriority = priority != null
                 ? priority

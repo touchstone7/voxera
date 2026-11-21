@@ -72,6 +72,18 @@ public class TicketCategory {
         return name.trim().toLowerCase(Locale.ROOT);
     }
 
+    public void rename(String newName) {
+        this.name = newName;
+    }
+
+    public void deactivate() {
+        this.active = false;
+    }
+
+    public void activate() {
+        this.active = true;
+    }
+
     public UUID getCategoryId() {
         return categoryId;
     }
