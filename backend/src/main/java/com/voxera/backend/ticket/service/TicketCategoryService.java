@@ -48,7 +48,9 @@ public class TicketCategoryService {
                 now,
                 now);
 
-        ensureNameAvailable(category.getName(), null);
+        ensureNameKeyAvailable(
+                TicketCategory.nameKeyFor(category.getName()),
+                null);
 
         try {
             return categoryRepository.saveAndFlush(category);
@@ -63,17 +65,16 @@ public class TicketCategoryService {
     public TicketCategory renameCategory(UUID categoryId, String newName) {
         TicketCategory category = findCategory(categoryId);
 
-        // Entity validates and trims the new name.
-        category.rename(newName);
+        // Check availability BEFORE mutating the managed entity.
+        String nameKey = TicketCategory.nameKeyFor(newName);
+        ensureNameKeyAvailable(nameKey, categoryId);
 
-        ensureNameAvailable(category.getName(), categoryId);
+        category.rename(newName);
 
         try {
             return categoryRepository.saveAndFlush(category);
         } catch (DataIntegrityViolationException exception) {
-            throw new IllegalStateException(
-                    DUPLICATE_NAME_MESSAGE,
-                    exception);
+            throw new IllegalStateException(DUPLICATE_NAME_MESSAGE, exception);
         }
     }
 
@@ -101,16 +102,14 @@ public class TicketCategoryService {
                         "Ticket category not found: " + categoryId));
     }
 
-    private void ensureNameAvailable(String name, UUID currentCategoryId) {
-        String nameKey = name.toLowerCase(Locale.ROOT);
+    private void ensureNameKeyAvailable(
+            String nameKey,
+            UUID currentCategoryId) {
 
         categoryRepository.findByNameKey(nameKey)
                 .ifPresent(existingCategory -> {
-                    if (!existingCategory.getCategoryId()
-                            .equals(currentCategoryId)) {
-
-                        throw new IllegalStateException(
-                                DUPLICATE_NAME_MESSAGE);
+                    if (!existingCategory.getCategoryId().equals(currentCategoryId)) {
+                        throw new IllegalStateException(DUPLICATE_NAME_MESSAGE);
                     }
                 });
     }

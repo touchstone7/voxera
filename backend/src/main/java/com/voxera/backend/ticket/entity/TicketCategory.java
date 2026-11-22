@@ -73,6 +73,10 @@ public class TicketCategory {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public static String nameKeyFor(String name) {
+        return normalizeNameKey(normalizeDisplayName(name));
+    }
+
     private static String normalizeDisplayName(String name) {
         if (name == null) {
             throw new IllegalArgumentException(
