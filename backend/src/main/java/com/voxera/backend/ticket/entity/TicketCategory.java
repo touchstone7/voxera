@@ -1,3 +1,4 @@
+
 package com.voxera.backend.ticket.entity;
 
 import jakarta.persistence.*;
@@ -12,14 +13,16 @@ import java.util.UUID;
 })
 public class TicketCategory {
 
+    private static final int MAX_NAME_LENGTH = 100;
+
     @Id
     @Column(name = "category_id")
     private UUID categoryId;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = MAX_NAME_LENGTH)
     private String name;
 
-    @Column(name = "name_key", nullable = false, length = 100)
+    @Column(name = "name_key", nullable = false, length = MAX_NAME_LENGTH)
     private String nameKey;
 
     @Column(nullable = false)
@@ -42,16 +45,17 @@ public class TicketCategory {
             LocalDateTime updatedAt) {
 
         this.categoryId = categoryId;
-        this.name = name;
+        this.name = normalizeDisplayName(name);
+        this.nameKey = normalizeNameKey(this.name);
         this.active = active;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.nameKey = normalizeName(name);
     }
 
     @PrePersist
     protected void onCreate() {
-        this.nameKey = normalizeName(name);
+        this.name = normalizeDisplayName(this.name);
+        this.nameKey = normalizeNameKey(this.name);
 
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
@@ -64,16 +68,39 @@ public class TicketCategory {
 
     @PreUpdate
     protected void onUpdate() {
-        this.nameKey = normalizeName(name);
+        this.name = normalizeDisplayName(this.name);
+        this.nameKey = normalizeNameKey(this.name);
         this.updatedAt = LocalDateTime.now();
     }
 
-    private static String normalizeName(String name) {
-        return name.trim().toLowerCase(Locale.ROOT);
+    private static String normalizeDisplayName(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException(
+                    "Category name cannot be null");
+        }
+
+        String normalizedName = name.trim();
+
+        if (normalizedName.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Category name cannot be blank");
+        }
+
+        if (normalizedName.length() > MAX_NAME_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Category name cannot exceed "
+                            + MAX_NAME_LENGTH + " characters");
+        }
+
+        return normalizedName;
+    }
+
+    private static String normalizeNameKey(String name) {
+        return name.toLowerCase(Locale.ROOT);
     }
 
     public void rename(String newName) {
-        this.name = newName;
+        this.name = normalizeDisplayName(newName);
     }
 
     public void deactivate() {
