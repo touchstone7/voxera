@@ -1,6 +1,5 @@
 package com.voxera.backend.ticket.entity;
 
-import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import com.voxera.backend.user.entity.User;
@@ -31,13 +30,20 @@ class TicketTest {
                 now
         );
 
+        TicketCategory category = new TicketCategory(
+                UUID.randomUUID(),
+                "Network",
+                true,
+                now,
+                now);
+
         return new Ticket(
                 UUID.randomUUID(),
                 "INC-2026-TEST001",
                 "Test ticket",
                 "Test description",
                 TicketPriority.HIGH,
-                TicketCategory.NETWORK,
+                category,
                 user,
                 now
         );

@@ -260,7 +260,7 @@ class AdminSettingsControllerIntegrationTest {
                                     "title": "Prefix integration test",
                                     "description": "Verify configured ticket prefix",
                                     "priority": "HIGH",
-                                    "category": "SOFTWARE"
+                                    "category": "a1000000-0000-4000-8000-000000000002"
                                 }
                                 """))
                 .andExpect(status().isCreated())

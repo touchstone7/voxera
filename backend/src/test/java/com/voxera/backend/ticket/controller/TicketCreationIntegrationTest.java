@@ -1,7 +1,6 @@
 package com.voxera.backend.ticket.controller;
 
 import com.voxera.backend.ticket.entity.Ticket;
-import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,7 @@ class TicketCreationIntegrationTest
                 "Laptop not connecting to Wi-Fi",
                 "Wi-Fi disconnects every few minutes",
                 "HIGH",
-                "NETWORK"
+                "a1000000-0000-4000-8000-000000000003"
         );
 
         mockMvc.perform(
@@ -45,8 +44,9 @@ class TicketCreationIntegrationTest
                         .value(TicketStatus.OPEN.name()))
                 .andExpect(jsonPath("$.priority")
                         .value(TicketPriority.HIGH.name()))
-                .andExpect(jsonPath("$.category")
-                        .value(TicketCategory.NETWORK.name()))
+                .andExpect(jsonPath("$.category").value("Network"))
+                .andExpect(jsonPath("$.categoryId")
+                        .value("a1000000-0000-4000-8000-000000000003"))
                 .andExpect(jsonPath("$.createdBy")
                         .value(SEEDED_USER_ID.toString()))
                 .andExpect(jsonPath("$.assignedTo")
@@ -101,7 +101,7 @@ class TicketCreationIntegrationTest
                                                                             {
                                                                                 "title": "Default priority test",
                                                                                 "description": "Priority should use workspace default",
-                                                                                "category": "SOFTWARE"
+                                                                                "category": "a1000000-0000-4000-8000-000000000002"
                                                                             }
                                                                             """)))
                             .andExpect(status().isCreated())
@@ -116,7 +116,7 @@ class TicketCreationIntegrationTest
                             "Explicit priority test",
                             "Explicit priority should override workspace default",
                             "HIGH",
-                            "SOFTWARE");
+                            "a1000000-0000-4000-8000-000000000002");
 
             mockMvc.perform(
                             authenticated(

@@ -1,7 +1,6 @@
 package com.voxera.backend.ticket.entity;
 
 import com.voxera.backend.team.entity.Team;
-import com.voxera.backend.ticket.enums.TicketCategory;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import com.voxera.backend.user.entity.User;
@@ -35,8 +34,8 @@ public class Ticket {
     @Column(nullable = false, length = 30)
     private TicketPriority priority;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
     private TicketCategory category;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
