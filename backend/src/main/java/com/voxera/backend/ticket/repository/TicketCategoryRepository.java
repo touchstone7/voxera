@@ -15,4 +15,6 @@ public interface TicketCategoryRepository
     boolean existsByNameKey(String nameKey);
 
     List<TicketCategory> findAllByActiveTrueOrderByNameAsc();
+
+    List<TicketCategory> findAllByOrderByNameAsc();
 }
