@@ -48,6 +48,9 @@ class TicketServiceTest {
     private TicketCategoryRepository ticketCategoryRepository;
 
     @Mock
+    private TicketHistoryService ticketHistoryService;
+
+    @Mock
     private CurrentUserService currentUserService;
 
     @Mock 
@@ -69,11 +72,11 @@ class TicketServiceTest {
         ticketService = new TicketService(
                         ticketRepository,
                         ticketCategoryRepository,
+                        ticketHistoryService,
                         userRepository,
                         currentUserService,
                         ticketAuthorizationService,
                         workspaceSettingsService);
-
         userId = UUID.randomUUID();
         ticketId = UUID.randomUUID();
 

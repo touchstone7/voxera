@@ -1,6 +1,8 @@
 package com.voxera.backend.ticket.controller;
 
 import com.voxera.backend.ticket.entity.Ticket;
+import com.voxera.backend.ticket.entity.TicketHistory;
+import com.voxera.backend.ticket.enums.TicketHistoryAction;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import com.voxera.backend.user.entity.User;
 
@@ -8,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
+
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -215,6 +219,46 @@ class TicketAssignmentIntegrationTest
                 persistedTicket.getAssignedTo().getUserId());
 
         assertEquals(TicketStatus.OPEN, persistedTicket.getStatus());
+
+        List<TicketHistory> history =
+        ticketHistoryRepository
+                .findByTicket_TicketIdOrderByCreatedAtAsc(
+                        ticket.getTicketId());
+
+        assertEquals(3, history.size());
+
+        // Initial ticket creation
+        assertEquals(
+                TicketHistoryAction.TICKET_CREATED.name(),
+                history.get(0).getAction());
+
+        // First assignment: unassigned -> first assignee
+        assertEquals(
+                TicketHistoryAction.ASSIGNED.name(),
+                history.get(1).getAction());
+
+        assertEquals(null, history.get(1).getOldValue());
+
+        assertEquals(
+                firstAssignee.getUserId().toString(),
+                history.get(1).getNewValue());
+
+        // Reassignment: first assignee -> second assignee
+        assertEquals(
+                TicketHistoryAction.ASSIGNED.name(),
+                history.get(2).getAction());
+
+        assertEquals(
+                firstAssignee.getUserId().toString(),
+                history.get(2).getOldValue());
+
+        assertEquals(
+                secondAssignee.getUserId().toString(),
+                history.get(2).getNewValue());
+
+        // Both assignment operations were performed by an agent
+        assertEquals("AGENT", history.get(1).getActorType());
+        assertEquals("AGENT", history.get(2).getActorType());
     }
 
     @Test

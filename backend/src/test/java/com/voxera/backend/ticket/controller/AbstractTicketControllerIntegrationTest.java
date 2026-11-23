@@ -21,6 +21,7 @@ import com.voxera.backend.security.authentication.PasswordService;
 import com.voxera.backend.ticket.repository.TicketRepository;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.repository.TicketCommentRepository;
+import com.voxera.backend.ticket.repository.TicketHistoryRepository;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.entity.UserCredential;
 import com.voxera.backend.user.enums.UserRole;
@@ -60,11 +61,15 @@ abstract class AbstractTicketControllerIntegrationTest {
     @Autowired
     protected PasswordService passwordService;
 
+    @Autowired
+    protected TicketHistoryRepository ticketHistoryRepository;
+
     protected String accessToken;
 
     @BeforeEach
     void setUp() throws Exception {
         ticketCommentRepository.deleteAll();
+        ticketHistoryRepository.deleteAll();
         ticketRepository.deleteAll();
         WorkspaceSettings settings = workspaceSettingsRepository.findById(1)
         .orElseThrow();

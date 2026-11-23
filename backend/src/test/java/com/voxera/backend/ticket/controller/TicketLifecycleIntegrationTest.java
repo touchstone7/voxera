@@ -1,9 +1,13 @@
 package com.voxera.backend.ticket.controller;
 
 import com.voxera.backend.ticket.entity.Ticket;
+import com.voxera.backend.ticket.entity.TicketHistory;
+import com.voxera.backend.ticket.enums.TicketHistoryAction;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.enums.UserRole;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -99,6 +103,49 @@ class TicketLifecycleIntegrationTest
                 true,
                 !persistedTicket.getResolvedAt()
                         .isAfter(persistedTicket.getClosedAt()));
+
+                List<TicketHistory> history =
+                ticketHistoryRepository
+                        .findByTicket_TicketIdOrderByCreatedAtAsc(ticketId);
+
+        assertEquals(5, history.size());
+
+        // Creation + four lifecycle transitions
+        assertEquals(
+                List.of(
+                        TicketHistoryAction.TICKET_CREATED.name(),
+                        TicketHistoryAction.STATUS_CHANGED.name(),
+                        TicketHistoryAction.STATUS_CHANGED.name(),
+                        TicketHistoryAction.STATUS_CHANGED.name(),
+                        TicketHistoryAction.STATUS_CHANGED.name()
+                ),
+                history.stream()
+                        .map(TicketHistory::getAction)
+                        .toList()
+        );
+
+        // Initial ticket creation
+        assertEquals("EMPLOYEE", history.get(0).getActorType());
+        assertEquals(null, history.get(0).getOldValue());
+        assertEquals(TicketStatus.OPEN.name(), history.get(0).getNewValue());
+
+        // Lifecycle transitions
+        assertEquals(TicketStatus.OPEN.name(), history.get(1).getOldValue());
+        assertEquals(TicketStatus.IN_PROGRESS.name(), history.get(1).getNewValue());
+
+        assertEquals(TicketStatus.IN_PROGRESS.name(), history.get(2).getOldValue());
+        assertEquals(TicketStatus.PENDING.name(), history.get(2).getNewValue());
+
+        assertEquals(TicketStatus.PENDING.name(), history.get(3).getOldValue());
+        assertEquals(TicketStatus.RESOLVED.name(), history.get(3).getNewValue());
+
+        assertEquals(TicketStatus.RESOLVED.name(), history.get(4).getOldValue());
+        assertEquals(TicketStatus.CLOSED.name(), history.get(4).getNewValue());
+
+        // All lifecycle transitions were performed by the agent
+        for (int i = 1; i < history.size(); i++) {
+        assertEquals("AGENT", history.get(i).getActorType());
+        }
     }
 
     @Test
@@ -131,6 +178,30 @@ class TicketLifecycleIntegrationTest
                 true,
                 !persistedTicket.getUpdatedAt()
                         .isBefore(persistedTicket.getCreatedAt()));
+
+        List<TicketHistory> history = ticketHistoryRepository
+        .findByTicket_TicketIdOrderByCreatedAtAsc(
+                        ticket.getTicketId());
+
+        assertEquals(2, history.size());
+
+        assertEquals(
+                        TicketHistoryAction.TICKET_CREATED.name(),
+                        history.get(0).getAction());
+
+        assertEquals(
+                        TicketHistoryAction.STATUS_CHANGED.name(),
+                        history.get(1).getAction());
+
+        assertEquals(
+                        TicketStatus.OPEN.name(),
+                        history.get(1).getOldValue());
+
+        assertEquals(
+                        TicketStatus.CANCELLED.name(),
+                        history.get(1).getNewValue());
+
+        assertEquals("EMPLOYEE", history.get(1).getActorType());
     }
 
     @Test
