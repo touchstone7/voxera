@@ -1,3 +1,4 @@
+
 package com.voxera.backend.ticket.entity;
 
 import com.voxera.backend.team.entity.Team;
@@ -118,6 +119,18 @@ public class Ticket {
         requireStatus(TicketStatus.RESOLVED);
         this.status = TicketStatus.CLOSED;
         this.closedAt = LocalDateTime.now();
+        touch();
+    }
+
+    public void reopen() {
+        if (status != TicketStatus.RESOLVED && status != TicketStatus.CLOSED) {
+            throw new IllegalStateException(
+                    "Only resolved or closed tickets can be reopened");
+        }
+
+        this.status = TicketStatus.OPEN;
+        this.resolvedAt = null;
+        this.closedAt = null;
         touch();
     }
 

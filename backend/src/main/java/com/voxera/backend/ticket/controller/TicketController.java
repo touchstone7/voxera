@@ -1,6 +1,5 @@
-package com.voxera.backend.ticket.controller;
 
-import org.springframework.security.access.prepost.PreAuthorize;
+package com.voxera.backend.ticket.controller;
 
 import com.voxera.backend.ticket.dto.AssignTicketRequest;
 import com.voxera.backend.ticket.dto.CreateTicketRequest;
@@ -10,6 +9,7 @@ import com.voxera.backend.ticket.service.TicketService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,8 +34,7 @@ public class TicketController {
                 request.title(),
                 request.description(),
                 request.priority(),
-                request.category()
-        );
+                request.category());
 
         return TicketResponse.from(ticket);
     }
@@ -83,6 +82,13 @@ public class TicketController {
                 ticketService.closeTicket(ticketId));
     }
 
+    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN')")
+    @PostMapping("/{ticketId}/reopen")
+    public TicketResponse reopenTicket(@PathVariable UUID ticketId) {
+        return TicketResponse.from(
+                ticketService.reopenTicket(ticketId));
+    }
+
     @PostMapping("/{ticketId}/cancel")
     public TicketResponse cancelTicket(@PathVariable UUID ticketId) {
         return TicketResponse.from(
@@ -97,8 +103,7 @@ public class TicketController {
 
         Ticket ticket = ticketService.assignTicket(
                 ticketId,
-                request.assignedTo()
-        );
+                request.assignedTo());
 
         return ResponseEntity.ok(TicketResponse.from(ticket));
     }

@@ -1,5 +1,7 @@
+
 package com.voxera.backend.ticket.service;
 
+import com.voxera.backend.admin.service.WorkspaceSettingsService;
 import com.voxera.backend.exception.ResourceNotFoundException;
 import com.voxera.backend.security.CurrentUserService;
 import com.voxera.backend.ticket.entity.Ticket;
@@ -8,12 +10,13 @@ import com.voxera.backend.ticket.enums.TicketHistoryAction;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.repository.TicketCategoryRepository;
 import com.voxera.backend.ticket.repository.TicketRepository;
-import com.voxera.backend.admin.service.WorkspaceSettingsService;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.enums.UserRole;
 import com.voxera.backend.user.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -89,8 +92,7 @@ public class TicketService {
                 currentUser,
                 TicketHistoryAction.TICKET_CREATED,
                 null,
-                savedTicket.getStatus().name()
-        );
+                savedTicket.getStatus().name());
 
         return savedTicket;
     }
@@ -120,16 +122,14 @@ public class TicketService {
         if (createdBy != null) {
             ticketAuthorizationService.requireTicketListAccess(
                     actor,
-                    createdBy
-            );
+                    createdBy);
 
             return ticketRepository.findByCreatedBy_UserId(createdBy);
         }
 
         if (actor.getRole() == UserRole.EMPLOYEE) {
             return ticketRepository.findByCreatedBy_UserId(
-                    actor.getUserId()
-            );
+                    actor.getUserId());
         }
 
         return ticketRepository.findAll();
@@ -143,6 +143,14 @@ public class TicketService {
         ticketAuthorizationService.requireAgentOrAdmin(actor);
 
         Ticket ticket = getTicket(ticketId, actor);
+
+        if (workspaceSettingsService.getSettings().isRequireAssignment()
+                && ticket.getAssignedTo() == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Ticket must be assigned to an agent before it can be started");
+        }
 
         String oldStatus = ticket.getStatus().name();
 
@@ -231,6 +239,35 @@ public class TicketService {
                 TicketHistoryAction.STATUS_CHANGED,
                 oldStatus,
                 newStatus);
+
+        return ticket;
+    }
+
+    @Transactional
+    public Ticket reopenTicket(UUID ticketId) {
+
+        User actor = currentUserService.getCurrentUser();
+
+        ticketAuthorizationService.requireAgentOrAdmin(actor);
+
+        Ticket ticket = getTicket(ticketId, actor);
+
+        if (!workspaceSettingsService.getSettings().isAllowReopening()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Ticket reopening is disabled by workspace settings");
+        }
+
+        String oldStatus = ticket.getStatus().name();
+
+        ticket.reopen();
+
+        ticketHistoryService.record(
+                ticket,
+                actor,
+                TicketHistoryAction.TICKET_REOPENED,
+                oldStatus,
+                ticket.getStatus().name());
 
         return ticket;
     }
