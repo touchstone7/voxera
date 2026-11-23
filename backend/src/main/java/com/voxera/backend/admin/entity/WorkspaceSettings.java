@@ -88,6 +88,7 @@ public class WorkspaceSettings {
         return updatedAt;
     }
 
+    // Retained for existing callers that do not update workflow settings.
     public void update(
             String workspaceName,
             String organization,
@@ -95,11 +96,32 @@ public class WorkspaceSettings {
             String ticketPrefix,
             TicketPriority defaultPriority) {
 
+        update(
+                workspaceName,
+                organization,
+                timezone,
+                ticketPrefix,
+                defaultPriority,
+                requireAssignment,
+                allowReopening);
+    }
+
+    public void update(
+            String workspaceName,
+            String organization,
+            String timezone,
+            String ticketPrefix,
+            TicketPriority defaultPriority,
+            boolean requireAssignment,
+            boolean allowReopening) {
+
         this.workspaceName = workspaceName;
         this.organization = organization;
         this.timezone = timezone;
         this.ticketPrefix = ticketPrefix;
         this.defaultPriority = defaultPriority;
+        this.requireAssignment = requireAssignment;
+        this.allowReopening = allowReopening;
         this.updatedAt = LocalDateTime.now();
     }
 }

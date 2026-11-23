@@ -66,6 +66,14 @@ public class WorkspaceSettingsService {
                 ? request.defaultPriority()
                 : settings.getDefaultPriority();
 
+        boolean requireAssignment = request.requireAssignment() != null
+                ? request.requireAssignment()
+                : settings.isRequireAssignment();
+
+        boolean allowReopening = request.allowReopening() != null
+                ? request.allowReopening()
+                : settings.isAllowReopening();
+
         validateTimezone(timezone);
 
         settings.update(
@@ -73,7 +81,9 @@ public class WorkspaceSettingsService {
                 organization,
                 timezone,
                 ticketPrefix,
-                defaultPriority);
+                defaultPriority,
+                requireAssignment,
+                allowReopening);
 
         return settings;
     }
