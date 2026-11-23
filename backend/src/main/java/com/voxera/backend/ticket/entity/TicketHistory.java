@@ -1,6 +1,9 @@
+
 package com.voxera.backend.ticket.entity;
 
+import com.voxera.backend.user.entity.User;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -35,6 +38,23 @@ public class TicketHistory {
     private LocalDateTime createdAt;
 
     protected TicketHistory() {
+    }
+
+    public TicketHistory(
+            Ticket ticket,
+            User actor,
+            String action,
+            String oldValue,
+            String newValue) {
+
+        this.historyId = UUID.randomUUID();
+        this.ticket = ticket;
+        this.actorType = actor.getRole().name();
+        this.actorId = actor.getUserId();
+        this.action = action;
+        this.oldValue = oldValue;
+        this.newValue = newValue;
+        this.createdAt = LocalDateTime.now();
     }
 
     public UUID getHistoryId() {

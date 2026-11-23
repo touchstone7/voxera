@@ -4,6 +4,7 @@ import com.voxera.backend.exception.ResourceNotFoundException;
 import com.voxera.backend.security.CurrentUserService;
 import com.voxera.backend.ticket.entity.Ticket;
 import com.voxera.backend.ticket.entity.TicketCategory;
+import com.voxera.backend.ticket.enums.TicketHistoryAction;
 import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.repository.TicketCategoryRepository;
 import com.voxera.backend.ticket.repository.TicketRepository;
@@ -27,10 +28,12 @@ public class TicketService {
     private final CurrentUserService currentUserService;
     private final TicketAuthorizationService ticketAuthorizationService;
     private final WorkspaceSettingsService workspaceSettingsService;
+    private final TicketHistoryService ticketHistoryService;
 
     public TicketService(
             TicketRepository ticketRepository,
             TicketCategoryRepository ticketCategoryRepository,
+            TicketHistoryService ticketHistoryService,
             UserRepository userRepository,
             CurrentUserService currentUserService,
             TicketAuthorizationService ticketAuthorizationService,
@@ -38,6 +41,7 @@ public class TicketService {
 
         this.ticketRepository = ticketRepository;
         this.ticketCategoryRepository = ticketCategoryRepository;
+        this.ticketHistoryService = ticketHistoryService;
         this.userRepository = userRepository;
         this.currentUserService = currentUserService;
         this.ticketAuthorizationService = ticketAuthorizationService;
@@ -78,17 +82,31 @@ public class TicketService {
                 currentUser,
                 LocalDateTime.now());
 
-        return ticketRepository.save(ticket);
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        ticketHistoryService.record(
+                savedTicket,
+                currentUser,
+                TicketHistoryAction.TICKET_CREATED,
+                null,
+                savedTicket.getStatus().name()
+        );
+
+        return savedTicket;
     }
 
     @Transactional(readOnly = true)
     public Ticket getTicket(UUID ticketId) {
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Ticket not found: " + ticketId));
-
         User actor = currentUserService.getCurrentUser();
+        return getTicket(ticketId, actor);
+    }
+
+    private Ticket getTicket(UUID ticketId, User actor) {
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Ticket not found: " + ticketId));
+
         ticketAuthorizationService.requireResourceAccess(actor, ticket);
 
         return ticket;
@@ -119,59 +137,154 @@ public class TicketService {
 
     @Transactional
     public Ticket startProgress(UUID ticketId) {
-        ticketAuthorizationService.requireAgentOrAdmin(
-                currentUserService.getCurrentUser());
-        Ticket ticket = getTicket(ticketId);
+
+        User actor = currentUserService.getCurrentUser();
+
+        ticketAuthorizationService.requireAgentOrAdmin(actor);
+
+        Ticket ticket = getTicket(ticketId, actor);
+
+        String oldStatus = ticket.getStatus().name();
+
         ticket.startProgress();
+
+        String newStatus = ticket.getStatus().name();
+
+        ticketHistoryService.record(
+                ticket,
+                actor,
+                TicketHistoryAction.STATUS_CHANGED,
+                oldStatus,
+                newStatus);
+
         return ticket;
     }
 
     @Transactional
     public Ticket markPending(UUID ticketId) {
-        ticketAuthorizationService.requireAgentOrAdmin(
-                currentUserService.getCurrentUser());
-        Ticket ticket = getTicket(ticketId);
+
+        User actor = currentUserService.getCurrentUser();
+
+        ticketAuthorizationService.requireAgentOrAdmin(actor);
+
+        Ticket ticket = getTicket(ticketId, actor);
+
+        String oldStatus = ticket.getStatus().name();
+
         ticket.markPending();
+
+        String newStatus = ticket.getStatus().name();
+
+        ticketHistoryService.record(
+                ticket,
+                actor,
+                TicketHistoryAction.STATUS_CHANGED,
+                oldStatus,
+                newStatus);
+
         return ticket;
     }
 
     @Transactional
     public Ticket resolveTicket(UUID ticketId) {
-        ticketAuthorizationService.requireAgentOrAdmin(
-                currentUserService.getCurrentUser());
-        Ticket ticket = getTicket(ticketId);
+
+        User actor = currentUserService.getCurrentUser();
+
+        ticketAuthorizationService.requireAgentOrAdmin(actor);
+
+        Ticket ticket = getTicket(ticketId, actor);
+
+        String oldStatus = ticket.getStatus().name();
+
         ticket.resolve();
+
+        String newStatus = ticket.getStatus().name();
+
+        ticketHistoryService.record(
+                ticket,
+                actor,
+                TicketHistoryAction.STATUS_CHANGED,
+                oldStatus,
+                newStatus);
+
         return ticket;
     }
 
     @Transactional
     public Ticket closeTicket(UUID ticketId) {
-        ticketAuthorizationService.requireAgentOrAdmin(
-                currentUserService.getCurrentUser());
-        Ticket ticket = getTicket(ticketId);
+
+        User actor = currentUserService.getCurrentUser();
+
+        ticketAuthorizationService.requireAgentOrAdmin(actor);
+
+        Ticket ticket = getTicket(ticketId, actor);
+
+        String oldStatus = ticket.getStatus().name();
+
         ticket.close();
+
+        String newStatus = ticket.getStatus().name();
+
+        ticketHistoryService.record(
+                ticket,
+                actor,
+                TicketHistoryAction.STATUS_CHANGED,
+                oldStatus,
+                newStatus);
+
         return ticket;
     }
 
     @Transactional
     public Ticket cancelTicket(UUID ticketId) {
-        Ticket ticket = getTicket(ticketId);
+
+        User actor = currentUserService.getCurrentUser();
+
+        Ticket ticket = getTicket(ticketId, actor);
+
+        String oldStatus = ticket.getStatus().name();
+
         ticket.cancel();
+
+        String newStatus = ticket.getStatus().name();
+
+        ticketHistoryService.record(
+                ticket,
+                actor,
+                TicketHistoryAction.STATUS_CHANGED,
+                oldStatus,
+                newStatus);
+
         return ticket;
     }
 
     @Transactional
     public Ticket assignTicket(UUID ticketId, UUID userId) {
-        ticketAuthorizationService.requireAgentOrAdmin(
-                currentUserService.getCurrentUser());
-        Ticket ticket = getTicket(ticketId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found: " + userId));
+        User actor = currentUserService.getCurrentUser();
 
-        ticket.assignTo(user);
+        ticketAuthorizationService.requireAgentOrAdmin(actor);
+
+        Ticket ticket = getTicket(ticketId, actor);
+
+        String oldAssignee = ticket.getAssignedTo() != null
+                ? ticket.getAssignedTo().getUserId().toString()
+                : null;
+
+        User assignee = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found: " + userId));
+
+        ticket.assignTo(assignee);
+
+        String newAssignee = assignee.getUserId().toString();
+
+        ticketHistoryService.record(
+                ticket,
+                actor,
+                TicketHistoryAction.ASSIGNED,
+                oldAssignee,
+                newAssignee);
 
         return ticketRepository.save(ticket);
     }
