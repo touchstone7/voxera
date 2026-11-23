@@ -36,6 +36,12 @@ public class WorkspaceSettings {
     @Column(name = "default_priority", nullable = false, length = 20)
     private TicketPriority defaultPriority;
 
+    @Column(name = "require_assignment", nullable = false)
+    private boolean requireAssignment = false;
+
+    @Column(name = "allow_reopening", nullable = false)
+    private boolean allowReopening = false;
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -68,6 +74,14 @@ public class WorkspaceSettings {
 
     public TicketPriority getDefaultPriority() {
         return defaultPriority;
+    }
+
+    public boolean isRequireAssignment() {
+        return requireAssignment;
+    }
+
+    public boolean isAllowReopening() {
+        return allowReopening;
     }
 
     public LocalDateTime getUpdatedAt() {
