@@ -75,11 +75,13 @@ abstract class AbstractTicketControllerIntegrationTest {
         .orElseThrow();
 
         settings.update(
-        "Voxera Support",
-        "Voxera Technologies",
-        "Asia/Kolkata",
-        "VXR",
-        TicketPriority.MEDIUM);
+                "Voxera Support",
+                "Voxera Technologies",
+                "Asia/Kolkata",
+                "VXR",
+                TicketPriority.MEDIUM,
+                false,
+                false);
 
         workspaceSettingsRepository.save(settings);
         workspaceSettingsRepository.flush();
