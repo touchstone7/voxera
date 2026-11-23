@@ -20,6 +20,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -105,7 +106,9 @@ class AdminSettingsControllerIntegrationTest {
                 .andExpect(jsonPath("$.timezone",
                         is("Asia/Kolkata")))
                 .andExpect(jsonPath("$.ticketPrefix",
-                        is("VXR")));
+                        is("VXR")))
+                .andExpect(jsonPath("$.requireAssignment").value(false))
+                .andExpect(jsonPath("$.allowReopening").value(false));
     }
 
     @Test
@@ -334,6 +337,64 @@ class AdminSettingsControllerIntegrationTest {
                 .andExpect(jsonPath("$.ticketPrefix", is("IT")));
     }
 
+    @Test
+    void adminCanUpdateWorkflowSettings() throws Exception {
+        String requestBody = """
+                {
+                    "requireAssignment": true,
+                    "allowReopening": true
+                }
+                """;
+
+        mockMvc.perform(authenticated(
+                patch("/api/v1/admin/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody),
+                adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requireAssignment").value(true))
+                .andExpect(jsonPath("$.allowReopening").value(true));
+
+        mockMvc.perform(authenticated(
+                get("/api/v1/admin/settings"),
+                adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requireAssignment").value(true))
+                .andExpect(jsonPath("$.allowReopening").value(true));
+    }
+
+    @Test
+    void partialWorkflowSettingsUpdateShouldPreserveOmittedValues() throws Exception {
+        String initialRequest = """
+                {
+                    "requireAssignment": true,
+                    "allowReopening": true
+                }
+                """;
+
+        mockMvc.perform(authenticated(
+                patch("/api/v1/admin/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(initialRequest),
+                adminToken))
+                .andExpect(status().isOk());
+
+        String partialRequest = """
+                {
+                    "requireAssignment": false
+                }
+                """;
+
+        mockMvc.perform(authenticated(
+                patch("/api/v1/admin/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(partialRequest),
+                adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requireAssignment").value(false))
+                .andExpect(jsonPath("$.allowReopening").value(true));
+    }
+
     private User createUser(
             String name,
             String email,
@@ -386,5 +447,15 @@ class AdminSettingsControllerIntegrationTest {
 
     private String bearer(String token) {
         return "Bearer " + token;
+    }
+
+    private MockHttpServletRequestBuilder authenticated(
+        MockHttpServletRequestBuilder request,
+        String token) {
+
+    return request.header(
+            "Authorization",
+            "Bearer " + token
+    );
     }
 }
