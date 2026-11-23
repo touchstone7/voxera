@@ -21,6 +21,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.voxera.backend.admin.entity.WorkspaceSettings;
+
 import com.voxera.backend.exception.ResourceNotFoundException;
 import com.voxera.backend.security.CurrentUserService;
 import com.voxera.backend.ticket.entity.Ticket;
@@ -58,6 +63,9 @@ class TicketServiceTest {
 
     @Mock
     private WorkspaceSettingsService workspaceSettingsService;
+
+    @Mock
+    private WorkspaceSettings workspaceSettings;
 
     private TicketService ticketService;
 
@@ -211,15 +219,44 @@ class TicketServiceTest {
     }
 
     @Test
-    void startProgressShouldChangeTicketStatus() {
-        when(ticketRepository.findById(ticketId))
-                .thenReturn(Optional.of(ticket));
+    void startProgressShouldChangeTicketStatusWhenAssignmentIsNotRequired() {
+            when(ticketRepository.findById(ticketId))
+                            .thenReturn(Optional.of(ticket));
 
-        Ticket result = ticketService.startProgress(ticketId);
+            when(workspaceSettingsService.getSettings())
+                            .thenReturn(workspaceSettings);
 
-        assertEquals(TicketStatus.IN_PROGRESS, result.getStatus());
+            when(workspaceSettings.isRequireAssignment())
+                            .thenReturn(false);
 
-        verify(ticketRepository).findById(ticketId);
+            Ticket result = ticketService.startProgress(ticketId);
+
+            assertEquals(TicketStatus.IN_PROGRESS, result.getStatus());
+
+            verify(ticketRepository).findById(ticketId);
+            verify(workspaceSettingsService).getSettings();
+    }
+
+    @Test
+    void startProgressShouldFailWhenAssignmentIsRequiredAndTicketIsUnassigned() {
+            when(ticketRepository.findById(ticketId))
+                            .thenReturn(Optional.of(ticket));
+
+            when(workspaceSettingsService.getSettings())
+                            .thenReturn(workspaceSettings);
+
+            when(workspaceSettings.isRequireAssignment())
+                            .thenReturn(true);
+
+            ResponseStatusException exception = assertThrows(
+                            ResponseStatusException.class,
+                            () -> ticketService.startProgress(ticketId));
+
+            assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+            assertEquals(TicketStatus.OPEN, ticket.getStatus());
+
+            verify(ticketRepository).findById(ticketId);
+            verify(workspaceSettingsService).getSettings();
     }
 
     @Test
