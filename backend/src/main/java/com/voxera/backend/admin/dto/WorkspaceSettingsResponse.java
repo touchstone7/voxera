@@ -12,6 +12,8 @@ public record WorkspaceSettingsResponse(
         String timezone,
         String ticketPrefix,
         TicketPriority defaultPriority,
+        boolean requireAssignment,
+        boolean allowReopening,
         LocalDateTime updatedAt) {
 
     public static WorkspaceSettingsResponse from(WorkspaceSettings settings) {
@@ -21,6 +23,8 @@ public record WorkspaceSettingsResponse(
                 settings.getTimezone(),
                 settings.getTicketPrefix(),
                 settings.getDefaultPriority(),
+                settings.isRequireAssignment(),
+                settings.isAllowReopening(),
                 settings.getUpdatedAt());
     }
 }

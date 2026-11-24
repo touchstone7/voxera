@@ -1,8 +1,10 @@
 package com.voxera.backend.ticket.controller;
 
+import com.voxera.backend.admin.entity.WorkspaceSettings;
 import com.voxera.backend.ticket.entity.Ticket;
 import com.voxera.backend.ticket.entity.TicketHistory;
 import com.voxera.backend.ticket.enums.TicketHistoryAction;
+import com.voxera.backend.ticket.enums.TicketPriority;
 import com.voxera.backend.ticket.enums.TicketStatus;
 import com.voxera.backend.user.entity.User;
 import com.voxera.backend.user.enums.UserRole;
@@ -12,10 +14,12 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
+import static org.hamcrest.Matchers.is;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -264,5 +268,86 @@ class TicketLifecycleIntegrationTest
         }
     }
 
+    @Test
+void reopeningShouldBeRejectedWhenWorkspaceDisablesIt() throws Exception {
+    createTicket("Ticket reopening disabled");
+
+    Ticket ticket = ticketRepository.findAll().get(0);
+    String agentToken = createAgentToken();
+
+    mockMvc.perform(authenticated(
+                    post("/api/v1/tickets/{ticketId}/start", ticket.getTicketId()),
+                    agentToken))
+            .andExpect(status().isOk());
+
+    mockMvc.perform(authenticated(
+                    post("/api/v1/tickets/{ticketId}/resolve", ticket.getTicketId()),
+                    agentToken))
+            .andExpect(status().isOk());
+
+    mockMvc.perform(authenticated(
+                    post("/api/v1/tickets/{ticketId}/reopen", ticket.getTicketId()),
+                    agentToken))
+            .andExpect(status().isConflict());
+
+    Ticket unchanged = ticketRepository.findById(ticket.getTicketId())
+            .orElseThrow();
+
+    assertEquals(TicketStatus.RESOLVED, unchanged.getStatus());
+    assertNotNull(unchanged.getResolvedAt());
+}
+
+    @Test
+    void agentCanReopenResolvedTicketWhenWorkspaceAllowsIt() throws Exception {
+        createTicket("Ticket to reopen");
+
+        Ticket ticket = ticketRepository.findAll().get(0);
+        String agentToken = createAgentToken();
+
+        mockMvc.perform(authenticated(
+                        post("/api/v1/tickets/{ticketId}/start", ticket.getTicketId()),
+                        agentToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(authenticated(
+                        post("/api/v1/tickets/{ticketId}/resolve", ticket.getTicketId()),
+                        agentToken))
+                .andExpect(status().isOk());
+
+        WorkspaceSettings settings = workspaceSettingsRepository.findById(1)
+                .orElseThrow();
+        settings.update(
+                "Voxera Support", "Voxera Technologies", "Asia/Kolkata",
+                "VXR", TicketPriority.MEDIUM, false, true);
+        workspaceSettingsRepository.saveAndFlush(settings);
+
+        mockMvc.perform(authenticated(
+                        post("/api/v1/tickets/{ticketId}/reopen", ticket.getTicketId()),
+                        agentToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("OPEN")))
+                .andExpect(jsonPath("$.resolvedAt").doesNotExist())
+                .andExpect(jsonPath("$.closedAt").doesNotExist());
+
+        Ticket reopened = ticketRepository.findById(ticket.getTicketId())
+                .orElseThrow();
+
+        assertEquals(TicketStatus.OPEN, reopened.getStatus());
+        assertNull(reopened.getResolvedAt());
+        assertNull(reopened.getClosedAt());
+
+        List<TicketHistory> history = ticketHistoryRepository
+                .findAll()
+                .stream()
+                .filter(item -> item.getTicket().getTicketId().equals(ticket.getTicketId()))
+                .toList();
+
+        assertEquals(4, history.size());
+        TicketHistory reopenEvent = history.get(3);
+        assertEquals("TICKET_REOPENED", reopenEvent.getAction());
+        assertEquals("RESOLVED", reopenEvent.getOldValue());
+        assertEquals("OPEN", reopenEvent.getNewValue());
+        assertEquals("AGENT", reopenEvent.getActorType());
+        }
 }
 

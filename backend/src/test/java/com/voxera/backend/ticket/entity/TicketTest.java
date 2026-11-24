@@ -224,4 +224,66 @@ class TicketTest {
         assertFalse(ticket.getResolvedAt().isAfter(ticket.getClosedAt()));
         assertFalse(ticket.getUpdatedAt().isBefore(ticket.getCreatedAt()));
     }
+
+    @Test
+    void resolvedTicketShouldBeReopened() {
+        Ticket ticket = createTicket();
+        ticket.startProgress();
+        ticket.resolve();
+
+        assertNotNull(ticket.getResolvedAt());
+
+        ticket.reopen();
+
+        assertEquals(TicketStatus.OPEN, ticket.getStatus());
+        assertNull(ticket.getResolvedAt());
+        assertNull(ticket.getClosedAt());
+    }
+
+    @Test
+    void closedTicketShouldBeReopened() {
+        Ticket ticket = createTicket();
+        ticket.startProgress();
+        ticket.resolve();
+        ticket.close();
+
+        assertNotNull(ticket.getResolvedAt());
+        assertNotNull(ticket.getClosedAt());
+
+        ticket.reopen();
+
+        assertEquals(TicketStatus.OPEN, ticket.getStatus());
+        assertNull(ticket.getResolvedAt());
+        assertNull(ticket.getClosedAt());
+    }
+
+    @Test
+    void cancelledTicketShouldNotBeReopened() {
+        Ticket ticket = createTicket();
+        ticket.cancel();
+
+        assertThrows(
+                IllegalStateException.class,
+                ticket::reopen);
+
+        assertEquals(TicketStatus.CANCELLED, ticket.getStatus());
+    }
+
+    @Test
+    void activeTicketStatesShouldNotBeReopened() {
+        Ticket openTicket = createTicket();
+
+        assertThrows(IllegalStateException.class, openTicket::reopen);
+
+        Ticket inProgressTicket = createTicket();
+        inProgressTicket.startProgress();
+
+        assertThrows(IllegalStateException.class, inProgressTicket::reopen);
+
+        Ticket pendingTicket = createTicket();
+        pendingTicket.startProgress();
+        pendingTicket.markPending();
+
+        assertThrows(IllegalStateException.class, pendingTicket::reopen);
+    }
 }
