@@ -1,7 +1,7 @@
 # API Contracts
 
-> Generated: 2026-11-19T00:15:12.941304+00:00
-> Git commit: `57cd56b`
+> Generated: 2026-11-24T09:34:55.197016+00:00
+> Git commit: `ca3c4a5`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -26,6 +26,10 @@
 - **POST `/api/v1/auth/login`** — `login(@Valid @RequestBody LoginRequest request)`
   - Mapping: `@PostMapping("/login")`
 
+## `TicketCategoryController`
+- File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketCategoryController.java`
+- Class-level path: `/api/v1/ticket-categories`
+
 ## `TicketCommentController`
 - File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketCommentController.java`
 - Class-level path: `/api/v1/tickets/{ticketId}/comments`
@@ -47,6 +51,8 @@
   - Mapping: `@PostMapping("/{ticketId}/resolve")`
 - **POST `/api/v1/tickets/{ticketId}/close`** — `closeTicket(@PathVariable UUID ticketId)`
   - Mapping: `@PostMapping("/{ticketId}/close")`
+- **POST `/api/v1/tickets/{ticketId}/reopen`** — `reopenTicket(@PathVariable UUID ticketId)`
+  - Mapping: `@PostMapping("/{ticketId}/reopen")`
 - **POST `/api/v1/tickets/{ticketId}/cancel`** — `cancelTicket(@PathVariable UUID ticketId)`
   - Mapping: `@PostMapping("/{ticketId}/cancel")`
 - **POST `/api/v1/tickets/{ticketId}/assign`** — `assignTicket(@PathVariable UUID ticketId, @Valid @RequestBody AssignTicketRequest request)`

@@ -1,7 +1,7 @@
 # Project Structure and Java Inventory
 
-> Generated: 2026-11-19T00:15:12.742562+00:00
-> Git commit: `57cd56b`
+> Generated: 2026-11-24T09:34:54.897085+00:00
+> Git commit: `ca3c4a5`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -29,24 +29,33 @@
 - `backend/src/main/java/com/voxera/backend/team/entity/Team.java`
 - `backend/src/main/java/com/voxera/backend/team/repository/TeamRepository.java`
 - `backend/src/main/java/com/voxera/backend/team/service/TeamService.java`
+- `backend/src/main/java/com/voxera/backend/ticket/controller/TicketCategoryController.java`
 - `backend/src/main/java/com/voxera/backend/ticket/controller/TicketCommentController.java`
 - `backend/src/main/java/com/voxera/backend/ticket/controller/TicketController.java`
 - `backend/src/main/java/com/voxera/backend/ticket/dto/AssignTicketRequest.java`
+- `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketCategoryRequest.java`
 - `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketCommentRequest.java`
 - `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketRequest.java`
+- `backend/src/main/java/com/voxera/backend/ticket/dto/RenameTicketCategoryRequest.java`
+- `backend/src/main/java/com/voxera/backend/ticket/dto/TicketCategoryResponse.java`
 - `backend/src/main/java/com/voxera/backend/ticket/dto/TicketCommentResponse.java`
 - `backend/src/main/java/com/voxera/backend/ticket/dto/TicketResponse.java`
 - `backend/src/main/java/com/voxera/backend/ticket/entity/Ticket.java`
+- `backend/src/main/java/com/voxera/backend/ticket/entity/TicketCategory.java`
 - `backend/src/main/java/com/voxera/backend/ticket/entity/TicketComment.java`
 - `backend/src/main/java/com/voxera/backend/ticket/entity/TicketHistory.java`
 - `backend/src/main/java/com/voxera/backend/ticket/enums/TicketCategory.java`
+- `backend/src/main/java/com/voxera/backend/ticket/enums/TicketHistoryAction.java`
 - `backend/src/main/java/com/voxera/backend/ticket/enums/TicketPriority.java`
 - `backend/src/main/java/com/voxera/backend/ticket/enums/TicketStatus.java`
+- `backend/src/main/java/com/voxera/backend/ticket/repository/TicketCategoryRepository.java`
 - `backend/src/main/java/com/voxera/backend/ticket/repository/TicketCommentRepository.java`
 - `backend/src/main/java/com/voxera/backend/ticket/repository/TicketHistoryRepository.java`
 - `backend/src/main/java/com/voxera/backend/ticket/repository/TicketRepository.java`
 - `backend/src/main/java/com/voxera/backend/ticket/service/TicketAuthorizationService.java`
+- `backend/src/main/java/com/voxera/backend/ticket/service/TicketCategoryService.java`
 - `backend/src/main/java/com/voxera/backend/ticket/service/TicketCommentService.java`
+- `backend/src/main/java/com/voxera/backend/ticket/service/TicketHistoryService.java`
 - `backend/src/main/java/com/voxera/backend/ticket/service/TicketService.java`
 - `backend/src/main/java/com/voxera/backend/user/controller/AdminUserController.java`
 - `backend/src/main/java/com/voxera/backend/user/dto/UpdateUserRoleRequest.java`
@@ -70,11 +79,14 @@
 - `backend/src/test/java/com/voxera/backend/ticket/controller/AbstractTicketControllerIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAssignmentIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketAuthorizationIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCategoryControllerIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCommentIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCreationIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketLifecycleIntegrationTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/controller/TicketRetrievalIntegrationTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/entity/TicketCategoryTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`
+- `backend/src/test/java/com/voxera/backend/ticket/service/TicketCategoryServiceTest.java`
 - `backend/src/test/java/com/voxera/backend/ticket/service/TicketServiceTest.java`
 - `backend/src/test/java/com/voxera/backend/user/controller/AdminUserControllerIntegrationTest.java`
 
@@ -101,7 +113,7 @@
 ### `WorkspaceSettingsResponse`
 - File: `backend/src/main/java/com/voxera/backend/admin/dto/WorkspaceSettingsResponse.java`
 - Package: `com.voxera.backend.admin.dto`
-- `WorkspaceSettingsResponse(String workspaceName, String organization, String timezone, String ticketPrefix, LocalDateTime updatedAt)`
+- `WorkspaceSettingsResponse(String workspaceName, String organization, String timezone, String ticketPrefix, TicketPriority defaultPriority, boolean requireAssignment, boolean allowReopening, LocalDateTime updatedAt)`
 - `WorkspaceSettingsResponse from(WorkspaceSettings settings)`
 
 ### `WorkspaceSettings`
@@ -113,8 +125,12 @@
 - `String getOrganization()`
 - `String getTimezone()`
 - `String getTicketPrefix()`
+- `TicketPriority getDefaultPriority()`
+- `boolean isRequireAssignment()`
+- `boolean isAllowReopening()`
 - `LocalDateTime getUpdatedAt()`
-- `void update(String workspaceName, String organization, String timezone, String ticketPrefix)`
+- `void update(String workspaceName, String organization, String timezone, String ticketPrefix, TicketPriority defaultPriority)`
+- `void update(String workspaceName, String organization, String timezone, String ticketPrefix, TicketPriority defaultPriority, boolean requireAssignment, boolean allowReopening)`
 
 ### `WorkspaceSettingsRepository`
 - File: `backend/src/main/java/com/voxera/backend/admin/repository/WorkspaceSettingsRepository.java`
@@ -129,6 +145,7 @@
 - `WorkspaceSettings updateSettings(UpdateWorkspaceSettingsRequest request)`
 - ` if(!request.hasUpdates())`
 - `String getTicketPrefix()`
+- `TicketPriority getDefaultPriority()`
 - `void validateTimezone(String timezone)`
 
 ### `GlobalExceptionHandler`
@@ -233,6 +250,17 @@
 - `TeamService(TeamRepository teamRepository)`
 - `Team getTeam(UUID teamId)`
 
+### `TicketCategoryController`
+- File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketCategoryController.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `TicketCategoryController(TicketCategoryService categoryService)`
+- `List<TicketCategoryResponse> getAllCategories()`
+- `List<TicketCategoryResponse> getActiveCategories()`
+- `ResponseEntity<TicketCategoryResponse> createCategory(@Valid @RequestBody CreateTicketCategoryRequest request)`
+- `TicketCategoryResponse renameCategory(@PathVariable UUID categoryId, @Valid @RequestBody RenameTicketCategoryRequest request)`
+- `TicketCategoryResponse deactivateCategory(@PathVariable UUID categoryId)`
+- `TicketCategoryResponse activateCategory(@PathVariable UUID categoryId)`
+
 ### `TicketCommentController`
 - File: `backend/src/main/java/com/voxera/backend/ticket/controller/TicketCommentController.java`
 - Package: `com.voxera.backend.ticket.controller`
@@ -251,6 +279,7 @@
 - `TicketResponse markPending(@PathVariable UUID ticketId)`
 - `TicketResponse resolveTicket(@PathVariable UUID ticketId)`
 - `TicketResponse closeTicket(@PathVariable UUID ticketId)`
+- `TicketResponse reopenTicket(@PathVariable UUID ticketId)`
 - `TicketResponse cancelTicket(@PathVariable UUID ticketId)`
 - `ResponseEntity<TicketResponse> assignTicket(@PathVariable UUID ticketId, @Valid @RequestBody AssignTicketRequest request)`
 
@@ -258,6 +287,11 @@
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/AssignTicketRequest.java`
 - Package: `com.voxera.backend.ticket.dto`
 - `AssignTicketRequest(@NotNull UUID assignedTo)`
+
+### `CreateTicketCategoryRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketCategoryRequest.java`
+- Package: `com.voxera.backend.ticket.dto`
+- `CreateTicketCategoryRequest(@NotBlank(message = "Category name cannot be blank") @Size(max = 100, message = "Category name cannot exceed 100 characters") String name)`
 
 ### `CreateTicketCommentRequest`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketCommentRequest.java`
@@ -267,7 +301,18 @@
 ### `CreateTicketRequest`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketRequest.java`
 - Package: `com.voxera.backend.ticket.dto`
-- `CreateTicketRequest(@NotBlank String title, @NotBlank String description, @NotNull TicketPriority priority, @NotNull TicketCategory category)`
+- `CreateTicketRequest(@NotBlank String title, @NotBlank String description, TicketPriority priority, @NotNull UUID category)`
+
+### `RenameTicketCategoryRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/RenameTicketCategoryRequest.java`
+- Package: `com.voxera.backend.ticket.dto`
+- `RenameTicketCategoryRequest(@NotBlank(message = "Category name cannot be blank") @Size(max = 100, message = "Category name cannot exceed 100 characters") String name)`
+
+### `TicketCategoryResponse`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketCategoryResponse.java`
+- Package: `com.voxera.backend.ticket.dto`
+- `TicketCategoryResponse(UUID categoryId, String name, boolean active, LocalDateTime createdAt, LocalDateTime updatedAt)`
+- `TicketCategoryResponse from(TicketCategory category)`
 
 ### `TicketCommentResponse`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketCommentResponse.java`
@@ -278,7 +323,7 @@
 ### `TicketResponse`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketResponse.java`
 - Package: `com.voxera.backend.ticket.dto`
-- `TicketResponse(UUID ticketId, String ticketNumber, String title, String description, TicketStatus status, TicketPriority priority, TicketCategory category, UUID createdBy, UUID assignedTo, UUID assignedTeam, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime resolvedAt, LocalDateTime closedAt)`
+- `TicketResponse(UUID ticketId, String ticketNumber, String title, String description, TicketStatus status, TicketPriority priority, UUID categoryId, String category, UUID createdBy, UUID assignedTo, UUID assignedTeam, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime resolvedAt, LocalDateTime closedAt)`
 - `TicketResponse from(Ticket ticket)`
 
 ### `Ticket`
@@ -291,6 +336,8 @@
 - `void resolve()`
 - ` if(status != TicketStatus.IN_PROGRESS && status != TicketStatus.PENDING)`
 - `void close()`
+- `void reopen()`
+- ` if(status != TicketStatus.RESOLVED && status != TicketStatus.CLOSED)`
 - `void cancel()`
 - ` if(status == TicketStatus.CLOSED || status == TicketStatus.CANCELLED)`
 - `void assignTo(User user)`
@@ -314,6 +361,30 @@
 - `LocalDateTime getClosedAt()`
 - `Long getVersion()`
 
+### `TicketCategory`
+- File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketCategory.java`
+- Package: `com.voxera.backend.ticket.entity`
+- `TicketCategory()`
+- `TicketCategory(UUID categoryId, String name, boolean active, LocalDateTime createdAt, LocalDateTime updatedAt)`
+- `void onCreate()`
+- ` if(createdAt == null)`
+- ` if(updatedAt == null)`
+- `void onUpdate()`
+- `String nameKeyFor(String name)`
+- `String normalizeDisplayName(String name)`
+- ` if(name == null)`
+- ` if(normalizedName.isEmpty())`
+- ` if(normalizedName.length() > MAX_NAME_LENGTH)`
+- `String normalizeNameKey(String name)`
+- `void rename(String newName)`
+- `void deactivate()`
+- `void activate()`
+- `UUID getCategoryId()`
+- `String getName()`
+- `boolean isActive()`
+- `LocalDateTime getCreatedAt()`
+- `LocalDateTime getUpdatedAt()`
+
 ### `TicketComment`
 - File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketComment.java`
 - Package: `com.voxera.backend.ticket.entity`
@@ -330,6 +401,7 @@
 - File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketHistory.java`
 - Package: `com.voxera.backend.ticket.entity`
 - `TicketHistory()`
+- `TicketHistory(Ticket ticket, User actor, String action, String oldValue, String newValue)`
 - `UUID getHistoryId()`
 - `Ticket getTicket()`
 - `String getActorType()`
@@ -344,6 +416,11 @@
 - Package: `com.voxera.backend.ticket.enums`
 - No method signatures extracted.
 
+### `TicketHistoryAction`
+- File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketHistoryAction.java`
+- Package: `com.voxera.backend.ticket.enums`
+- No method signatures extracted.
+
 ### `TicketPriority`
 - File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketPriority.java`
 - Package: `com.voxera.backend.ticket.enums`
@@ -352,6 +429,11 @@
 ### `TicketStatus`
 - File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketStatus.java`
 - Package: `com.voxera.backend.ticket.enums`
+- No method signatures extracted.
+
+### `TicketCategoryRepository`
+- File: `backend/src/main/java/com/voxera/backend/ticket/repository/TicketCategoryRepository.java`
+- Package: `com.voxera.backend.ticket.repository`
 - No method signatures extracted.
 
 ### `TicketCommentRepository`
@@ -379,6 +461,20 @@
 - `void requireTicketListAccess(User actor, UUID requestedUserId)`
 - ` if(actor.getRole() == UserRole.EMPLOYEE && !actor.getUserId().equals(requestedUserId))`
 
+### `TicketCategoryService`
+- File: `backend/src/main/java/com/voxera/backend/ticket/service/TicketCategoryService.java`
+- Package: `com.voxera.backend.ticket.service`
+- `TicketCategoryService(TicketCategoryRepository categoryRepository)`
+- `List<TicketCategory> getAllCategories()`
+- `List<TicketCategory> getActiveCategories()`
+- `TicketCategory createCategory(String name)`
+- `TicketCategory renameCategory(UUID categoryId, String newName)`
+- `TicketCategory deactivateCategory(UUID categoryId)`
+- `TicketCategory activateCategory(UUID categoryId)`
+- `TicketCategory findCategory(UUID categoryId)`
+- `void ensureNameKeyAvailable(String nameKey, UUID currentCategoryId)`
+- ` if(!existingCategory.getCategoryId().equals(currentCategoryId))`
+
 ### `TicketCommentService`
 - File: `backend/src/main/java/com/voxera/backend/ticket/service/TicketCommentService.java`
 - Package: `com.voxera.backend.ticket.service`
@@ -386,19 +482,30 @@
 - `TicketCommentResponse addComment(UUID ticketId, String content)`
 - `List<TicketCommentResponse> getComments(UUID ticketId)`
 
+### `TicketHistoryService`
+- File: `backend/src/main/java/com/voxera/backend/ticket/service/TicketHistoryService.java`
+- Package: `com.voxera.backend.ticket.service`
+- `TicketHistoryService(TicketHistoryRepository ticketHistoryRepository)`
+- `void record(Ticket ticket, User actor, TicketHistoryAction action, String oldValue, String newValue)`
+
 ### `TicketService`
 - File: `backend/src/main/java/com/voxera/backend/ticket/service/TicketService.java`
 - Package: `com.voxera.backend.ticket.service`
-- `TicketService(TicketRepository ticketRepository, UserRepository userRepository, CurrentUserService currentUserService, TicketAuthorizationService ticketAuthorizationService, WorkspaceSettingsService workspaceSettingsService)`
-- `Ticket createTicket(String title, String description, TicketPriority priority, TicketCategory category)`
+- `TicketService(TicketRepository ticketRepository, TicketCategoryRepository ticketCategoryRepository, TicketHistoryService ticketHistoryService, UserRepository userRepository, CurrentUserService currentUserService, TicketAuthorizationService ticketAuthorizationService, WorkspaceSettingsService workspaceSettingsService)`
+- `Ticket createTicket(String title, String description, TicketPriority priority, UUID categoryId)`
+- ` if(!category.isActive())`
 - `Ticket getTicket(UUID ticketId)`
+- `Ticket getTicket(UUID ticketId, User actor)`
 - `List<Ticket> getTickets(UUID createdBy)`
 - ` if(createdBy != null)`
 - ` if(actor.getRole() == UserRole.EMPLOYEE)`
 - `Ticket startProgress(UUID ticketId)`
+- ` if(workspaceSettingsService.getSettings().isRequireAssignment() && ticket.getAssignedTo() == null)`
 - `Ticket markPending(UUID ticketId)`
 - `Ticket resolveTicket(UUID ticketId)`
 - `Ticket closeTicket(UUID ticketId)`
+- `Ticket reopenTicket(UUID ticketId)`
+- ` if(!workspaceSettingsService.getSettings().isAllowReopening())`
 - `Ticket cancelTicket(UUID ticketId)`
 - `Ticket assignTicket(UUID ticketId, UUID userId)`
 - `String generateTicketNumber()`
@@ -519,9 +626,15 @@
 - `void updateSettings_shouldRejectInvalidPrefix()`
 - `void updateSettings_shouldRejectEmptyRequest()`
 - `void updatedTicketPrefixShouldBeUsedWhenCreatingTickets()`
+- `void updateSettings_shouldUpdateDefaultPriority()`
+- `void updateSettings_shouldRejectInvalidDefaultPriority()`
+- `void updateSettings_shouldPreserveDefaultPriorityWhenOmitted()`
+- `void adminCanUpdateWorkflowSettings()`
+- `void partialWorkflowSettingsUpdateShouldPreserveOmittedValues()`
 - `User createUser(String name, String email, UserRole role)`
 - `String login(User user)`
 - `String bearer(String token)`
+- `MockHttpServletRequestBuilder authenticated(MockHttpServletRequestBuilder request, String token)`
 
 ### `CurrentUserServiceTest`
 - File: `backend/src/test/java/com/voxera/backend/security/CurrentUserServiceTest.java`
@@ -605,6 +718,28 @@
 - `void ticketEndpoint_shouldRejectUnauthenticatedRequest()`
 - `void employeeCannotReadAnotherEmployeesTicket()`
 
+### `TicketCategoryControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCategoryControllerIntegrationTest.java`
+- Package: `com.voxera.backend.ticket.controller`
+- `String createAdminToken()`
+- `String uniqueCategoryName()`
+- `String categoryRequest(String name)`
+- `void unauthenticatedUserCannotRetrieveActiveCategories()`
+- `void employeeCanRetrieveActiveCategories()`
+- `void agentCanRetrieveActiveCategories()`
+- `void adminCanRetrieveActiveCategories()`
+- `void onlyAdminCanRetrieveAllCategories()`
+- `void unauthenticatedUserCannotRetrieveAllCategories()`
+- `void adminCanCreateCategory()`
+- `void employeeCannotCreateCategory()`
+- `void createCategoryRejectsBlankName()`
+- `void createCategoryRejectsNameLongerThan100Characters()`
+- `void createCategoryRejectsDuplicateNameIgnoringCase()`
+- `void adminCanRenameCategory()`
+- `void adminCanDeactivateAndReactivateCategory()`
+- `void renamingCategoryRejectsDuplicateName()`
+- `void operationsReturnNotFoundForUnknownCategory()`
+
 ### `TicketCommentIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCommentIntegrationTest.java`
 - Package: `com.voxera.backend.ticket.controller`
@@ -619,6 +754,9 @@
 - Package: `com.voxera.backend.ticket.controller`
 - `void createTicket_shouldReturnCreatedTicketAndPersistIt()`
 - `void createTicket_shouldRejectInvalidRequest()`
+- `void createTicket_shouldUseWorkspaceDefaultWhenPriorityIsOmitted()`
+- `void createTicket_shouldUseExplicitPriorityInsteadOfWorkspaceDefault()`
+- `void createTicket_shouldRejectMissingCategoryEvenWhenPriorityIsOmitted()`
 
 ### `TicketLifecycleIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketLifecycleIntegrationTest.java`
@@ -628,6 +766,8 @@
 - `void employeeCannotCancelAnotherEmployeesTicket()`
 - `void employeeCannotPerformAgentOnlyLifecycleActions()`
 - ` for(String action : actions)`
+- `void reopeningShouldBeRejectedWhenWorkspaceDisablesIt()`
+- `void agentCanReopenResolvedTicketWhenWorkspaceAllowsIt()`
 
 ### `TicketRetrievalIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketRetrievalIntegrationTest.java`
@@ -639,6 +779,22 @@
 - `void getTicketsWithoutFilter_agentShouldReturnAllTickets()`
 - `void getTicketsWithoutFilter_adminShouldReturnAllTickets()`
 - `void getTickets_employeeShouldNotAccessAnotherUsersTickets()`
+
+### `TicketCategoryTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/entity/TicketCategoryTest.java`
+- Package: `com.voxera.backend.ticket.entity`
+- `TicketCategory createCategory(String name)`
+- `void categoryShouldPreserveDisplayName()`
+- `void categoryNameShouldBeTrimmed()`
+- `void constructorShouldRejectNullName()`
+- `void constructorShouldRejectBlankName()`
+- `void constructorShouldRejectNameLongerThan100Characters()`
+- `void constructorShouldAcceptNameOfExactly100Characters()`
+- `void renameShouldTrimNewName()`
+- `void renameShouldRejectNullName()`
+- `void renameShouldRejectBlankName()`
+- `void renameShouldRejectNameLongerThan100Characters()`
+- `void categoryShouldSupportDeactivationAndReactivation()`
 
 ### `TicketTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`
@@ -656,6 +812,25 @@
 - `void cancelledTicketCannotBeCancelledAgain()`
 - `void resolvedTicketCanBeCancelledAndRetainsResolutionTimestamp()`
 - `void lifecycleTimestampsRemainConsistent()`
+- `void resolvedTicketShouldBeReopened()`
+- `void closedTicketShouldBeReopened()`
+- `void cancelledTicketShouldNotBeReopened()`
+- `void activeTicketStatesShouldNotBeReopened()`
+
+### `TicketCategoryServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/service/TicketCategoryServiceTest.java`
+- Package: `com.voxera.backend.ticket.service`
+- `void setUp()`
+- `void getAllCategoriesReturnsAllCategories()`
+- `void getActiveCategoriesReturnsOnlyActiveCategories()`
+- `void createCategorySavesNewCategory()`
+- `void createCategoryRejectsDuplicateNameIgnoringCase()`
+- `void renameCategoryUpdatesName()`
+- `void renameCategoryAllowsItsExistingName()`
+- `void renameCategoryRejectsNameUsedByAnotherCategory()`
+- `void deactivateCategoryChangesActiveState()`
+- `void activateCategoryChangesActiveState()`
+- `void operationsFailWhenCategoryDoesNotExist()`
 
 ### `TicketServiceTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/service/TicketServiceTest.java`
@@ -665,7 +840,8 @@
 - `void createTicketShouldGenerateTicketNumber()`
 - `void getTicketShouldReturnExistingTicket()`
 - `void getTicketShouldFailWhenTicketDoesNotExist()`
-- `void startProgressShouldChangeTicketStatus()`
+- `void startProgressShouldChangeTicketStatusWhenAssignmentIsNotRequired()`
+- `void startProgressShouldFailWhenAssignmentIsRequiredAndTicketIsUnassigned()`
 - `void markPendingShouldChangeTicketStatus()`
 - `void resolveTicketShouldChangeTicketStatus()`
 - `void closeTicketShouldChangeTicketStatus()`
@@ -674,6 +850,9 @@
 - `void assignTicketShouldAssignExistingUser()`
 - `void assignTicketShouldFailWhenAssigneeDoesNotExist()`
 - `void assignTicketShouldFailWhenTicketDoesNotExist()`
+- `void createTicketShouldUseWorkspaceDefaultPriorityWhenOmitted()`
+- `void createTicketShouldFailWhenCategoryDoesNotExist()`
+- `void createTicketShouldFailWhenCategoryIsInactive()`
 
 ### `AdminUserControllerIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/user/controller/AdminUserControllerIntegrationTest.java`

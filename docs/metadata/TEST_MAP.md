@@ -1,7 +1,7 @@
 # Test Map
 
-> Generated: 2026-11-19T00:15:12.973441+00:00
-> Git commit: `57cd56b`
+> Generated: 2026-11-24T09:34:55.233526+00:00
+> Git commit: `ca3c4a5`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -13,7 +13,7 @@
 
 ## `AdminSettingsControllerIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/admin/controller/AdminSettingsControllerIntegrationTest.java`
-- Test methods detected: 11
+- Test methods detected: 16
   - `getSettings_adminShouldReturnPersistedDefaults()`
   - `getSettings_agentShouldReceiveForbidden()`
   - `getSettings_employeeShouldReceiveForbidden()`
@@ -25,6 +25,11 @@
   - `updateSettings_shouldRejectInvalidPrefix()`
   - `updateSettings_shouldRejectEmptyRequest()`
   - `updatedTicketPrefixShouldBeUsedWhenCreatingTickets()`
+  - `updateSettings_shouldUpdateDefaultPriority()`
+  - `updateSettings_shouldRejectInvalidDefaultPriority()`
+  - `updateSettings_shouldPreserveDefaultPriorityWhenOmitted()`
+  - `adminCanUpdateWorkflowSettings()`
+  - `partialWorkflowSettingsUpdateShouldPreserveOmittedValues()`
 
 ## `CurrentUserServiceTest`
 - File: `backend/src/test/java/com/voxera/backend/security/CurrentUserServiceTest.java`
@@ -93,6 +98,25 @@
   - `ticketEndpoint_shouldRejectUnauthenticatedRequest()`
   - `employeeCannotReadAnotherEmployeesTicket()`
 
+## `TicketCategoryControllerIntegrationTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCategoryControllerIntegrationTest.java`
+- Test methods detected: 15
+  - `unauthenticatedUserCannotRetrieveActiveCategories()`
+  - `employeeCanRetrieveActiveCategories()`
+  - `agentCanRetrieveActiveCategories()`
+  - `adminCanRetrieveActiveCategories()`
+  - `onlyAdminCanRetrieveAllCategories()`
+  - `unauthenticatedUserCannotRetrieveAllCategories()`
+  - `adminCanCreateCategory()`
+  - `employeeCannotCreateCategory()`
+  - `createCategoryRejectsBlankName()`
+  - `createCategoryRejectsNameLongerThan100Characters()`
+  - `createCategoryRejectsDuplicateNameIgnoringCase()`
+  - `adminCanRenameCategory()`
+  - `adminCanDeactivateAndReactivateCategory()`
+  - `renamingCategoryRejectsDuplicateName()`
+  - `operationsReturnNotFoundForUnknownCategory()`
+
 ## `TicketCommentIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCommentIntegrationTest.java`
 - Test methods detected: 5
@@ -104,17 +128,22 @@
 
 ## `TicketCreationIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketCreationIntegrationTest.java`
-- Test methods detected: 2
+- Test methods detected: 5
   - `createTicket_shouldReturnCreatedTicketAndPersistIt()`
   - `createTicket_shouldRejectInvalidRequest()`
+  - `createTicket_shouldUseWorkspaceDefaultWhenPriorityIsOmitted()`
+  - `createTicket_shouldUseExplicitPriorityInsteadOfWorkspaceDefault()`
+  - `createTicket_shouldRejectMissingCategoryEvenWhenPriorityIsOmitted()`
 
 ## `TicketLifecycleIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketLifecycleIntegrationTest.java`
-- Test methods detected: 4
+- Test methods detected: 6
   - `ticketLifecycle_shouldPersistStateTransitions()`
   - `employeeCanCancelOwnTicket()`
   - `employeeCannotCancelAnotherEmployeesTicket()`
   - `employeeCannotPerformAgentOnlyLifecycleActions()`
+  - `reopeningShouldBeRejectedWhenWorkspaceDisablesIt()`
+  - `agentCanReopenResolvedTicketWhenWorkspaceAllowsIt()`
 
 ## `TicketRetrievalIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/controller/TicketRetrievalIntegrationTest.java`
@@ -127,9 +156,24 @@
   - `getTicketsWithoutFilter_adminShouldReturnAllTickets()`
   - `getTickets_employeeShouldNotAccessAnotherUsersTickets()`
 
+## `TicketCategoryTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/entity/TicketCategoryTest.java`
+- Test methods detected: 11
+  - `categoryShouldPreserveDisplayName()`
+  - `categoryNameShouldBeTrimmed()`
+  - `constructorShouldRejectNullName()`
+  - `constructorShouldRejectBlankName()`
+  - `constructorShouldRejectNameLongerThan100Characters()`
+  - `constructorShouldAcceptNameOfExactly100Characters()`
+  - `renameShouldTrimNewName()`
+  - `renameShouldRejectNullName()`
+  - `renameShouldRejectBlankName()`
+  - `renameShouldRejectNameLongerThan100Characters()`
+  - `categoryShouldSupportDeactivationAndReactivation()`
+
 ## `TicketTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/entity/TicketTest.java`
-- Test methods detected: 12
+- Test methods detected: 16
   - `newTicketShouldStartAsOpen()`
   - `openTicketCanStartProgress()`
   - `inProgressTicketCanBeMarkedPending()`
@@ -142,15 +186,34 @@
   - `cancelledTicketCannotBeCancelledAgain()`
   - `resolvedTicketCanBeCancelledAndRetainsResolutionTimestamp()`
   - `lifecycleTimestampsRemainConsistent()`
+  - `resolvedTicketShouldBeReopened()`
+  - `closedTicketShouldBeReopened()`
+  - `cancelledTicketShouldNotBeReopened()`
+  - `activeTicketStatesShouldNotBeReopened()`
+
+## `TicketCategoryServiceTest`
+- File: `backend/src/test/java/com/voxera/backend/ticket/service/TicketCategoryServiceTest.java`
+- Test methods detected: 10
+  - `getAllCategoriesReturnsAllCategories()`
+  - `getActiveCategoriesReturnsOnlyActiveCategories()`
+  - `createCategorySavesNewCategory()`
+  - `createCategoryRejectsDuplicateNameIgnoringCase()`
+  - `renameCategoryUpdatesName()`
+  - `renameCategoryAllowsItsExistingName()`
+  - `renameCategoryRejectsNameUsedByAnotherCategory()`
+  - `deactivateCategoryChangesActiveState()`
+  - `activateCategoryChangesActiveState()`
+  - `operationsFailWhenCategoryDoesNotExist()`
 
 ## `TicketServiceTest`
 - File: `backend/src/test/java/com/voxera/backend/ticket/service/TicketServiceTest.java`
-- Test methods detected: 13
+- Test methods detected: 17
   - `createTicketShouldSaveTicketForExistingUser()`
   - `createTicketShouldGenerateTicketNumber()`
   - `getTicketShouldReturnExistingTicket()`
   - `getTicketShouldFailWhenTicketDoesNotExist()`
-  - `startProgressShouldChangeTicketStatus()`
+  - `startProgressShouldChangeTicketStatusWhenAssignmentIsNotRequired()`
+  - `startProgressShouldFailWhenAssignmentIsRequiredAndTicketIsUnassigned()`
   - `markPendingShouldChangeTicketStatus()`
   - `resolveTicketShouldChangeTicketStatus()`
   - `closeTicketShouldChangeTicketStatus()`
@@ -159,6 +222,9 @@
   - `assignTicketShouldAssignExistingUser()`
   - `assignTicketShouldFailWhenAssigneeDoesNotExist()`
   - `assignTicketShouldFailWhenTicketDoesNotExist()`
+  - `createTicketShouldUseWorkspaceDefaultPriorityWhenOmitted()`
+  - `createTicketShouldFailWhenCategoryDoesNotExist()`
+  - `createTicketShouldFailWhenCategoryIsInactive()`
 
 ## `AdminUserControllerIntegrationTest`
 - File: `backend/src/test/java/com/voxera/backend/user/controller/AdminUserControllerIntegrationTest.java`

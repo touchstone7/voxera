@@ -1,7 +1,7 @@
 # Domain Model, DTOs, and Enums
 
-> Generated: 2026-11-19T00:15:12.952476+00:00
-> Git commit: `57cd56b`
+> Generated: 2026-11-24T09:34:55.210872+00:00
+> Git commit: `ca3c4a5`
 > Generator: `scripts/generate_metadata.py`
 
 
@@ -14,6 +14,9 @@
   - `organization: message = "Organization must not be blank") String`
   - `timezone: message = "Timezone must not be blank") String`
   - `ticketPrefix: message = "Ticket prefix must contain 2–10 alphanumeric characters") String`
+  - `defaultPriority: TicketPriority`
+  - `requireAssignment: Boolean`
+  - `allowReopening: Boolean`
 
 ## `WorkspaceSettingsResponse`
 - File: `backend/src/main/java/com/voxera/backend/admin/dto/WorkspaceSettingsResponse.java`
@@ -23,6 +26,9 @@
   - `organization: String`
   - `timezone: String`
   - `ticketPrefix: String`
+  - `defaultPriority: TicketPriority`
+  - `requireAssignment: boolean`
+  - `allowReopening: boolean`
   - `updatedAt: LocalDateTime`
 
 ## `WorkspaceSettings`
@@ -35,6 +41,10 @@
 - Persistence annotation: `@Column(nullable = false, length = 150)`
 - Persistence annotation: `@Column(nullable = false, length = 100)`
 - Persistence annotation: `@Column(name = "ticket_prefix", nullable = false, length = 10)`
+- Persistence annotation: `@Enumerated(EnumType.STRING)`
+- Persistence annotation: `@Column(name = "default_priority", nullable = false, length = 20)`
+- Persistence annotation: `@Column(name = "require_assignment", nullable = false)`
+- Persistence annotation: `@Column(name = "allow_reopening", nullable = false)`
 - Persistence annotation: `@Column(name = "updated_at", nullable = false)`
 - Persistence annotation: `@Version`
 - Persistence annotation: `@Column(nullable = false)`
@@ -49,8 +59,14 @@
     - Nearby annotations (verify scope): `@Column(name = "workspace_name", nullable = false, length = 150)`, `@Column(nullable = false, length = 150)`, `@Column(nullable = false, length = 100)`
   - `ticketPrefix: String`
     - Nearby annotations (verify scope): `@Column(nullable = false, length = 150)`, `@Column(nullable = false, length = 100)`, `@Column(name = "ticket_prefix", nullable = false, length = 10)`
+  - `defaultPriority: TicketPriority`
+    - Nearby annotations (verify scope): `@Column(name = "ticket_prefix", nullable = false, length = 10)`, `@Enumerated(EnumType.STRING)`, `@Column(name = "default_priority", nullable = false, length = 20)`
+  - `requireAssignment: boolean`
+    - Nearby annotations (verify scope): `@Enumerated(EnumType.STRING)`, `@Column(name = "default_priority", nullable = false, length = 20)`, `@Column(name = "require_assignment", nullable = false)`
+  - `allowReopening: boolean`
+    - Nearby annotations (verify scope): `@Column(name = "default_priority", nullable = false, length = 20)`, `@Column(name = "require_assignment", nullable = false)`, `@Column(name = "allow_reopening", nullable = false)`
   - `updatedAt: LocalDateTime`
-    - Nearby annotations (verify scope): `@Column(nullable = false, length = 100)`, `@Column(name = "ticket_prefix", nullable = false, length = 10)`, `@Column(name = "updated_at", nullable = false)`
+    - Nearby annotations (verify scope): `@Column(name = "require_assignment", nullable = false)`, `@Column(name = "allow_reopening", nullable = false)`, `@Column(name = "updated_at", nullable = false)`
   - `version: Long`
     - Nearby annotations (verify scope): `@Column(name = "updated_at", nullable = false)`, `@Version`, `@Column(nullable = false)`
 
@@ -97,6 +113,12 @@
 - Kind: DTO / request / response
 - No fields/components extracted.
 
+## `CreateTicketCategoryRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketCategoryRequest.java`
+- Kind: DTO / request / response
+- Fields/components:
+  - `name: message = "Category name cannot exceed 100 characters") String`
+
 ## `CreateTicketCommentRequest`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketCommentRequest.java`
 - Kind: DTO / request / response
@@ -105,7 +127,24 @@
 ## `CreateTicketRequest`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/CreateTicketRequest.java`
 - Kind: DTO / request / response
-- No fields/components extracted.
+- Fields/components:
+  - `priority: TicketPriority`
+
+## `RenameTicketCategoryRequest`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/RenameTicketCategoryRequest.java`
+- Kind: DTO / request / response
+- Fields/components:
+  - `name: message = "Category name cannot exceed 100 characters") String`
+
+## `TicketCategoryResponse`
+- File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketCategoryResponse.java`
+- Kind: DTO / request / response
+- Fields/components:
+  - `categoryId: UUID`
+  - `name: String`
+  - `active: boolean`
+  - `createdAt: LocalDateTime`
+  - `updatedAt: LocalDateTime`
 
 ## `TicketCommentResponse`
 - File: `backend/src/main/java/com/voxera/backend/ticket/dto/TicketCommentResponse.java`
@@ -129,7 +168,8 @@
   - `description: String`
   - `status: TicketStatus`
   - `priority: TicketPriority`
-  - `category: TicketCategory`
+  - `categoryId: UUID`
+  - `category: String`
   - `createdBy: UUID`
   - `assignedTo: UUID`
   - `assignedTeam: UUID`
@@ -151,8 +191,8 @@
 - Persistence annotation: `@Column(nullable = false, length = 30)`
 - Persistence annotation: `@Enumerated(EnumType.STRING)`
 - Persistence annotation: `@Column(nullable = false, length = 30)`
-- Persistence annotation: `@Enumerated(EnumType.STRING)`
-- Persistence annotation: `@Column(nullable = false, length = 50)`
+- Persistence annotation: `@ManyToOne(fetch = FetchType.LAZY, optional = false)`
+- Persistence annotation: `@JoinColumn(name = "category_id", nullable = false)`
 - Persistence annotation: `@ManyToOne(fetch = FetchType.LAZY, optional = false)`
 - Persistence annotation: `@JoinColumn(name = "created_by", nullable = false)`
 - Persistence annotation: `@ManyToOne(fetch = FetchType.LAZY)`
@@ -179,9 +219,9 @@
   - `priority: TicketPriority`
     - Nearby annotations (verify scope): `@Column(nullable = false, length = 30)`, `@Enumerated(EnumType.STRING)`, `@Column(nullable = false, length = 30)`
   - `category: TicketCategory`
-    - Nearby annotations (verify scope): `@Column(nullable = false, length = 30)`, `@Enumerated(EnumType.STRING)`, `@Column(nullable = false, length = 50)`
+    - Nearby annotations (verify scope): `@Column(nullable = false, length = 30)`, `@ManyToOne(fetch = FetchType.LAZY, optional = false)`, `@JoinColumn(name = "category_id", nullable = false)`
   - `createdBy: User`
-    - Nearby annotations (verify scope): `@Column(nullable = false, length = 50)`, `@ManyToOne(fetch = FetchType.LAZY, optional = false)`, `@JoinColumn(name = "created_by", nullable = false)`
+    - Nearby annotations (verify scope): `@JoinColumn(name = "category_id", nullable = false)`, `@ManyToOne(fetch = FetchType.LAZY, optional = false)`, `@JoinColumn(name = "created_by", nullable = false)`
   - `assignedTo: User`
     - Nearby annotations (verify scope): `@JoinColumn(name = "created_by", nullable = false)`, `@ManyToOne(fetch = FetchType.LAZY)`, `@JoinColumn(name = "assigned_to")`
   - `assignedTeam: Team`
@@ -196,6 +236,35 @@
     - Nearby annotations (verify scope): `@Column(name = "updated_at", nullable = false)`, `@Column(name = "resolved_at")`, `@Column(name = "closed_at")`
   - `version: Long`
     - Nearby annotations (verify scope): `@Column(name = "closed_at")`, `@Version`, `@Column(nullable = false)`
+
+## `TicketCategory`
+- File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketCategory.java`
+- Kind: JPA entity
+- Persistence annotation: `@Table(name = "ticket_categories", uniqueConstraints = {`
+- Persistence annotation: `@Id`
+- Persistence annotation: `@Column(name = "category_id")`
+- Persistence annotation: `@Column(nullable = false, length = MAX_NAME_LENGTH)`
+- Persistence annotation: `@Column(name = "name_key", nullable = false, length = MAX_NAME_LENGTH)`
+- Persistence annotation: `@Column(nullable = false)`
+- Persistence annotation: `@Column(name = "created_at", nullable = false)`
+- Persistence annotation: `@Column(name = "updated_at", nullable = false)`
+- Fields/components:
+  - `MAX_NAME_LENGTH: int`
+    - Nearby annotations (verify scope): `@Entity`, `@Table(name = "ticket_categories", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_ticket_categories_name_key", columnNames = "name_key")`
+  - `categoryId: UUID`
+    - Nearby annotations (verify scope): `@Table(name = "ticket_categories", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_ticket_categories_name_key", columnNames = "name_key")`, `@Id`, `@Column(name = "category_id")`
+  - `name: String`
+    - Nearby annotations (verify scope): `@Id`, `@Column(name = "category_id")`, `@Column(nullable = false, length = MAX_NAME_LENGTH)`
+  - `nameKey: String`
+    - Nearby annotations (verify scope): `@Column(name = "category_id")`, `@Column(nullable = false, length = MAX_NAME_LENGTH)`, `@Column(name = "name_key", nullable = false, length = MAX_NAME_LENGTH)`
+  - `active: boolean`
+    - Nearby annotations (verify scope): `@Column(nullable = false, length = MAX_NAME_LENGTH)`, `@Column(name = "name_key", nullable = false, length = MAX_NAME_LENGTH)`, `@Column(nullable = false)`
+  - `createdAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(name = "name_key", nullable = false, length = MAX_NAME_LENGTH)`, `@Column(nullable = false)`, `@Column(name = "created_at", nullable = false)`
+  - `updatedAt: LocalDateTime`
+    - Nearby annotations (verify scope): `@Column(nullable = false)`, `@Column(name = "created_at", nullable = false)`, `@Column(name = "updated_at", nullable = false)`
 
 ## `TicketComment`
 - File: `backend/src/main/java/com/voxera/backend/ticket/entity/TicketComment.java`
@@ -260,6 +329,12 @@
 - File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketCategory.java`
 - Kind: enum
 - Values: `HARDWARE`, `SOFTWARE`, `NETWORK`, `ACCESS`, `SECURITY`, `ACCOUNT`, `OTHER`
+- No fields/components extracted.
+
+## `TicketHistoryAction`
+- File: `backend/src/main/java/com/voxera/backend/ticket/enums/TicketHistoryAction.java`
+- Kind: enum
+- Values: `TICKET_CREATED`, `STATUS_CHANGED`, `TICKET_REOPENED`, `ASSIGNED`
 - No fields/components extracted.
 
 ## `TicketPriority`
